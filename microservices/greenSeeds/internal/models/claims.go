@@ -9,17 +9,14 @@ import (
 type Claims struct {
 	jwt.RegisteredClaims
 
-	Subject   string    `json:"subject"`
+	Username  string    `json:"username"`
+	Role      string    `json:"role"`
 	IssuedAt  time.Time `json:"issued_at"`
 	ExpiresAt time.Time `json:"expires_at"`
 	ExpiresIn int       `json:"expires_in"`
 	Type      string    `json:"type"`
 
-	Resources map[string]Roles `json:"resource_access"`
-}
-
-type Roles struct {
-	Roles []string `json:"roles"`
+	Resources map[string]string `json:"resource_access"`
 }
 
 type JWT struct {

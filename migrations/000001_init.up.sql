@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS green_seeds.shifts (
 CREATE TABLE IF NOT EXISTS green_seeds.users (
     username VARCHAR(20) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    full_name VARCHAR(50) NOT NULL,
-    isAdmin BOOLEAN DEFAULT FALSE, -- TODO: мб поменять
+    full_name DVARCHAR(50) NOT NULL,
+    is_admin BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (username)
 );
 

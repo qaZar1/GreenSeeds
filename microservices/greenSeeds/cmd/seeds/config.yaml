@@ -8,7 +8,7 @@ auth:
 database:
   host: "localhost"                                        # Хост базы данных
   port: 5432                                               # Порт базы данных
-  name: "green_seeds"                                      # Название базы данных
+  name: "db"                                               # Название базы данных
   user: "dev"                                              # Пользователь базы данных
   password: "test"                                         # Пароль базы данных
 

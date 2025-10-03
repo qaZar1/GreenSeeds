@@ -1,80 +1,81 @@
 package service
 
-// import (
-// 	"database/sql"
-// 	"net/http"
+import (
+	"database/sql"
+	"net/http"
 
-// 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
-// 	bcrypt "golang.org/x/crypto/bcrypt"
-// )
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
+	bcrypt "golang.org/x/crypto/bcrypt"
+)
 
-// func (s *Service) RegisterUser(user models.User) (int, error) {
-// 	if err := s.validate.Struct(user); err != nil {
-// 		return http.StatusBadRequest, ErrValidateStruct
-// 	}
+func (s *Service) RegisterUser(user models.User) (int, error) {
+	if err := s.validate.Struct(user); err != nil {
+		return http.StatusBadRequest, ErrValidateStruct
+	}
 
-// 	newPass, err := bcrypt.GenerateFromPassword([]byte(*user.PasswordHash), 10)
-// 	if err != nil {
-// 		return http.StatusInternalServerError, ErrInvalidGeneratePassHash
-// 	}
+	newPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	if err != nil {
+		return http.StatusInternalServerError, ErrInvalidGeneratePassHash
+	}
 
-// 	tmp := string(newPass)
+	tmp := string(newPass)
 
-// 	newUser := models.User{
-// 		FullName:     user.FullName,
-// 		PasswordHash: &tmp,
-// 		Role:         user.Role,
-// 	}
+	newUser := models.User{
+		Username: user.Username,
+		Password: tmp,
+		FullName: user.FullName,
+		IsAdmin:  user.IsAdmin,
+	}
 
-// 	ok, err := s.repo.UsrRepo.AddUser(newUser)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return http.StatusConflict, ErrUserAlreadyExists
-// 		}
-// 		return http.StatusInternalServerError, ErrInvalidAddUser
-// 	}
+	ok, err := s.repo.UsrRepo.AddUser(newUser)
+	if err != nil {
+		return http.StatusInternalServerError, ErrInvalidAddUser
+	}
 
-// 	if !ok {
-// 		return http.StatusBadRequest, ErrUserAlreadyExists
-// 	}
+	if !ok {
+		return http.StatusBadRequest, ErrUserAlreadyExists
+	}
 
-// 	return http.StatusNoContent, nil
-// }
+	return http.StatusNoContent, nil
+}
 
-// func (s *Service) LoginUser(user models.User) (*models.TokenResponse, int, error) {
-// 	if err := s.validate.Struct(user); err != nil {
-// 		return nil, http.StatusBadRequest, ErrValidateStruct
-// 	}
+func (s *Service) LoginUser(user models.User) (*models.TokenResponse, int, error) {
+	if err := s.validate.Struct(user); err != nil {
+		return nil, http.StatusBadRequest, ErrValidateStruct
+	}
 
-// 	checkedUser, err := s.repo.UsrRepo.CheckUserByFullName(user.FullName)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, http.StatusNotFound, ErrUserNotFound
-// 		}
-// 		return nil, http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
+	checkedUser, err := s.repo.UsrRepo.CheckUserByUsername(user.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, http.StatusNotFound, ErrUserNotFound
+		}
+		return nil, http.StatusInternalServerError, ErrInvalidGetDataFromDB
+	}
 
-// 	if bcrypt.CompareHashAndPassword([]byte(*checkedUser.PasswordHash), []byte(*user.PasswordHash)) != nil {
-// 		return nil, http.StatusUnauthorized, ErrInvalidUsernameOrPassword
-// 	}
+	if bcrypt.CompareHashAndPassword([]byte(checkedUser.Password), []byte(user.Password)) != nil {
+		return nil, http.StatusUnauthorized, ErrInvalidUsernameOrPassword
+	}
 
-// 	role, err := s.repo.UsrRepo.CheckRolesById(*checkedUser.UUID)
-// 	if err != nil {
-// 		return nil, http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
+	var role string
+	if *checkedUser.IsAdmin {
+		role = "admin"
+	} else {
+		role = "operator"
+	}
 
-// 	claims := s.infra.GetClaims(*checkedUser.UUID, role)
+	claims := s.infra.GetClaims(checkedUser.Username, role)
 
-// 	signed, err := s.infra.GetSignedToken(claims)
-// 	if err != nil {
-// 		return nil, http.StatusInternalServerError, ErrInvalidGenerateToken
-// 	}
+	signed, err := s.infra.GetSignedToken(claims)
+	if err != nil {
+		return nil, http.StatusInternalServerError, ErrInvalidGenerateToken
+	}
 
-// 	return &models.TokenResponse{
-// 		AccessToken: signed,
-// 		ExpiresIn:   s.cfg.JWT.ExpiresIn,
-// 	}, http.StatusOK, nil
-// }
+	return &models.TokenResponse{
+		AccessToken: signed,
+		ExpiresIn:   s.cfg.JWT.ExpiresIn,
+		TokenType:   claims.Type,
+	}, http.StatusOK, nil
+}
 
 // func (s *Service) CheckUserByUuid(uuid string) (*models.User, int, error) {
 // 	user, err := s.repo.UsrRepo.CheckUserByUuid(uuid)

@@ -7,13 +7,13 @@ type Infrastructure struct {
 
 	secret []byte
 
-	resources map[string]models.Roles
+	resources map[string]string
 }
 
 func New(expiresIn int, cfg models.Config) *Infrastructure {
 	return &Infrastructure{
 		secret:    []byte(cfg.JWT.Secret),
 		ExpiresIn: expiresIn,
-		resources: map[string]models.Roles{},
+		resources: map[string]string{},
 	}
 }

@@ -18,7 +18,7 @@ import (
 
 func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 	infra := infrastructure.New(cfg.JWT.ExpiresIn, cfg)
-	_ = transport.NewTransport(repo, cfg, infra)
+	transport := transport.NewTransport(repo, cfg, infra)
 
 	router := chi.NewRouter()
 
@@ -31,7 +31,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 		MaxAge:           300,
 	}))
 
-	// router.Post("/api/login", transport.PostApiLoginUser)
+	router.Post("/api/login", transport.PostApiLoginUser)
 
 	router.HandleFunc("/debug/pprof/", pprof.Index)
 	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -52,7 +52,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 	router.Route("/api", func(r chi.Router) {
 		// r.Use(middlewares.BearerAuthMiddleware(infra, repo))
 		// r.Route("/users", func(r chi.Router) {
-		// 	r.Post("/register", transport.PostApiRegisterUser)
+		r.Post("/register", transport.PostApiRegisterUser)
 		// 	r.Get("/checkByUuid/{uuid}", transport.GetApiCheckUserByUuidUuid)
 		// 	r.Get("/checkRoles/{uuid}", transport.GetApiCheckRolesUuid)
 		// 	r.Get("/checkAll", transport.GetApiCheckAllUsers)
