@@ -1,0 +1,17 @@
+server:
+  address: ":8001"                                         # На каком порту будет работать микросервис seeds
+  path_to_log: "./logs"                                    # Путь к логу /var/log/
+
+auth:
+  default_password: "123456"                               # Пароль по умолчанию
+
+database:
+  host: "localhost"                                        # Хост базы данных
+  port: 5432                                               # Порт базы данных
+  name: "db"                                               # Название базы данных
+  user: "dev"                                              # Пользователь базы данных
+  password: "test"                                         # Пароль базы данных
+
+jwt:
+  client_secret: "dev"                                     # Секретный ключ
+  expires_in: 1800000                                      # Срок действия токена

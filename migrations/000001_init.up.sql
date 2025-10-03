@@ -45,17 +45,17 @@ CREATE TABLE IF NOT EXISTS green_seeds.assignments (
 CREATE TABLE IF NOT EXISTS green_seeds.shifts (
     shift SERIAL,
     dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    user VARCHAR(20),
-    FOREIGN KEY (user) REFERENCES green_seeds.users(user),
+    username VARCHAR(20),
+    FOREIGN KEY (username) REFERENCES green_seeds.users(username),
     PRIMARY KEY (shift)
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.users (
-    user VARCHAR(20) NOT NULL UNIQUE,
+    username VARCHAR(20) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    full_name VARCHAR(50) NOT NULL,
-    isAdmin BOOLEAN DEFAULT FALSE, -- TODO: мб поменять
-    PRIMARY KEY (user)
+    full_name DVARCHAR(50) NOT NULL,
+    is_admin BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (username)
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.reports (
