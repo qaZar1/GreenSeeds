@@ -1,51 +1,50 @@
+import { jwtDecode } from "jwt-decode";
+
 export const authProvider = {
-    // вызывается при логине
-    login: async ({ username, password }) => {
-      const request = new Request("/api/login", {
-        method: "POST",
-        body: JSON.stringify({ username, password }),
-        headers: new Headers({ "Content-Type": "application/json" }),
-      });
-  
-      const response = await fetch(request);
-      if (response.status < 200 || response.status >= 300) {
-        throw new Error("Ошибка входа");
-      }
-  
-      const { token, role } = await response.json();
-  
-      localStorage.setItem("auth", JSON.stringify({ token, role }));
-      return Promise.resolve();
-    },
-  
-    // выход
-    logout: () => {
+  login: async ({ username, password }) => {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error("Ошибка входа");
+    }
+
+    const { access_token } = await response.json();
+
+    // Раскодируем JWT
+    const decoded = jwtDecode(access_token);
+
+    const role = decoded.role; // в твоем примере "admin"
+
+    localStorage.setItem(
+      "auth",
+      JSON.stringify({ token: access_token, role })
+    );
+  },
+
+  logout: () => {
+    localStorage.removeItem("auth");
+    return Promise.resolve();
+  },
+
+  checkAuth: () =>
+    localStorage.getItem("auth") ? Promise.resolve() : Promise.reject(),
+
+  getPermissions: () => {
+    const auth = localStorage.getItem("auth");
+    if (!auth) return Promise.reject();
+    const { role } = JSON.parse(auth);
+    return Promise.resolve(role);
+  },
+
+  checkError: (error) => {
+    if (error.status === 401 || error.status === 403) {
       localStorage.removeItem("auth");
-      return Promise.resolve();
-    },
-  
-    // проверка авторизации
-    checkAuth: () =>
-      localStorage.getItem("auth") ? Promise.resolve() : Promise.reject(),
-  
-    // проверка прав доступа (по ролям)
-    getPermissions: () => {
-      const auth = localStorage.getItem("auth");
-      if (auth) {
-        const { role } = JSON.parse(auth);
-        return Promise.resolve(role);
-      }
       return Promise.reject();
-    },
-  
-    // проверка статуса при ошибках API
-    checkError: (error) => {
-      const status = error.status;
-      if (status === 401 || status === 403) {
-        localStorage.removeItem("auth");
-        return Promise.reject();
-      }
-      return Promise.resolve();
-    },
-  };
-  
+    }
+    return Promise.resolve();
+  },
+};

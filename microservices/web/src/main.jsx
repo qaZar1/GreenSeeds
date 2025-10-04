@@ -1,16 +1,11 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
-import { Admin, Resource, ListGuesser } from "react-admin";
-import jsonServerProvider from "ra-data-json-server";
-import { authProvider } from "./authProvider";
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App'
 
-const dataProvider = jsonServerProvider("https://jsonplaceholder.typicode.com");
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <Admin dataProvider={dataProvider} authProvider={authProvider}>
-      <Resource name="users" list={ListGuesser} />
-      <Resource name="posts" list={ListGuesser} />
-    </Admin>
-  </React.StrictMode>
-);
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
