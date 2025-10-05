@@ -40,13 +40,18 @@ func (transport *Transport) PostApiBunkerAdd(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	status, err := transport.service.AddBunker(bunker)
+	ok, err := transport.service.AddBunker(bunker)
 	if err != nil {
-		utils.WriteJSON(w, status, err)
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %w", err))
 		return
 	}
 
-	utils.WriteNoContent(w)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %w", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, bunker)
 }
 
 // Set godoc
@@ -66,16 +71,42 @@ func (transport *Transport) PostApiBunkerAdd(w http.ResponseWriter, r *http.Requ
 func (transport *Transport) GetApiBunkerGet(w http.ResponseWriter, r *http.Request) {
 	bunkers, err := transport.service.GetBunkers()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err.Error())
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunkers: %w", err))
 		return
 	}
 
 	if bunkers == nil {
-		utils.WriteString(w, http.StatusNotFound, err.Error())
+		utils.WriteString(w, http.StatusNotFound, fmt.Sprintf("Bunkers not found"))
 		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, bunkers)
+}
+
+// Set godoc
+//
+// @Router /api/bunker/get/{bunker} [get]
+// @Summary Получение бункера по ID
+// @Description При обращении, возвращает бункер по ID
+//
+// @Tags Bunkers
+// @Produce      application/json
+// @Consume      application/json
+//
+// @Success 200 {object} bunker "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiBunkerGetId(w http.ResponseWriter, r *http.Request) {
+	bunkerId := chi.URLParam(r, "bunker")
+
+	bunker, err := transport.service.GetBunkersById(bunkerId)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunker by id: %w", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, bunker)
 }
 
 // Set godoc
@@ -95,28 +126,33 @@ func (transport *Transport) GetApiBunkerGet(w http.ResponseWriter, r *http.Reque
 func (transport *Transport) PutApiBunkerUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err.Error())
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
 		return
 	}
 
 	var bunker models.Bunkers
 	if err := jsoniter.Unmarshal(data, &bunker); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err.Error())
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
 		return
 	}
 
-	status, err := transport.service.UpdateBunker(bunker)
+	ok, err := transport.service.UpdateBunker(bunker)
 	if err != nil {
-		utils.WriteJSON(w, status, err)
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %w", err))
 		return
 	}
 
-	utils.WriteNoContent(w)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %w", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, bunker)
 }
 
 // Set godoc
 //
-// @Router /api/bunker/delete [delete]
+// @Router /api/bunker/delete/{bunker} [delete]
 // @Summary Удаление бункера
 // @Description При обращении, удаляет бункер
 //
@@ -133,8 +169,14 @@ func (transport *Transport) PutApiBunkerUpdate(w http.ResponseWriter, r *http.Re
 func (transport *Transport) DeleteApiBunkerDelete(w http.ResponseWriter, r *http.Request) {
 	bunker := chi.URLParam(r, "bunker")
 
-	if err := transport.service.DeleteBunker(bunker); err != nil {
+	ok, err := transport.service.DeleteBunker(bunker)
+	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid delete bunker: %w", err))
 		return
 	}
 

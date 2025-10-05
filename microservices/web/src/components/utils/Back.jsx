@@ -15,7 +15,7 @@ const BackButton = () => {
         <IconButton
             variant="contained"
             color="primary"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/bunkers')}
             sx={{
                 minWidth: isSmall ? 36 : 40,
                 width: isSmall ? 36 : 40,

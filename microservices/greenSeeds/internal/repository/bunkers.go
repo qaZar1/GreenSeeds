@@ -8,6 +8,7 @@ import (
 type IBunkersRepository interface {
 	AddBunkers(bunkers models.Bunkers) (bool, error)
 	GetBunkers() ([]models.Bunkers, error)
+	GetBunkersById(id int) (models.Bunkers, error)
 	UpdateBunkers(bunkers models.Bunkers) (bool, error)
 	DeleteBunkers(id int) (bool, error)
 }
@@ -49,7 +50,8 @@ VALUES (
 func (bunk *bunkersRepository) GetBunkers() ([]models.Bunkers, error) {
 	const query = `
 SELECT bunker, distance
-FROM green_seeds.bunkers`
+FROM green_seeds.bunkers
+ORDER BY bunker ASC`
 
 	var bunkers []models.Bunkers
 	if err := bunk.db.Select(&bunkers, query); err != nil {
@@ -57,6 +59,20 @@ FROM green_seeds.bunkers`
 	}
 
 	return bunkers, nil
+}
+
+func (bunk *bunkersRepository) GetBunkersById(id int) (models.Bunkers, error) {
+	const query = `
+SELECT bunker, distance
+FROM green_seeds.bunkers
+WHERE bunker = $1`
+
+	var bunker models.Bunkers
+	if err := bunk.db.Get(&bunker, query, id); err != nil {
+		return models.Bunkers{}, err
+	}
+
+	return bunker, nil
 }
 
 func (bunk *bunkersRepository) UpdateBunkers(bunkers models.Bunkers) (bool, error) {
