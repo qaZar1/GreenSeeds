@@ -55,6 +55,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 		r.Post("/register", transport.PostApiRegisterUser)
 		r.Post("/bunker/add", transport.PostApiBunkerAdd)
 		r.Get("/bunker/get", transport.GetApiBunkerGet)
+		r.Get("/bunker/get/{bunker}", transport.GetApiBunkerGetId)
 		r.Put("/bunker/update", transport.PutApiBunkerUpdate)
 		r.Delete("/bunker/delete/{bunker}", transport.DeleteApiBunkerDelete)
 		// 	r.Get("/checkByUuid/{uuid}", transport.GetApiCheckUserByUuidUuid)

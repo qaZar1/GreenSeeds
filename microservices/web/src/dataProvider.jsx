@@ -1,30 +1,105 @@
 // src/dataProvider.js
-const mockData = [
-    { bunker: 1, distance: 100 },
-    { bunker: 2, distance: 200 },
-    { bunker: 3, distance: 300 },
-    { bunker: 4, distance: 400 },
-    { bunker: 5, distance: 500 },
-];
-
 const dataProvider = {
-    getList: (resource, params) => {
-        const dataWithId = mockData.map(item => ({ ...item, id: item.bunker }));
-        return Promise.resolve({
+    getList: async (resource, params) => {
+        const response = await fetch(`/api/bunker/get`);
+        if (!response.ok) {
+            throw new Error("Ошибка загрузки данных");
+        }
+    
+        const data = await response.json();
+    
+        const dataWithId = data.map(item => ({
+            ...item,
+            id: item.id ?? item.bunker,
+        }));
+    
+        return {
             data: dataWithId,
             total: dataWithId.length,
-        });
-    },
-    getOne: (resource, params) => {
-        const record = mockData.find(item => String(item.bunker) === String(params.id));
-        if (!record) {
-            return Promise.reject(new Error(`Record with bunker=${params.id} not found`));
+        };
+    },    
+    getOne: async (resource, params) => {
+        const response = await fetch(`/api/bunker/get/${params.id}`);
+        if (!response.ok) {
+            throw new Error("Ошибка загрузки");
         }
-        return Promise.resolve({ data: { ...record, id: record.bunker } });
+
+        const data = await response.json();
+
+        return {
+            data: {
+                ...data,
+                id: data.id ?? data.bunker,
+            },
+        };
     },
-    create: (resource, params) => Promise.resolve({ data: { ...params.data, bunker: Date.now() } }),
-    update: (resource, params) => Promise.resolve({ data: params.data }),
-    delete: (resource, params) => Promise.resolve({ data: params.previousData }),
+    create: async (resource, params) => {
+        const response = await fetch(`/api/bunker/add`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(
+                {
+                    bunker: params.data.bunker,
+                    distance: params.data.distance,
+                }
+            ),
+        });
+
+        if (!response.ok) {
+            throw new Error("Ошибка создания");
+        }
+
+        const data = await response.json();
+
+        return {
+            data: {
+                ...data,
+                id: data.id ?? data.bunker,
+            },
+        };
+    },
+
+    update: async (resource, params) => {
+        const response = await fetch(`/api/bunker/update`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(
+                {
+                    bunker: params.data.id,
+                    distance: params.data.distance,
+                }
+            ),
+        });
+
+        if (!response.ok) {
+            throw new Error("Ошибка обновления");
+        }
+
+        const data = await response.json();
+
+        return {
+            data: {
+                ...data,
+                id: data.id ?? data.bunker,
+            },
+        };
+    },
+
+    delete: async (resource, params) => {
+        const response = await fetch(`/api/bunker/delete/${params.id}`, {
+            method: "DELETE",
+        });
+
+        if (!response.ok) {
+            throw new Error("Ошибка удаления");
+        }
+
+        return { data: params.previousData };
+    },
 };
 
 export default dataProvider;
