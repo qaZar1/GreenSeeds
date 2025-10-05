@@ -6,10 +6,10 @@ import (
 )
 
 type IBunkersRepository interface {
-	AddBunkers(bunkers *models.Bunkers) (bool, error)
+	AddBunkers(bunkers models.Bunkers) (bool, error)
 	GetBunkers() ([]models.Bunkers, error)
-	UpdateBunkers(bunkers *models.Bunkers) (bool, error)
-	DeleteBunkers(id int64) (bool, error)
+	UpdateBunkers(bunkers models.Bunkers) (bool, error)
+	DeleteBunkers(id int) (bool, error)
 }
 
 type bunkersRepository struct {
@@ -22,7 +22,7 @@ func NewBunkersRepository(db *sqlx.DB) *bunkersRepository {
 	}
 }
 
-func (bunk *bunkersRepository) AddBunkers(bunkers *models.Bunkers) (bool, error) {
+func (bunk *bunkersRepository) AddBunkers(bunkers models.Bunkers) (bool, error) {
 	const query = `
 INSERT INTO green_seeds.bunkers (
 	bunker,
@@ -59,7 +59,7 @@ FROM green_seeds.bunkers`
 	return bunkers, nil
 }
 
-func (bunk *bunkersRepository) UpdateBunkers(bunkers *models.Bunkers) (bool, error) {
+func (bunk *bunkersRepository) UpdateBunkers(bunkers models.Bunkers) (bool, error) {
 	const query = `
 UPDATE green_seeds.bunkers
 SET distance = :distance
