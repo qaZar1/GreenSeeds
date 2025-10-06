@@ -5,17 +5,23 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { TopToolbar } from "react-admin";
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
+import { useResourceContext } from "react-admin";
 
 const BackButton = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
+    const resource = useResourceContext();
+
+    const handleClick = () => {
+        navigate(`/${resource}`);
+    };
 
     return (
         <IconButton
             variant="contained"
             color="primary"
-            onClick={() => navigate('/bunkers')}
+            onClick={handleClick}
             sx={{
                 minWidth: isSmall ? 36 : 40,
                 width: isSmall ? 36 : 40,

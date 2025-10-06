@@ -1,7 +1,7 @@
 // BunkerEdit.jsx
 import React from "react";
 import { Edit, SimpleForm, TextInput, NumberInput } from "react-admin";
-import { ToolbarEdit } from "./Toolbars";
+import { ToolbarEdit } from "../utils/Toolbars";
 import BackButton from "../utils/Back";
 
 const BunkerEdit = () => {

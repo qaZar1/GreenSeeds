@@ -13,7 +13,7 @@ import (
 
 // Set godoc
 //
-// @Router /api/bunker/add [post]
+// @Router /api/bunkers/add [post]
 // @Summary Добавление бункера в БД
 // @Description При обращении, добавляет бункер в БД
 //
@@ -56,7 +56,7 @@ func (transport *Transport) PostApiBunkerAdd(w http.ResponseWriter, r *http.Requ
 
 // Set godoc
 //
-// @Router /api/bunker/get [get]
+// @Router /api/bunkers/get [get]
 // @Summary Получение списка бункеров
 // @Description При обращении, возвращает список бункеров
 //
@@ -85,7 +85,7 @@ func (transport *Transport) GetApiBunkerGet(w http.ResponseWriter, r *http.Reque
 
 // Set godoc
 //
-// @Router /api/bunker/get/{bunker} [get]
+// @Router /api/bunkers/get/{bunker} [get]
 // @Summary Получение бункера по ID
 // @Description При обращении, возвращает бункер по ID
 //
@@ -111,7 +111,7 @@ func (transport *Transport) GetApiBunkerGetId(w http.ResponseWriter, r *http.Req
 
 // Set godoc
 //
-// @Router /api/bunker/update [put]
+// @Router /api/bunkers/update [put]
 // @Summary Обновление данных о бункере
 // @Description При обращении, обновляет данные о бункере
 //
@@ -152,7 +152,7 @@ func (transport *Transport) PutApiBunkerUpdate(w http.ResponseWriter, r *http.Re
 
 // Set godoc
 //
-// @Router /api/bunker/delete/{bunker} [delete]
+// @Router /api/bunkers/delete/{bunker} [delete]
 // @Summary Удаление бункера
 // @Description При обращении, удаляет бункер
 //

@@ -53,11 +53,23 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 		// r.Use(middlewares.BearerAuthMiddleware(infra, repo))
 		// r.Route("/users", func(r chi.Router) {
 		r.Post("/register", transport.PostApiRegisterUser)
-		r.Post("/bunker/add", transport.PostApiBunkerAdd)
-		r.Get("/bunker/get", transport.GetApiBunkerGet)
-		r.Get("/bunker/get/{bunker}", transport.GetApiBunkerGetId)
-		r.Put("/bunker/update", transport.PutApiBunkerUpdate)
-		r.Delete("/bunker/delete/{bunker}", transport.DeleteApiBunkerDelete)
+
+		r.Route("/seeds", func(r chi.Router) {
+			r.Post("/add", transport.PostApiSeedAdd)
+			r.Get("/get", transport.GetApiSeedGet)
+			r.Get("/get/{seed}", transport.GetApiSeedGetId)
+			r.Put("/update", transport.PutApiSeedUpdate)
+			r.Delete("/delete/{seed}", transport.DeleteApiSeedDelete)
+		})
+
+		r.Route("/bunkers", func(r chi.Router) {
+			r.Post("/add", transport.PostApiBunkerAdd)
+			r.Get("/get", transport.GetApiBunkerGet)
+			r.Get("/get/{bunker}", transport.GetApiBunkerGetId)
+			r.Put("/update", transport.PutApiBunkerUpdate)
+			r.Delete("/delete/{bunker}", transport.DeleteApiBunkerDelete)
+		})
+
 		// 	r.Get("/checkByUuid/{uuid}", transport.GetApiCheckUserByUuidUuid)
 		// 	r.Get("/checkRoles/{uuid}", transport.GetApiCheckRolesUuid)
 		// 	r.Get("/checkAll", transport.GetApiCheckAllUsers)
