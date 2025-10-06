@@ -9,7 +9,7 @@ type Repository struct {
 	PlcRepo  IPlacementRepository
 	RptRepo  IReceiptsRepository
 	AsnRepo  IAssignmentsRepository
-	SedRepo  ISeedsRepository
+	SeedRepo ISeedsRepository
 	BunkRepo IBunkersRepository
 }
 
@@ -21,7 +21,7 @@ func NewRepository(db *sqlx.DB) *Repository {
 		PlcRepo:  NewPlacementRepository(db),
 		RptRepo:  NewReceiptsRepository(db),
 		AsnRepo:  NewAssignmentsRepository(db),
-		SedRepo:  NewSeedsRepository(db),
+		SeedRepo: NewSeedsRepository(db),
 		BunkRepo: NewBunkersRepository(db),
 	}
 }
