@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 
-export const EmptySeed = () => (
+export const EmptyProfile = () => (
     <Box
         sx={{
             display: "flex",
@@ -13,7 +13,6 @@ export const EmptySeed = () => (
             color: "text.secondary",
         }}
     >
-        <Typography variant="h6">Нет данных о семенах</Typography>
-        <Typography variant="body2">Добавьте семена через панель администратора</Typography>
+        <Typography variant="h6">Данные невозможно загрузить</Typography>
     </Box>
 );

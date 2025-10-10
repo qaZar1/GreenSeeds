@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/docs"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/transport"
@@ -50,8 +51,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 	router.Handle("/swagger/*", httpSwagger.WrapHandler)
 
 	router.Route("/api", func(r chi.Router) {
-		// r.Use(middlewares.BearerAuthMiddleware(infra, repo))
-		// r.Route("/users", func(r chi.Router) {
+		r.Use(middlewares.BearerAuthMiddleware(infra, repo))
 		r.Post("/register", transport.PostApiRegisterUser)
 
 		r.Route("/seeds", func(r chi.Router) {
@@ -68,6 +68,14 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 			r.Get("/get/{bunker}", transport.GetApiBunkerGetId)
 			r.Put("/update", transport.PutApiBunkerUpdate)
 			r.Delete("/delete/{bunker}", transport.DeleteApiBunkerDelete)
+		})
+
+		r.Route("/users", func(r chi.Router) {
+			r.Get("/get", transport.GetApiCheckAllUsers)
+			r.Get("/get/{username}", transport.GetApiUserGetUsername)
+			r.Put("/update", transport.PutApiUpdateUser)
+			r.Put("/change-password", transport.PutApiChangePassword)
+			r.Delete("/delete/{username}", transport.DeleteApiRemoveUser)
 		})
 
 		// 	r.Get("/checkByUuid/{uuid}", transport.GetApiCheckUserByUuidUuid)

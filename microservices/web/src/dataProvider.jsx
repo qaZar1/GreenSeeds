@@ -1,4 +1,20 @@
 // src/dataProvider.js
+import { jwtDecode } from "jwt-decode";
+import { useNotify } from "react-admin";
+
+export const getToken = () => {
+    try {
+        const stored = localStorage.getItem("auth");
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            return parsed?.token || null;
+        }
+    } catch (e) {
+        console.warn("Ошибка получения профиля:", e);
+    }
+    return null;
+};
+
 const dataProvider = {
     // --- Вспомогательные функции для определения API и трансформации данных ---
 
@@ -25,6 +41,19 @@ const dataProvider = {
                 case 'update': return `/api/seeds/update`;
                 case 'delete': return `/api/seeds/delete${idPart}`;
             }
+        } else if (resource === 'users') {
+            switch (action) {
+                case 'list': return `/api/users/get`;
+                case 'one': return `/api/users/get${idPart}`;
+                case 'create': return `/api/register`;
+                case 'update': return `/api/users/update`;
+                case 'delete': return `/api/users/delete${idPart}`;
+            }
+        } else if (resource === 'profile'){
+            switch (action) {
+                case 'one': return `/api/users/get${idPart}`;
+                case 'update': return `/api/users/update`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
@@ -47,6 +76,11 @@ const dataProvider = {
                 ...item,
                 id: item.id ?? item.seed,
             };
+        } else if (resource === 'users' || resource === 'profile') {
+            return {
+                ...item,
+                id: item.id ?? item.username,
+            };
         }
         return item;
     },
@@ -54,10 +88,17 @@ const dataProvider = {
     // --- Методы CRUD ---
 
     getList: async (resource, params) => {
+        const token = getToken();
         const url = dataProvider.getApiUrl(resource, 'list');
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
 
         if (!response.ok) {
+            //notify(`Ошибка загрузки данных для ${resource}`, { type: 'error' });
             throw new Error(`Ошибка загрузки данных для ${resource}`);
         }
 
@@ -74,8 +115,15 @@ const dataProvider = {
     },
 
     getOne: async (resource, params) => {
+        const token = getToken();
         const url = dataProvider.getApiUrl(resource, 'one', params.id);
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`Ошибка загрузки данных для ${resource}`);
@@ -89,6 +137,7 @@ const dataProvider = {
     },
 
     create: async (resource, params) => {
+        const token = getToken();
         const url = dataProvider.getApiUrl(resource, 'create');
 
         let bodyData = {};
@@ -106,6 +155,13 @@ const dataProvider = {
                 tank_capacity: params.data.tank_capacity,
                 latency: params.data.latency,
             };
+        } else if (resource === 'users') {
+            bodyData = {
+                username: params.data.username,
+                password: params.data.password,
+                full_name: params.data.full_name,
+                is_admin: params.data.is_admin,
+            };
         } else {
             throw new Error(`Неподдерживаемый ресурс для создания: ${resource}`);
         }
@@ -114,9 +170,16 @@ const dataProvider = {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify(bodyData),
         });
+
+        if (response.status === 204) {
+            return {
+                data: dataProvider.transformData(resource, params.data),
+            };
+        }
 
         if (!response.ok) {
             throw new Error(`Ошибка создания ${resource}`);
@@ -130,6 +193,7 @@ const dataProvider = {
     },
 
     update: async (resource, params) => {
+        const token = getToken();
         const url = dataProvider.getApiUrl(resource, 'update');
 
         let bodyData = {};
@@ -147,6 +211,18 @@ const dataProvider = {
                 tank_capacity: params.data.tank_capacity,
                 latency: params.data.latency,
             };
+        } else if (resource === 'users') {
+            bodyData = {
+                username: params.data.username,
+                password: params.data.password,
+                full_name: params.data.full_name,
+                is_admin: params.data.is_admin,
+            };
+        } else if (resource === 'profile') {
+            bodyData = {
+                username: params.data.username,
+                full_name: params.data.full_name,
+            };
         } else {
             throw new Error(`Неподдерживаемый ресурс для обновления: ${resource}`);
         }
@@ -155,9 +231,16 @@ const dataProvider = {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify(bodyData),
-        });
+        });        
+
+        if (response.status === 204) {
+            return {
+                data: dataProvider.transformData(resource, params.data),
+            };
+        }
 
         if (!response.ok) {
             throw new Error(`Ошибка обновления ${resource}`);
@@ -171,9 +254,13 @@ const dataProvider = {
     },
 
     delete: async (resource, params) => {
+        const token = getToken();
         const url = dataProvider.getApiUrl(resource, 'delete', params.id);
         const response = await fetch(url, {
             method: "DELETE",
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
         });
 
         if (!response.ok) {

@@ -13,7 +13,11 @@ func (s *Service) RegisterUser(user models.User) (int, error) {
 		return http.StatusBadRequest, ErrValidateStruct
 	}
 
-	newPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	if user.Password == nil {
+		user.Password = &s.cfg.Auth.DefaultPassword
+	}
+
+	newPass, err := bcrypt.GenerateFromPassword([]byte(*user.Password), 10)
 	if err != nil {
 		return http.StatusInternalServerError, ErrInvalidGeneratePassHash
 	}
@@ -22,7 +26,7 @@ func (s *Service) RegisterUser(user models.User) (int, error) {
 
 	newUser := models.User{
 		Username: user.Username,
-		Password: tmp,
+		Password: &tmp,
 		FullName: user.FullName,
 		IsAdmin:  user.IsAdmin,
 	}
@@ -52,7 +56,7 @@ func (s *Service) LoginUser(user models.User) (*models.TokenResponse, int, error
 		return nil, http.StatusInternalServerError, ErrInvalidGetDataFromDB
 	}
 
-	if bcrypt.CompareHashAndPassword([]byte(checkedUser.Password), []byte(user.Password)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(*checkedUser.Password), []byte(*user.Password)) != nil {
 		return nil, http.StatusUnauthorized, ErrInvalidUsernameOrPassword
 	}
 
@@ -77,143 +81,71 @@ func (s *Service) LoginUser(user models.User) (*models.TokenResponse, int, error
 	}, http.StatusOK, nil
 }
 
-// func (s *Service) CheckUserByUuid(uuid string) (*models.User, int, error) {
-// 	user, err := s.repo.UsrRepo.CheckUserByUuid(uuid)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, http.StatusNotFound, ErrUserNotFound
-// 		}
+func (s *Service) GetUserByUsername(username string) (*models.User, error) {
+	user, err := s.repo.UsrRepo.CheckUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
 
-// 		return nil, http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
+	return &user, nil
+}
 
-// 	return &user, http.StatusOK, nil
-// }
+func (s *Service) CheckAllUsers() ([]models.User, error) {
+	allUsers, err := s.repo.UsrRepo.CheckAllUsers()
+	if err != nil {
+		return nil, err
+	}
 
-// func (s *Service) CheckRolesById(uuid string) (string, int, error) {
-// 	role, err := s.repo.UsrRepo.CheckRolesById(uuid)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return "", http.StatusNotFound, ErrUserNotFound
-// 		}
+	return allUsers, nil
+}
 
-// 		return "", http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
+func (s *Service) Update(user models.User) (bool, error) {
+	if err := s.validate.Struct(user); err != nil {
+		return false, ErrValidateStruct
+	}
 
-// 	return role, http.StatusOK, nil
-// }
+	result, err := s.repo.UsrRepo.Update(user)
+	if err != nil {
+		return false, err
+	}
 
-// func (s *Service) CheckAllUsers() ([]models.User, int, error) {
-// 	allUsers, err := s.repo.UsrRepo.CheckAllUsers()
-// 	if err != nil {
-// 		return nil, http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
+	return result, nil
+}
 
-// 	return allUsers, http.StatusOK, nil
-// }
+func (s *Service) ChangePassword(user models.UpdatePassword) (bool, error) {
+	if err := s.validate.Struct(user); err != nil {
+		return false, err
+	}
 
-// func (s *Service) UpdateRole(updateRole models.UpdateRole) (models.UpdateRole, int, error) {
-// 	if err := s.validate.Struct(updateRole); err != nil {
-// 		return models.UpdateRole{}, http.StatusBadRequest, ErrValidateStruct
-// 	}
+	checkedUser, err := s.repo.UsrRepo.CheckUserByUsernameWithPwd(user.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, err
+		}
+		return false, err
+	}
 
-// 	result, err := s.repo.UsrRepo.UpdateRole(updateRole)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return models.UpdateRole{}, http.StatusNotFound, ErrUserNotFound
-// 		}
-// 		return models.UpdateRole{}, http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
+	if user.OldPassword == nil && user.NewPassword == nil {
+		user.NewPassword = &s.cfg.Auth.DefaultPassword
+	} else {
+		if bcrypt.CompareHashAndPassword([]byte(*checkedUser.Password), []byte(*user.OldPassword)) != nil {
+			return false, ErrInvalidUsernameOrPassword
+		}
+	}
 
-// 	return result, http.StatusOK, nil
-// }
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(*user.NewPassword), 10)
+	if err != nil {
+		return false, err
+	}
 
-// func (s *Service) ChangePassword(updatePassword models.UpdatePassword) (int, error) {
-// 	if err := s.validate.Struct(updatePassword); err != nil {
-// 		return http.StatusBadRequest, ErrValidateStruct
-// 	}
+	hashStr := string(passwordHash)
+	user.NewPassword = &hashStr
 
-// 	user, err := s.repo.UsrRepo.CheckUserByUuid(updatePassword.UUID)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return http.StatusNotFound, ErrUserNotFound
-// 		}
-// 		return http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
+	result, err := s.repo.UsrRepo.UpdatePassword(user)
 
-// 	if bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(*updatePassword.OldPassword)) != nil {
-// 		return http.StatusUnauthorized, ErrInvalidUsernameOrPassword
-// 	}
+	return result, err
+}
 
-// 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(updatePassword.NewPassword), 10)
-// 	if err != nil {
-// 		return http.StatusInternalServerError, ErrInvalidGeneratePassHash
-// 	}
-
-// 	updatePassword.NewPassword = string(passwordHash)
-
-// 	result, err := s.repo.UsrRepo.UpdatePassword(updatePassword)
-// 	if err != nil {
-// 		return http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
-
-// 	if !result {
-// 		return http.StatusInternalServerError, ErrInvalidUpdateData
-// 	}
-
-// 	return http.StatusOK, nil
-// }
-
-// func (s *Service) RemoveUser(removeUser models.RemoveUser) (int, error) {
-// 	if err := s.validate.Struct(removeUser); err != nil {
-// 		return http.StatusBadRequest, ErrValidateStruct
-// 	}
-
-// 	for _, uuid := range removeUser.UUID {
-// 		result, err := s.repo.UsrRepo.RemoveUser(uuid)
-// 		if err != nil {
-// 			return http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 		}
-
-// 		if !result {
-// 			return http.StatusInternalServerError, ErrInvalidUpdateData
-// 		}
-// 	}
-
-// 	return http.StatusOK, nil
-// }
-
-// func (s *Service) ResetPassword(uuid string) (int, error) {
-// 	user, err := s.repo.UsrRepo.CheckUserByUuid(uuid)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return http.StatusNotFound, ErrUserNotFound
-// 		}
-// 		return http.StatusInternalServerError, ErrInvalidGetDataFromDB
-// 	}
-
-// 	if user == (models.User{}) {
-// 		return http.StatusNotFound, ErrUserNotFound
-// 	}
-
-// 	newPass, err := bcrypt.GenerateFromPassword([]byte(s.cfg.Auth.DefaultPassword), 10)
-// 	if err != nil {
-// 		return http.StatusInternalServerError, ErrInvalidGeneratePassHash
-// 	}
-
-// 	update := models.UpdatePassword{
-// 		UUID:        *user.UUID,
-// 		NewPassword: string(newPass),
-// 	}
-
-// 	ok, err := s.repo.UsrRepo.UpdatePassword(update)
-// 	if err != nil {
-// 		return http.StatusInternalServerError, ErrInvalidUpdateData
-// 	}
-
-// 	if !ok {
-// 		return http.StatusInternalServerError, ErrInvalidUpdateData
-// 	}
-
-// 	return http.StatusOK, nil
-// }
+func (s *Service) RemoveUser(username string) (bool, error) {
+	return s.repo.UsrRepo.Delete(username)
+}
