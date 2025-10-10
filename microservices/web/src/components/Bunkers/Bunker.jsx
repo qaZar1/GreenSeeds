@@ -3,6 +3,7 @@ import { List, Datagrid, TextField, EditButton, DeleteButton, SimpleList } from 
 import { useMediaQuery } from "@mui/material";
 import { EmptyBunker } from "./EmptyBunker";
 import BunkerListActions from "./Action";
+import BunkerListContent from "./Controller";
 
 const BunkerList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
@@ -16,24 +17,7 @@ const BunkerList = ({ ...props }) => {
             sx={{ padding: 2 }}
             actions={<BunkerListActions />}
         >
-            {isSmall ? (
-                <SimpleList
-                    primaryText={record => `Бункер: ${record.bunker}`}
-                    secondaryText={record => `Расстояние: ${record.distance}`}
-                    tertiaryText={record => (
-                        <>
-                            <EditButton record={record} />
-                        </>
-                    )}
-                    rowClick={false}
-                />
-            ) : (
-                <Datagrid rowClick="edit">
-                    <TextField source="bunker" label="Бункер" />
-                    <TextField source="distance" label="Расстояние" />
-                    <EditButton />
-                </Datagrid>
-            )}
+            <BunkerListContent isSmall={isSmall} />
         </List>
     );
 };

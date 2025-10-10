@@ -3,9 +3,11 @@ import { List, Datagrid, TextField, EditButton, DeleteButton, SimpleList } from 
 import { useMediaQuery } from "@mui/material";
 import { EmptySeed } from "./EmptySeed";
 import SeedListActions from "./Action";
+import SeedListContent from "./Controller";
 
 const SeedList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+    const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
 
     return (
         <List
@@ -16,35 +18,7 @@ const SeedList = ({ ...props }) => {
             sx={{ padding: 2 }}
             actions={<SeedListActions />}
         >
-            {isSmall ? (
-                <SimpleList
-                    primaryText={record => `Семена: ${record.seed}`}
-                    secondaryText={record => (
-                        <>
-                            <span style={{ display: 'block' }}>Мин плотность: {record.min_density}</span>
-                            <span style={{ display: 'block' }}>Макс плотность: {record.max_density}</span>
-                            <span style={{ display: 'block' }}>Ёмкость бункера: {record.tank_capacity}</span>
-                            <span style={{ display: 'block' }}>Задержка: {record.latency}</span>
-                        </>
-                    )}
-                    
-                    tertiaryText={record => (
-                        <>
-                            <EditButton record={record} />
-                        </>
-                    )}
-                    rowClick={false}
-                />
-            ) : (
-                <Datagrid rowClick="edit">
-                    <TextField source="seed" label="Семена" />
-                    <TextField source="min_density" label="Минимальная плотность" />
-                    <TextField source="max_density" label="Максимальная плотность" />
-                    <TextField source="tank_capacity" label="Емкость бункера" />
-                    <TextField source="latency" label="Задержка" />
-                    <EditButton />
-                </Datagrid>
-            )}
+            <SeedListContent isSmall={isSmall} isMedium={isMedium} />
         </List>
     );
 };

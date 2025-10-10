@@ -1,6 +1,6 @@
 import React from "react";
 import './App.css'
-import { Admin, Resource } from 'react-admin'
+import { Admin, AppBar, Resource, CustomRoutes } from 'react-admin'
 import dataProvider from './dataProvider'
 import { authProvider } from './authProvider'
 import BunkerList from './components/Bunkers/Bunker'
@@ -12,14 +12,16 @@ import SeedEdit from './components/Seeds/SeedEdit'
 import CreateSeed from './components/Seeds/SeedCreate'
 import GrassIcon from '@mui/icons-material/Grass';
 import UserList from './components/Users/User'
-import UserEdit from './components/Users/UserEdit'
 import UserCreate from './components/Users/UserCreate'
+import PersonIcon from '@mui/icons-material/Person';
+import CustomLayout from './components/AppBar/AppBar';
+import { Route } from "react-router-dom";
+import ProfilePage from './components/Profile/Profile';
 
 function App() {
-
   return (
     <>
-      <Admin dataProvider={dataProvider} authProvider={authProvider}>
+      <Admin dataProvider={dataProvider} authProvider={authProvider} layout={CustomLayout}>
         <Resource
           name="bunkers"
           list={BunkerList}
@@ -39,11 +41,13 @@ function App() {
         <Resource
           name="users"
           list={UserList}
-          edit={UserEdit}
           create={UserCreate}
-          icon={GrassIcon}
+          icon={PersonIcon}
           options={{ label: "Пользователи" }} 
         />
+        <CustomRoutes>
+          <Route path="/profile" element={<ProfilePage />} />
+        </CustomRoutes>
       </Admin>
     </>
   )
