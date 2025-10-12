@@ -17,6 +17,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import CustomLayout from './components/AppBar/AppBar';
 import { Route } from "react-router-dom";
 import ProfilePage from './components/Profile/Profile';
+import PlacementList from './components/Placements/Placements';
+import PlacementEdit from './components/Placements/PlacementEdit';
+import PlacementCreate from './components/Placements/PlacementCreate';
+import LinkIcon from '@mui/icons-material/Link';
 
 function App() {
   return (
@@ -44,6 +48,14 @@ function App() {
           create={UserCreate}
           icon={PersonIcon}
           options={{ label: "Пользователи" }} 
+        />
+        <Resource
+          name="placements"
+          list={PlacementList}
+          create={PlacementCreate}
+          edit={PlacementEdit}
+          icon={LinkIcon}
+          options={{ label: "Связи бункер-семена" }} 
         />
         <CustomRoutes>
           <Route path="/profile" element={<ProfilePage />} />

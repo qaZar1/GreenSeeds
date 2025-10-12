@@ -54,6 +54,14 @@ const dataProvider = {
                 case 'one': return `/api/users/get${idPart}`;
                 case 'update': return `/api/users/update`;
             }
+        } else if (resource === 'placements'){
+            switch (action) {
+                case 'list': return `/api/placement/get`;
+                case 'one': return `/api/placement/get${idPart}`;
+                case 'create': return `/api/placement/add`;
+                case 'update': return `/api/placement/update`;
+                case 'delete': return `/api/placement/delete${idPart}`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
@@ -80,6 +88,11 @@ const dataProvider = {
             return {
                 ...item,
                 id: item.id ?? item.username,
+            };
+        } else if (resource === 'placements') {
+            return {
+                ...item,
+                id: item.id ?? item.bunker,
             };
         }
         return item;
@@ -112,6 +125,31 @@ const dataProvider = {
             data: dataWithId,
             total: dataWithId.length,
         };
+    },
+
+    getMany: async (resource, params) => {
+        const token = getToken();
+        const url = dataProvider.getApiUrl(resource, 'list'); // Используем общий эндпоинт для получения списка
+
+        const response = await fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка загрузки данных для ${resource}`);
+        }
+
+        const data = await response.json();
+
+        // фильтруем только нужные ID
+        const filtered = data
+            .map(item => dataProvider.transformData(resource, item))
+            .filter(item => params.ids.includes(item.id));
+
+        return { data: filtered };
     },
 
     getOne: async (resource, params) => {
@@ -161,6 +199,11 @@ const dataProvider = {
                 password: params.data.password,
                 full_name: params.data.full_name,
                 is_admin: params.data.is_admin,
+            };
+        } else if (resource === 'placements') {
+            bodyData = {
+                bunker: params.data.bunker,
+                seed: params.data.seed,
             };
         } else {
             throw new Error(`Неподдерживаемый ресурс для создания: ${resource}`);
@@ -222,6 +265,11 @@ const dataProvider = {
             bodyData = {
                 username: params.data.username,
                 full_name: params.data.full_name,
+            };
+        } else if (resource === 'placements') {
+            bodyData = {
+                bunker: params.data.bunker,
+                seed: params.data.seed,
             };
         } else {
             throw new Error(`Неподдерживаемый ресурс для обновления: ${resource}`);
