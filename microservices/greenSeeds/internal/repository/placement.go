@@ -6,10 +6,11 @@ import (
 )
 
 type IPlacementRepository interface {
-	AddPlacement(placement *models.Placement) (bool, error)
+	AddPlacement(placement models.Placement) (bool, error)
 	GetPlacement() ([]models.Placement, error)
-	UpdatePlacement(placement *models.Placement) (bool, error)
+	UpdatePlacement(placement models.Placement) (bool, error)
 	DeletePlacement(bunker int) (bool, error)
+	GetPlacementByBunker(bunker int) (models.Placement, error)
 }
 
 type placementRepository struct {
@@ -22,7 +23,7 @@ func NewPlacementRepository(db *sqlx.DB) *placementRepository {
 	}
 }
 
-func (pl *placementRepository) AddPlacement(placement *models.Placement) (bool, error) {
+func (pl *placementRepository) AddPlacement(placement models.Placement) (bool, error) {
 	const query = `
 INSERT INTO green_seeds.placement (
 	bunker,
@@ -59,7 +60,7 @@ FROM green_seeds.placement`
 	return placement, nil
 }
 
-func (pl *placementRepository) UpdatePlacement(placement *models.Placement) (bool, error) {
+func (pl *placementRepository) UpdatePlacement(placement models.Placement) (bool, error) {
 	const query = `
 UPDATE green_seeds.placement
 SET	seed = :seed
@@ -94,4 +95,18 @@ WHERE bunker = $1`
 	}
 
 	return rowsAffected == 1, nil
+}
+
+func (pl *placementRepository) GetPlacementByBunker(bunker int) (models.Placement, error) {
+	const query = `
+SELECT bunker, seed
+FROM green_seeds.placement
+WHERE bunker = $1`
+
+	var placement models.Placement
+	if err := pl.db.Get(&placement, query, bunker); err != nil {
+		return models.Placement{}, err
+	}
+
+	return placement, nil
 }

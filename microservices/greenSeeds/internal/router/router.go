@@ -78,6 +78,14 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 			r.Delete("/delete/{username}", transport.DeleteApiRemoveUser)
 		})
 
+		r.Route("/placement", func(r chi.Router) {
+			r.Post("/add", transport.PostApiPlacementAdd)
+			r.Get("/get", transport.GetApiPlacementGet)
+			r.Get("/get/{bunker}", transport.GetApiPlacementGetBunker)
+			r.Put("/update", transport.PutApiPlacementUpdate)
+			r.Delete("/delete/{bunker}", transport.DeleteApiPlacementDelete)
+		})
+
 		// 	r.Get("/checkByUuid/{uuid}", transport.GetApiCheckUserByUuidUuid)
 		// 	r.Get("/checkRoles/{uuid}", transport.GetApiCheckRolesUuid)
 		// 	r.Get("/checkAll", transport.GetApiCheckAllUsers)

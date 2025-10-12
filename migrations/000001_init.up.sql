@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS green_seeds.seeds (
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.placement (
-    bunker INT,
-    seed VARCHAR(50),
+    bunker INT UNIQUE,
+    seed VARCHAR(50) UNIQUE,
     FOREIGN KEY (bunker) REFERENCES green_seeds.bunkers(bunker),
     FOREIGN KEY (seed) REFERENCES green_seeds.seeds(seed)
 );
