@@ -62,6 +62,14 @@ const dataProvider = {
                 case 'update': return `/api/placement/update`;
                 case 'delete': return `/api/placement/delete${idPart}`;
             }
+        } else if (resource === 'receipts') {
+            switch (action) {
+                case 'list': return `/api/receipts/get`;
+                case 'one': return `/api/receipts/get${idPart}`;
+                case 'create': return `/api/receipts/add`;
+                case 'update': return `/api/receipts/update`;
+                case 'delete': return `/api/receipts/delete${idPart}`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
@@ -93,6 +101,11 @@ const dataProvider = {
             return {
                 ...item,
                 id: item.id ?? item.bunker,
+            };
+        } else if (resource === 'receipts') {
+            return {
+                ...item,
+                id: item.id ?? item.receipt,
             };
         }
         return item;
@@ -205,6 +218,13 @@ const dataProvider = {
                 bunker: params.data.bunker,
                 seed: params.data.seed,
             };
+        } else if (resource === 'receipts') {
+            bodyData = {
+                receipt: params.data.receipt,
+                seed: params.data.seed,
+                gcode: params.data.gcode,
+                description: params.data.description,
+            };
         } else {
             throw new Error(`Неподдерживаемый ресурс для создания: ${resource}`);
         }
@@ -268,8 +288,15 @@ const dataProvider = {
             };
         } else if (resource === 'placements') {
             bodyData = {
-                bunker: params.data.bunker,
+                bunker: params.data.id,
                 seed: params.data.seed,
+            };
+        } else if (resource === 'receipts') {
+            bodyData = {
+                receipt: params.data.id,
+                seed: params.data.seed,
+                gcode: params.data.gcode,
+                description: params.data.description,
             };
         } else {
             throw new Error(`Неподдерживаемый ресурс для обновления: ${resource}`);

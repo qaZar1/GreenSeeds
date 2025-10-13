@@ -6,9 +6,9 @@ import (
 )
 
 type IPlacementRepository interface {
-	AddPlacement(placement models.Placement) (bool, error)
+	AddPlacement(placement models.Placement) (models.Placement, error)
 	GetPlacement() ([]models.Placement, error)
-	UpdatePlacement(placement models.Placement) (bool, error)
+	UpdatePlacement(placement models.Placement) (models.Placement, error)
 	DeletePlacement(bunker int) (bool, error)
 	GetPlacementByBunker(bunker int) (models.Placement, error)
 }
@@ -23,7 +23,7 @@ func NewPlacementRepository(db *sqlx.DB) *placementRepository {
 	}
 }
 
-func (pl *placementRepository) AddPlacement(placement models.Placement) (bool, error) {
+func (pl *placementRepository) AddPlacement(placement models.Placement) (models.Placement, error) {
 	const query = `
 INSERT INTO green_seeds.placement (
 	bunker,
@@ -32,25 +32,32 @@ INSERT INTO green_seeds.placement (
 VALUES (
 	:bunker,
 	:seed
-)`
+)
+RETURNING bunker, seed`
 
-	result, err := pl.db.NamedExec(query, placement)
+	rows, err := pl.db.NamedQuery(query, placement)
 	if err != nil {
-		return false, err
+		return models.Placement{}, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
+	defer rows.Close()
+
+	var inserted models.Placement
+	if rows.Next() {
+		err = rows.StructScan(&inserted)
+		if err != nil {
+			return models.Placement{}, err
+		}
 	}
 
-	return rowsAffected == 1, nil
+	return inserted, nil
 }
 
 func (pl *placementRepository) GetPlacement() ([]models.Placement, error) {
 	const query = `
 SELECT bunker, seed
-FROM green_seeds.placement`
+FROM green_seeds.placement
+ORDER BY bunker ASC`
 
 	var placement []models.Placement
 	if err := pl.db.Select(&placement, query); err != nil {
@@ -60,23 +67,29 @@ FROM green_seeds.placement`
 	return placement, nil
 }
 
-func (pl *placementRepository) UpdatePlacement(placement models.Placement) (bool, error) {
+func (pl *placementRepository) UpdatePlacement(placement models.Placement) (models.Placement, error) {
 	const query = `
 UPDATE green_seeds.placement
 SET	seed = :seed
-WHERE bunker = :bunker`
+WHERE bunker = :bunker
+RETURNING bunker, seed`
 
-	result, err := pl.db.NamedExec(query, placement)
+	rows, err := pl.db.NamedQuery(query, placement)
 	if err != nil {
-		return false, err
+		return models.Placement{}, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
+	defer rows.Close()
+
+	var updated models.Placement
+	if rows.Next() {
+		err = rows.StructScan(&updated)
+		if err != nil {
+			return models.Placement{}, err
+		}
 	}
 
-	return rowsAffected == 1, nil
+	return updated, nil
 }
 
 func (pl *placementRepository) DeletePlacement(bunker int) (bool, error) {

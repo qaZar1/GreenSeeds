@@ -13,172 +13,172 @@ import (
 
 // Set godoc
 //
-// @Router /api/placement/add [post]
+// @Router /api/receipts/add [post]
 // @Summary Добавление информации, в каком бункере какие семена
 // @Description При обращении, добавляет информацию о семенах в БД
 //
-// @Tags Placements
+// @Tags Receipts
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param 	request	body	placement	true	"Тело запроса"
+// @Param 	request	body	receipts	true	"Тело запроса"
 //
-// @Success 200 {object} placement "Запрос выполнен успешно"
+// @Success 200 {object} receipts "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) PostApiPlacementAdd(w http.ResponseWriter, r *http.Request) {
+func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
 		return
 	}
 
-	var placement models.Placement
-	if err := jsoniter.Unmarshal(body, &placement); err != nil {
+	var receipt models.Receipts
+	if err := jsoniter.Unmarshal(body, &receipt); err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
 		return
 	}
 
-	inserted, err := transport.service.AddPlacement(placement)
+	addedReceipt, err := transport.service.AddReceipts(receipt)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %w", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add receipts: %w", err))
 		return
 	}
 
-	if inserted == (models.Placement{}) {
+	if addedReceipt == (models.Receipts{}) {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %w", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, inserted)
+	utils.WriteJSON(w, http.StatusOK, addedReceipt)
 }
 
 // Set godoc
 //
-// @Router /api/placement/get [get]
+// @Router /api/receipts/get [get]
 // @Summary Получение списка бункеров и семян
 // @Description При обращении, возвращает список бункеров и семян
 //
-// @Tags Placements
+// @Tags Receipts
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Success 200 {object} []placement "Запрос выполнен успешно"
+// @Success 200 {object} []receipt "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) GetApiPlacementGet(w http.ResponseWriter, r *http.Request) {
-	placements, err := transport.service.GetPlacements()
+func (transport *Transport) GetApiReceiptsGet(w http.ResponseWriter, r *http.Request) {
+	receipts, err := transport.service.GetReceipts()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get placements: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipts: %w", err))
 		return
 	}
 
-	if placements == nil {
-		utils.WriteString(w, http.StatusNotFound, fmt.Sprintf("Placements not found"))
+	if receipts == nil {
+		utils.WriteString(w, http.StatusNotFound, fmt.Sprintf("Receipts not found"))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, placements)
+	utils.WriteJSON(w, http.StatusOK, receipts)
 }
 
 // Set godoc
 //
-// @Router /api/placement/get/{bunker} [get]
+// @Router /api/receipts/get/{receipt} [get]
 // @Summary Получение бункера и семян по ID
 // @Description При обращении, возвращает бункер и семена по ID
 //
-// @Tags Placements
+// @Tags Receipts
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Success 200 {object} placement "Запрос выполнен успешно"
+// @Success 200 {object} receipt "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) GetApiPlacementGetBunker(w http.ResponseWriter, r *http.Request) {
-	bunkerId := chi.URLParam(r, "bunker")
+func (transport *Transport) GetApiReceiptsGetReceipt(w http.ResponseWriter, r *http.Request) {
+	receiptName := chi.URLParam(r, "receipt")
 
-	placement, err := transport.service.GetPlacementByBunker(bunkerId)
+	receipt, err := transport.service.GetReceiptsByReceipt(receiptName)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get placement by bunker: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt by receipt: %w", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, placement)
+	utils.WriteJSON(w, http.StatusOK, receipt)
 }
 
 // Set godoc
 //
-// @Router /api/placement/update [put]
+// @Router /api/receipts/update [put]
 // @Summary Обновление данных о семенах
 // @Description При обращении, обновляет данные о семенах
 //
-// @Tags Placements
+// @Tags Receipts
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param request body placement true "Тело запроса"
+// @Param request body receipt true "Тело запроса"
 //
-// @Success 200 {object} placement "Запрос выполнен успешно"
+// @Success 200 {object} receipt "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) PutApiPlacementUpdate(w http.ResponseWriter, r *http.Request) {
+func (transport *Transport) PutApiReceiptsUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
 		return
 	}
 
-	var placement models.Placement
-	if err := jsoniter.Unmarshal(data, &placement); err != nil {
+	var receipt models.Receipts
+	if err := jsoniter.Unmarshal(data, &receipt); err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
 		return
 	}
 
-	updated, err := transport.service.UpdatePlacement(placement)
+	updatedReceipt, err := transport.service.UpdateReceipts(receipt)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %w", err))
 		return
 	}
 
-	if updated == (models.Placement{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %w", err))
+	if updatedReceipt == (models.Receipts{}) {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %w", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, updated)
+	utils.WriteJSON(w, http.StatusOK, updatedReceipt)
 }
 
 // Set godoc
 //
-// @Router /api/placement/delete/{bunker} [delete]
-// @Summary Удаление бункера
-// @Description При обращении, удаляет бункер
+// @Router /api/receipts/delete/{receipt} [delete]
+// @Summary Удаление рецепта
+// @Description При обращении, удаляет рецепт
 //
-// @Tags Placements
+// @Tags Receipts
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param bunker path int true "ID бункера"
+// @Param receipt path string true "Название рецепта"
 //
 // @Success 204 {object} nil "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) DeleteApiPlacementDelete(w http.ResponseWriter, r *http.Request) {
-	bunkerId := chi.URLParam(r, "bunker")
+func (transport *Transport) DeleteApiReceiptsDelete(w http.ResponseWriter, r *http.Request) {
+	receiptName := chi.URLParam(r, "receipt")
 
-	ok, err := transport.service.DeletePlacement(bunkerId)
+	ok, err := transport.service.DeleteReceipts(receiptName)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if !ok {
-		utils.WriteString(w, http.StatusInternalServerError, "Invalid delete placement")
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid delete receipt")
 		return
 	}
 

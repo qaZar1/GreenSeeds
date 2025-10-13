@@ -21,6 +21,10 @@ import PlacementList from './components/Placements/Placements';
 import PlacementEdit from './components/Placements/PlacementEdit';
 import PlacementCreate from './components/Placements/PlacementCreate';
 import LinkIcon from '@mui/icons-material/Link';
+import ReceiptList from './components/Receipts/Receipts';
+import ReceiptEdit from './components/Receipts/ReceiptEdit';
+import ReceiptCreate from './components/Receipts/ReceiptCreate';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 
 function App() {
   return (
@@ -56,6 +60,14 @@ function App() {
           edit={PlacementEdit}
           icon={LinkIcon}
           options={{ label: "Связи бункер-семена" }} 
+        />
+        <Resource
+          name="receipts"
+          list={ReceiptList}
+          create={ReceiptCreate}
+          edit={ReceiptEdit}
+          icon={ReceiptIcon}
+          options={{ label: "Рецепты" }} 
         />
         <CustomRoutes>
           <Route path="/profile" element={<ProfilePage />} />

@@ -6,10 +6,10 @@ import (
 )
 
 type ISeedsRepository interface {
-	AddSeeds(seeds models.Seeds) (bool, error)
+	AddSeeds(seeds models.Seeds) (models.Seeds, error)
 	GetSeeds() ([]models.Seeds, error)
 	GetSeedsBySeed(seedName string) (models.Seeds, error)
-	UpdateSeeds(seeds models.Seeds) (bool, error)
+	UpdateSeeds(seeds models.Seeds) (models.Seeds, error)
 	DeleteSeeds(seedName string) (bool, error)
 }
 
@@ -23,7 +23,7 @@ func NewSeedsRepository(db *sqlx.DB) *seedsRepository {
 	}
 }
 
-func (se *seedsRepository) AddSeeds(seeds models.Seeds) (bool, error) {
+func (se *seedsRepository) AddSeeds(seeds models.Seeds) (models.Seeds, error) {
 	const query = `
 INSERT INTO green_seeds.seeds (
 	seed,
@@ -38,19 +38,25 @@ VALUES (
 	:max_density,
 	:tank_capacity,
 	:latency
-)`
+)
+RETURNING seed, min_density, max_density, tank_capacity, latency`
 
-	result, err := se.db.NamedExec(query, seeds)
+	rows, err := se.db.NamedQuery(query, seeds)
 	if err != nil {
-		return false, err
+		return models.Seeds{}, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
+	defer rows.Close()
+
+	var inserted models.Seeds
+	if rows.Next() {
+		err = rows.StructScan(&inserted)
+		if err != nil {
+			return models.Seeds{}, err
+		}
 	}
 
-	return rowsAffected == 1, nil
+	return inserted, nil
 }
 
 func (se *seedsRepository) GetSeeds() ([]models.Seeds, error) {
@@ -80,26 +86,32 @@ WHERE seed = $1`
 	return seed, nil
 }
 
-func (se *seedsRepository) UpdateSeeds(seeds models.Seeds) (bool, error) {
+func (se *seedsRepository) UpdateSeeds(seeds models.Seeds) (models.Seeds, error) {
 	const query = `
 UPDATE green_seeds.seeds
 SET	min_density = :min_density,
 	max_density = :max_density,
 	tank_capacity = :tank_capacity,
 	latency = :latency
-WHERE seed = :seed`
+WHERE seed = :seed
+RETURNING seed, min_density, max_density, tank_capacity, latency`
 
-	result, err := se.db.NamedExec(query, seeds)
+	rows, err := se.db.NamedQuery(query, seeds)
 	if err != nil {
-		return false, err
+		return models.Seeds{}, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
+	defer rows.Close()
+
+	var updated models.Seeds
+	if rows.Next() {
+		err = rows.StructScan(&updated)
+		if err != nil {
+			return models.Seeds{}, err
+		}
 	}
 
-	return rowsAffected == 1, nil
+	return updated, nil
 }
 
 func (se *seedsRepository) DeleteSeeds(seedName string) (bool, error) {

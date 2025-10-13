@@ -6,10 +6,10 @@ import (
 )
 
 type IBunkersRepository interface {
-	AddBunkers(bunkers models.Bunkers) (bool, error)
+	AddBunkers(bunkers models.Bunkers) (models.Bunkers, error)
 	GetBunkers() ([]models.Bunkers, error)
 	GetBunkersById(id int) (models.Bunkers, error)
-	UpdateBunkers(bunkers models.Bunkers) (bool, error)
+	UpdateBunkers(bunkers models.Bunkers) (models.Bunkers, error)
 	DeleteBunkers(id int) (bool, error)
 }
 
@@ -23,7 +23,7 @@ func NewBunkersRepository(db *sqlx.DB) *bunkersRepository {
 	}
 }
 
-func (bunk *bunkersRepository) AddBunkers(bunkers models.Bunkers) (bool, error) {
+func (bunk *bunkersRepository) AddBunkers(bunkers models.Bunkers) (models.Bunkers, error) {
 	const query = `
 INSERT INTO green_seeds.bunkers (
 	bunker,
@@ -32,19 +32,25 @@ INSERT INTO green_seeds.bunkers (
 VALUES (
 	:bunker,
 	:distance
-)`
+)
+RETURNING bunker, distance`
 
-	result, err := bunk.db.NamedExec(query, bunkers)
+	rows, err := bunk.db.NamedQuery(query, bunkers)
 	if err != nil {
-		return false, err
+		return models.Bunkers{}, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
+	defer rows.Close()
+
+	var inserted models.Bunkers
+	if rows.Next() {
+		err = rows.StructScan(&inserted)
+		if err != nil {
+			return models.Bunkers{}, err
+		}
 	}
 
-	return rowsAffected == 1, nil
+	return inserted, nil
 }
 
 func (bunk *bunkersRepository) GetBunkers() ([]models.Bunkers, error) {
@@ -75,23 +81,29 @@ WHERE bunker = $1`
 	return bunker, nil
 }
 
-func (bunk *bunkersRepository) UpdateBunkers(bunkers models.Bunkers) (bool, error) {
+func (bunk *bunkersRepository) UpdateBunkers(bunkers models.Bunkers) (models.Bunkers, error) {
 	const query = `
 UPDATE green_seeds.bunkers
 SET distance = :distance
-WHERE bunker = :bunker`
+WHERE bunker = :bunker
+RETURNING bunker, distance`
 
-	result, err := bunk.db.NamedExec(query, bunkers)
+	rows, err := bunk.db.NamedQuery(query, bunkers)
 	if err != nil {
-		return false, err
+		return models.Bunkers{}, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
+	defer rows.Close()
+
+	var updated models.Bunkers
+	if rows.Next() {
+		err = rows.StructScan(&updated)
+		if err != nil {
+			return models.Bunkers{}, err
+		}
 	}
 
-	return rowsAffected == 1, nil
+	return updated, nil
 }
 
 func (bunk *bunkersRepository) DeleteBunkers(bunker int) (bool, error) {

@@ -6,9 +6,9 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-func (s *Service) AddBunker(bunker models.Bunkers) (bool, error) {
+func (s *Service) AddBunker(bunker models.Bunkers) (models.Bunkers, error) {
 	if err := s.validate.Struct(bunker); err != nil {
-		return false, err
+		return models.Bunkers{}, err
 	}
 
 	return s.repo.BunkRepo.AddBunkers(bunker)
@@ -27,9 +27,9 @@ func (s *Service) GetBunkersById(bunkerId string) (models.Bunkers, error) {
 	return s.repo.BunkRepo.GetBunkersById(bunkerIdInt)
 }
 
-func (s *Service) UpdateBunker(bunker models.Bunkers) (bool, error) {
+func (s *Service) UpdateBunker(bunker models.Bunkers) (models.Bunkers, error) {
 	if err := s.validate.Struct(bunker); err != nil {
-		return false, err
+		return models.Bunkers{}, err
 	}
 
 	return s.repo.BunkRepo.UpdateBunkers(bunker)
