@@ -6,9 +6,9 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-func (s *Service) AddPlacement(placement models.Placement) (bool, error) {
+func (s *Service) AddPlacement(placement models.Placement) (models.Placement, error) {
 	if err := s.validate.Struct(placement); err != nil {
-		return false, err
+		return models.Placement{}, err
 	}
 
 	return s.repo.PlcRepo.AddPlacement(placement)
@@ -27,9 +27,9 @@ func (s *Service) GetPlacementByBunker(bunkerId string) (models.Placement, error
 	return s.repo.PlcRepo.GetPlacementByBunker(bunkerIdInt)
 }
 
-func (s *Service) UpdatePlacement(placement models.Placement) (bool, error) {
+func (s *Service) UpdatePlacement(placement models.Placement) (models.Placement, error) {
 	if err := s.validate.Struct(placement); err != nil {
-		return false, err
+		return models.Placement{}, err
 	}
 
 	return s.repo.PlcRepo.UpdatePlacement(placement)

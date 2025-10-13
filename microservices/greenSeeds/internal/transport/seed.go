@@ -40,18 +40,18 @@ func (transport *Transport) PostApiSeedAdd(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	ok, err := transport.service.AddSeed(seed)
+	inserted, err := transport.service.AddSeed(seed)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add seed: %w", err))
 		return
 	}
 
-	if !ok {
+	if inserted == (models.Seeds{}) {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add seed: %w", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, seed)
+	utils.WriteJSON(w, http.StatusOK, inserted)
 }
 
 // Set godoc
@@ -136,18 +136,18 @@ func (transport *Transport) PutApiSeedUpdate(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	ok, err := transport.service.UpdateSeed(seed)
+	updated, err := transport.service.UpdateSeed(seed)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update seed: %w", err))
 		return
 	}
 
-	if !ok {
+	if updated == (models.Seeds{}) {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update seed: %w", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, seed)
+	utils.WriteJSON(w, http.StatusOK, updated)
 }
 
 // Set godoc

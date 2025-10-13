@@ -40,18 +40,18 @@ func (transport *Transport) PostApiBunkerAdd(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	ok, err := transport.service.AddBunker(bunker)
+	inserted, err := transport.service.AddBunker(bunker)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %w", err))
 		return
 	}
 
-	if !ok {
+	if inserted == (models.Bunkers{}) {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %w", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, bunker)
+	utils.WriteJSON(w, http.StatusOK, inserted)
 }
 
 // Set godoc
@@ -136,18 +136,18 @@ func (transport *Transport) PutApiBunkerUpdate(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	ok, err := transport.service.UpdateBunker(bunker)
+	updated, err := transport.service.UpdateBunker(bunker)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %w", err))
 		return
 	}
 
-	if !ok {
+	if updated == (models.Bunkers{}) {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %w", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, bunker)
+	utils.WriteJSON(w, http.StatusOK, updated)
 }
 
 // Set godoc

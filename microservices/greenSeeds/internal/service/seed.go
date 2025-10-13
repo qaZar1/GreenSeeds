@@ -4,9 +4,9 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-func (s *Service) AddSeed(seed models.Seeds) (bool, error) {
+func (s *Service) AddSeed(seed models.Seeds) (models.Seeds, error) {
 	if err := s.validate.Struct(seed); err != nil {
-		return false, err
+		return models.Seeds{}, err
 	}
 
 	return s.repo.SeedRepo.AddSeeds(seed)
@@ -20,9 +20,9 @@ func (s *Service) GetSeedById(seed string) (models.Seeds, error) {
 	return s.repo.SeedRepo.GetSeedsBySeed(seed)
 }
 
-func (s *Service) UpdateSeed(seed models.Seeds) (bool, error) {
+func (s *Service) UpdateSeed(seed models.Seeds) (models.Seeds, error) {
 	if err := s.validate.Struct(seed); err != nil {
-		return false, err
+		return models.Seeds{}, err
 	}
 
 	return s.repo.SeedRepo.UpdateSeeds(seed)
