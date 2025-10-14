@@ -48,7 +48,7 @@ func (s *Service) LoginUser(user models.User) (*models.TokenResponse, int, error
 		return nil, http.StatusBadRequest, ErrValidateStruct
 	}
 
-	checkedUser, err := s.repo.UsrRepo.CheckUserByUsername(user.Username)
+	checkedUser, err := s.repo.UsrRepo.CheckUserByUsernameWithPwd(user.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, ErrUserNotFound

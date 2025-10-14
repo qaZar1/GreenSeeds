@@ -21,8 +21,8 @@ const dataProvider = {
     /**
      * Возвращает полный URL для API-запроса
      */
-    getApiUrl: (resource, action, id = '') => {
-        const idPart = id ? `/${id}` : '';
+    getApiUrl: (resource, action, id) => {
+        const idPart = id !== undefined && id !== null ? `/${id}` : '';
 
         if (resource === 'bunkers') {
             switch (action) {
@@ -70,6 +70,14 @@ const dataProvider = {
                 case 'update': return `/api/receipts/update`;
                 case 'delete': return `/api/receipts/delete${idPart}`;
             }
+        } else if (resource === 'shifts') {
+            switch (action) {
+                case 'list': return `/api/shifts/get`;
+                case 'one': return `/api/shifts/get${idPart}`;
+                case 'create': return `/api/shifts/add`;
+                case 'update': return `/api/shifts/update`;
+                case 'delete': return `/api/shifts/delete${idPart}`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
@@ -107,6 +115,11 @@ const dataProvider = {
                 ...item,
                 id: item.id ?? item.receipt,
             };
+        } else if (resource === 'shifts') {
+            return {
+                ...item,
+                id: item.id ?? item.shift,
+            };
         }
         return item;
     },
@@ -122,23 +135,34 @@ const dataProvider = {
                 'Authorization': `Bearer ${token}`,
             },
         });
-
-        if (!response.ok) {
-            //notify(`Ошибка загрузки данных для ${resource}`, { type: 'error' });
+    
+        if (response.status === 404){
+            return {
+                data: [],
+                total: 0,
+            };
+        } else if (!response.ok) {
             throw new Error(`Ошибка загрузки данных для ${resource}`);
         }
-
+    
         const data = await response.json();
-
+    
         const dataWithId = data.map(item =>
             dataProvider.transformData(resource, item)
         );
-
+    
+        // --- фронтэнд пагинация ---
+        const { page = 1, perPage = 10 } = params.pagination || {};
+        const start = (page - 1) * perPage;
+        const end = start + perPage;
+        const paginatedData = dataWithId.slice(start, end);
+    
         return {
-            data: dataWithId,
-            total: dataWithId.length,
+            data: paginatedData,
+            total: dataWithId.length, // RA использует total для пагинации
         };
     },
+    
 
     getMany: async (resource, params) => {
         const token = getToken();
@@ -220,10 +244,16 @@ const dataProvider = {
             };
         } else if (resource === 'receipts') {
             bodyData = {
-                receipt: params.data.receipt,
                 seed: params.data.seed,
                 gcode: params.data.gcode,
                 description: params.data.description,
+            };
+        } else if (resource === 'shifts') {
+            const date = new Date();
+            date.setHours(8, 0, 0, 0);
+            const dateISO = date.toISOString();
+            bodyData = {
+                dt: dateISO,
             };
         } else {
             throw new Error(`Неподдерживаемый ресурс для создания: ${resource}`);
@@ -293,10 +323,17 @@ const dataProvider = {
             };
         } else if (resource === 'receipts') {
             bodyData = {
-                receipt: params.data.id,
                 seed: params.data.seed,
                 gcode: params.data.gcode,
                 description: params.data.description,
+            };
+        } else if (resource === 'shifts') {
+            const date = new Date();
+            date.setHours(8, 0, 0, 0);
+            const dateISO = date.toISOString();
+            bodyData = {
+                shift: params.data.id,
+                dt: dateISO,
             };
         } else {
             throw new Error(`Неподдерживаемый ресурс для обновления: ${resource}`);
@@ -330,13 +367,17 @@ const dataProvider = {
 
     delete: async (resource, params) => {
         const token = getToken();
+        console.log("params.id", params.id)
         const url = dataProvider.getApiUrl(resource, 'delete', params.id);
+        console.log(url)
         const response = await fetch(url, {
             method: "DELETE",
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
         });
+
+        console.log(response)
 
         if (!response.ok) {
             throw new Error(`Ошибка удаления ${resource}`);

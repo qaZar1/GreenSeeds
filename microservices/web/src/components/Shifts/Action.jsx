@@ -4,12 +4,12 @@ import { CreateButton } from "react-admin";
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 
-const PlacementListActions = () => {
+const ShiftListActions = () => {
     const theme = useTheme();
     return (
     <TopToolbar>
         <CreateButton
-            label="ДОБАВИТЬ РАСПОЛОЖЕНИЕ СЕМЯН"
+            label="ДОБАВИТЬ СМЕНУ"
             sx={theme => ({
                 textTransform: 'none',
                 color: theme.palette.primary.main,
@@ -25,4 +25,4 @@ const PlacementListActions = () => {
     );
 };
 
-export default PlacementListActions;
+export default ShiftListActions;

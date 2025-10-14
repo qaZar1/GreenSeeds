@@ -2,37 +2,38 @@ import React from "react";
 import { useListContext, Datagrid, TextField, SimpleList } from "react-admin";
 import { LoadingOverlay } from "../utils/Loading";
 import { EditButton } from "react-admin";
-import { EmptyBunker } from "./EmptyBunker";
+import { EmptyShift } from "./EmptyShift";
+import { DateField } from "react-admin";
 
-const BunkerListContent = ({ isSmall }) => {
+const ShiftListContent = ({ isSmall }) => {
     const { isLoading, ids, data, error } = useListContext();
 
     if (isLoading) return <LoadingOverlay />;
-    if (error) return <EmptyBunker />;
+    if (error) return <EmptyShift />;
 
     return isSmall ? (
         <SimpleList
-            primaryText={record => `Бункер: ${record.bunker}`}
-            secondaryText={record => `Расстояние: ${record.distance}`}
+            primaryText={<DateField source="dt" label="Дата" showTime={false}/>}
+            secondaryText={record => `Оператор: ${record.username ? record.username : "Не определено"}`}
             tertiaryText={record => (
                 <>
                     <EditButton record={record} />
                 </>
             )}
             rowClick={false}
-            empty={<EmptyBunker />}
+            empty={<EmptyShift />}
         />
     ) : (
         <Datagrid
             rowClick={false}
             bulkActionButtons={false}
-            empty={<EmptyBunker />}
+            empty={<EmptyShift />}
         >
-            <TextField source="bunker" label="Бункер" />
-            <TextField source="distance" label="Расстояние" />
+            <DateField source="dt" label="Дата" showTime={false}/>
+            <TextField source="username" label="Пользователь" />
             <EditButton label="Редактировать" />
         </Datagrid>
     )
 };
 
-export default BunkerListContent;
+export default ShiftListContent;

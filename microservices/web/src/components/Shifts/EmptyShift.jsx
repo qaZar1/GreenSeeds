@@ -1,9 +1,8 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import { CreateButton } from "react-admin";
-import ReceiptListActions from "./Action";
+import ShiftListActions from "./Action";
 
-export const EmptyReceipt = () => (
+export const EmptyShift = () => (
     <Box
         sx={{
             display: "flex",
@@ -15,10 +14,10 @@ export const EmptyReceipt = () => (
             color: "text.secondary",
         }}
     >
-        <Typography variant="h6">Нет данных о рецептах</Typography>
-        <Typography variant="body2">Добавьте рецепты через панель администратора</Typography>
+        <Typography variant="h6">Нет данных о сменах</Typography>
+        <Typography variant="body2">Добавьте смену через панель администратора</Typography>
         <Box sx={{ mt: 2 }}>
-            <ReceiptListActions />
+            <ShiftListActions />
         </Box>
     </Box>
 );

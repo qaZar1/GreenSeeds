@@ -9,7 +9,6 @@ const ReceiptCreate = () => {
     return (
         <Create sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic">
             <SimpleForm toolbar={<ToolbarSave />}>
-                <NumberInput source="receipt" label="Номер рецепта" />
                 <ReferenceInput source="seed" reference="seeds">
                     <AutocompleteInput optionText="seed" id="seed" label="Семена"/>
                 </ReferenceInput>
