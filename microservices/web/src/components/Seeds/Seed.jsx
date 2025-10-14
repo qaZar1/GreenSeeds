@@ -12,7 +12,6 @@ const SeedList = ({ ...props }) => {
     return (
         <List
             resource="seeds"
-            pagination={false}
             empty={<EmptySeed />}
             {...props}
             sx={{ padding: 2 }}

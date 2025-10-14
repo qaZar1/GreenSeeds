@@ -32,7 +32,7 @@ const SeedListContent = ({ isSmall, isMedium }) => {
         />
     ) : (
         <Datagrid
-            rowClick="edit"
+            rowClick={false}
             bulkActionButtons={false}
             empty={<EmptySeed />}
         >
@@ -41,7 +41,7 @@ const SeedListContent = ({ isSmall, isMedium }) => {
             <TextField source="max_density" label="Максимальная плотность" />
             <TextField source="tank_capacity" label="Количество семян в бункере" />
             <TextField source="latency" label="Задержка" />
-            <EditButton />
+            <EditButton label="Редактировать" />
         </Datagrid>
     )
 };

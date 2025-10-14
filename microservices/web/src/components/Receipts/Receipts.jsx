@@ -11,7 +11,6 @@ const ReceiptList = ({ ...props }) => {
     return (
         <List
             resource="receipts"
-            pagination={false}
             empty={<EmptyReceipt />}
             {...props}
             sx={{ padding: 2 }}

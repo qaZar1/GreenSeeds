@@ -26,13 +26,11 @@ func NewReceiptsRepository(db *sqlx.DB) *receiptsRepository {
 func (rec *receiptsRepository) AddReceipts(receipts models.Receipts) (models.Receipts, error) {
 	const query = `
 INSERT INTO green_seeds.receipts (
-	receipt,
 	seed,
 	gcode,
 	description
 )
 VALUES (
-	:receipt,
 	:seed,
 	:gcode,
 	:description
@@ -61,7 +59,7 @@ func (rec *receiptsRepository) GetReceipts() ([]models.Receipts, error) {
 	const query = `
 SELECT receipt, seed, gcode, updated, description
 FROM green_seeds.receipts
-ORDER BY receipt ASC`
+ORDER BY seed ASC`
 
 	var receipts []models.Receipts
 	if err := rec.db.Select(&receipts, query); err != nil {
@@ -75,9 +73,9 @@ func (rec *receiptsRepository) UpdateReceipts(receipts models.Receipts) (models.
 	const query = `
 UPDATE green_seeds.receipts
 SET
-	seed = :seed,
-    gcode = :gcode,
-    description = :description,
+	seed = COALESCE(:seed, seed),
+    gcode = COALESCE(:gcode, gcode),
+    description = COALESCE(:description, description),
     updated = CURRENT_TIMESTAMP
 WHERE receipt = :receipt
 RETURNING receipt, seed, gcode, description, updated`

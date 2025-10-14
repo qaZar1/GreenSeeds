@@ -25,6 +25,10 @@ import ReceiptList from './components/Receipts/Receipts';
 import ReceiptEdit from './components/Receipts/ReceiptEdit';
 import ReceiptCreate from './components/Receipts/ReceiptCreate';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import ShiftList from './components/Shifts/Shifts';
+import ShiftEdit from './components/Shifts/ShiftEdit';
+import ShiftCreate from './components/Shifts/ShiftCreate';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
 function App() {
   return (
@@ -59,7 +63,7 @@ function App() {
           create={PlacementCreate}
           edit={PlacementEdit}
           icon={LinkIcon}
-          options={{ label: "Связи бункер-семена" }} 
+          options={{ label: "Расположение семян" }} 
         />
         <Resource
           name="receipts"
@@ -68,6 +72,14 @@ function App() {
           edit={ReceiptEdit}
           icon={ReceiptIcon}
           options={{ label: "Рецепты" }} 
+        />
+        <Resource
+          name="shifts"
+          list={ShiftList}
+          create={ShiftCreate}
+          edit={ShiftEdit}
+          icon={DragIndicatorIcon}
+          options={{ label: "Смены" }} 
         />
         <CustomRoutes>
           <Route path="/profile" element={<ProfilePage />} />

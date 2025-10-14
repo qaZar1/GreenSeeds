@@ -24,13 +24,13 @@ const PlacementListContent = ({ isSmall }) => {
         />
     ) : (
         <Datagrid
-            rowClick="edit"
+            rowClick={false}
             bulkActionButtons={false}
             empty={<EmptyPlacement />}
         >
             <TextField source="bunker" label="Бункер" />
             <TextField source="seed" label="Семена" />
-            {/* <EditButton /> */}
+            <EditButton label="Редактировать" />
         </Datagrid>
     )
 };

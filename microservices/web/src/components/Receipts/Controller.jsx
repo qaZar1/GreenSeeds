@@ -13,12 +13,12 @@ const ReceiptListContent = ({ isSmall }) => {
 
     return isSmall ? (
         <SimpleList
-            primaryText={record => `Название: ${record.receipt}`}
+            primaryText={record => `Семена: ${record.seed}`}
             secondaryText={record => (
                 <>
-                    <span style={{ display: 'block' }}>Семена: {record.seed}</span>
-                    <span>Обновлено: <DateField source="updated" showTime locales="ru-RU" /></span>
                     <span style={{ display: 'block' }}>Описание: {record.description}</span>
+                    <span style={{ display: 'block' }}>Обновлено: <DateField source="updated" showTime locales="ru-RU" /></span>
+                    
                 </>
             )}
             tertiaryText={record => (
@@ -31,15 +31,14 @@ const ReceiptListContent = ({ isSmall }) => {
         />
     ) : (
         <Datagrid
-            rowClick="edit"
+            rowClick={false}
             bulkActionButtons={false}
             empty={<EmptyReceipt />}
         >
-            <TextField source="receipt" label="Название" />
             <TextField source="seed" label="Семена" />
-            <DateField source="updated" showTime locales="ru-RU" label="Обновлено"/>
             <TextField source="description" label="Описание" />
-            {/* <EditButton /> */}
+            <DateField source="updated" showTime locales="ru-RU" label="Обновлено"/>
+            <EditButton label="Редактировать"/>
         </Datagrid>
     )
 };
