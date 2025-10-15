@@ -29,6 +29,10 @@ import ShiftList from './components/Shifts/Shifts';
 import ShiftEdit from './components/Shifts/ShiftEdit';
 import ShiftCreate from './components/Shifts/ShiftCreate';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import AssignmentsList from './components/Assignments/Assign';
+import AssignmentsEdit from './components/Assignments/AssignEdit';
+import AssignmentsCreate from './components/Assignments/AssignCreate';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 function App() {
   return (
@@ -80,6 +84,14 @@ function App() {
           edit={ShiftEdit}
           icon={DragIndicatorIcon}
           options={{ label: "Смены" }} 
+        />
+        <Resource
+          name="assignments"
+          list={AssignmentsList}
+          create={AssignmentsCreate}
+          edit={AssignmentsEdit}
+          icon={AssignmentIcon}
+          options={{ label: "Задания" }} 
         />
         <CustomRoutes>
           <Route path="/profile" element={<ProfilePage />} />
