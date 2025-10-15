@@ -78,6 +78,14 @@ const dataProvider = {
                 case 'update': return `/api/shifts/update`;
                 case 'delete': return `/api/shifts/delete${idPart}`;
             }
+        } else if (resource === 'assignments') {
+            switch (action) {
+                case 'list': return `/api/assignments/get`;
+                case 'one': return `/api/assignments/get${idPart}`;
+                case 'create': return `/api/assignments/add`;
+                case 'update': return `/api/assignments/update`;
+                case 'delete': return `/api/assignments/delete${idPart}`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
@@ -120,6 +128,11 @@ const dataProvider = {
                 ...item,
                 id: item.id ?? item.shift,
             };
+        } else if (resource === 'assignments') {
+            return {
+                ...item,
+                id: item.id ?? item.id,
+            };
         }
         return item;
     },
@@ -146,6 +159,8 @@ const dataProvider = {
         }
     
         const data = await response.json();
+
+        console.log(data)
     
         const dataWithId = data.map(item =>
             dataProvider.transformData(resource, item)
@@ -249,11 +264,17 @@ const dataProvider = {
                 description: params.data.description,
             };
         } else if (resource === 'shifts') {
-            const date = new Date();
-            date.setHours(8, 0, 0, 0);
-            const dateISO = date.toISOString();
+            const dt = params.data.dt;
+            const date = new Date(dt);
             bodyData = {
-                dt: dateISO,
+                dt: date.toISOString(),
+            };
+        } else if (resource === 'assignments') {
+            bodyData = {
+                shift: params.data.shift,
+                number: params.data.number,
+                receipt: params.data.receipt,
+                amount: params.data.amount,
             };
         } else {
             throw new Error(`Неподдерживаемый ресурс для создания: ${resource}`);
@@ -323,17 +344,25 @@ const dataProvider = {
             };
         } else if (resource === 'receipts') {
             bodyData = {
+                receipt: params.data.id,
                 seed: params.data.seed,
                 gcode: params.data.gcode,
                 description: params.data.description,
             };
         } else if (resource === 'shifts') {
-            const date = new Date();
-            date.setHours(8, 0, 0, 0);
-            const dateISO = date.toISOString();
+            const dt = params.data.dt;
+            const date = new Date(dt);
             bodyData = {
                 shift: params.data.id,
-                dt: dateISO,
+                dt: date.toISOString(),
+            };
+        } else if (resource === 'assignments') {
+            bodyData = {
+                id: params.data.id,
+                shift: params.data.shift,
+                number: params.data.number,
+                receipt: params.data.receipt,
+                amount: params.data.amount,
             };
         } else {
             throw new Error(`Неподдерживаемый ресурс для обновления: ${resource}`);

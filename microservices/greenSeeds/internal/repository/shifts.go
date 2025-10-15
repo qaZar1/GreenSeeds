@@ -53,6 +53,7 @@ func (sh *shiftsRepository) GetShifts() ([]models.Shifts, error) {
 	const query = `
 SELECT shift, dt, username
 FROM green_seeds.shifts
+WHERE dt >= CURRENT_DATE
 ORDER BY shift ASC`
 
 	var shifts []models.Shifts

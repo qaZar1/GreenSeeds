@@ -1,9 +1,8 @@
 import React from "react";
-import { useListContext, Datagrid, TextField, SimpleList } from "react-admin";
+import { useListContext, Datagrid, TextField, SimpleList, DateField } from "react-admin";
 import { LoadingOverlay } from "../utils/Loading";
 import { EditButton } from "react-admin";
 import { EmptyShift } from "./EmptyShift";
-import { DateField } from "react-admin";
 
 const ShiftListContent = ({ isSmall }) => {
     const { isLoading, ids, data, error } = useListContext();
@@ -13,7 +12,7 @@ const ShiftListContent = ({ isSmall }) => {
 
     return isSmall ? (
         <SimpleList
-            primaryText={<DateField source="dt" label="Дата" showTime={false}/>}
+            primaryText={<DateField source="dt" label="Дата" showTime={true}/>}
             secondaryText={record => `Оператор: ${record.username ? record.username : "Не определено"}`}
             tertiaryText={record => (
                 <>
@@ -29,7 +28,7 @@ const ShiftListContent = ({ isSmall }) => {
             bulkActionButtons={false}
             empty={<EmptyShift />}
         >
-            <DateField source="dt" label="Дата" showTime={false}/>
+            <DateField source="dt" label="Дата" showTime={true}/>
             <TextField source="username" label="Пользователь" />
             <EditButton label="Редактировать" />
         </Datagrid>

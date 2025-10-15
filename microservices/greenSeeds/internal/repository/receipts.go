@@ -73,9 +73,9 @@ func (rec *receiptsRepository) UpdateReceipts(receipts models.Receipts) (models.
 	const query = `
 UPDATE green_seeds.receipts
 SET
-	seed = COALESCE(:seed, seed),
-    gcode = COALESCE(:gcode, gcode),
-    description = COALESCE(:description, description),
+	seed = :seed,
+    gcode = :gcode,
+    description = :description,
     updated = CURRENT_TIMESTAMP
 WHERE receipt = :receipt
 RETURNING receipt, seed, gcode, description, updated`

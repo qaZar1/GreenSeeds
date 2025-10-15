@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS green_seeds.receipts (
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.assignments (
+    id SERIAL,
     shift BIGINT,
     number INT,
     receipt BIGINT,

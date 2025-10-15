@@ -3,6 +3,7 @@ import { AppBar, Layout, UserMenu, Logout } from "react-admin";
 import { MenuItem } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate } from "react-router-dom";
+import CustomMenu from "./CustomMenu";
 
 const CustomUserMenu = (props) => {
     const navigate = useNavigate();
@@ -23,7 +24,7 @@ const CustomAppBar = (props) => (
 );
 
 const CustomLayout = (props) => (
-    <Layout {...props} appBar={CustomAppBar} />
+    <Layout {...props} appBar={CustomAppBar} menu={CustomMenu}/>
 );
 
 export default CustomLayout;

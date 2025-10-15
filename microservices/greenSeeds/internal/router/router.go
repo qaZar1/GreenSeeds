@@ -102,6 +102,14 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 			r.Delete("/delete/{shift}", transport.DeleteApiShiftsDelete)
 		})
 
+		r.Route("/assignments", func(r chi.Router) {
+			r.Post("/add", transport.PostApiAssignmentsAdd)
+			r.Get("/get", transport.GetApiAssignmentsGet)
+			r.Get("/get/{id}", transport.GetApiAssignmentsGetAssignment)
+			r.Put("/update", transport.PutApiAssignmentsUpdate)
+			r.Delete("/delete/{id}", transport.DeleteApiAssignmentsDelete)
+		})
+
 		// 	r.Get("/checkByUuid/{uuid}", transport.GetApiCheckUserByUuidUuid)
 		// 	r.Get("/checkRoles/{uuid}", transport.GetApiCheckRolesUuid)
 		// 	r.Get("/checkAll", transport.GetApiCheckAllUsers)
