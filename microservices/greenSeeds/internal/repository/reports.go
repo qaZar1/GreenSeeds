@@ -6,10 +6,11 @@ import (
 )
 
 type IReportsRepository interface {
-	AddReports(reports *models.Reports) (bool, error)
+	AddReports(reports models.Reports) (bool, error)
 	GetReports() ([]models.Reports, error)
-	UpdateReports(reports *models.Reports) (bool, error)
+	UpdateReports(reports models.Reports) (bool, error)
 	DeleteReports(shift int, number int, receipt int) (bool, error)
+	GetReportsById(id int) (models.Reports, error)
 }
 
 type reportsRepository struct {
@@ -22,7 +23,7 @@ func NewReportsRepository(db *sqlx.DB) *reportsRepository {
 	}
 }
 
-func (rep *reportsRepository) AddReports(reports *models.Reports) (bool, error) {
+func (rep *reportsRepository) AddReports(reports models.Reports) (bool, error) {
 	const query = `
 INSERT INTO green_seeds.reports (
 	shift,
@@ -60,7 +61,8 @@ VALUES (
 
 func (rep *reportsRepository) GetReports() ([]models.Reports, error) {
 	const query = `
-SELECT 
+SELECT
+	id,
 	shift,
 	number,
 	receipt,
@@ -80,7 +82,7 @@ FROM green_seeds.reports`
 	return reports, nil
 }
 
-func (rep *reportsRepository) UpdateReports(reports *models.Reports) (bool, error) {
+func (rep *reportsRepository) UpdateReports(reports models.Reports) (bool, error) {
 	const query = `
 UPDATE green_seeds.reports
 SET turn = :turn,
@@ -124,4 +126,28 @@ WHERE shift = $1 AND number = $2 AND receipt = $3`
 	}
 
 	return rowsAffected == 1, nil
+}
+
+func (rep *reportsRepository) GetReportsById(id int) (models.Reports, error) {
+	const query = `
+SELECT
+	id,
+	shift,
+	number,
+	receipt,
+	turn,
+	dt,
+	success,
+	error,
+	solution,
+	mark
+FROM green_seeds.reports
+WHERE id = $1`
+
+	var report models.Reports
+	if err := rep.db.Get(&report, query, id); err != nil {
+		return models.Reports{}, err
+	}
+
+	return report, nil
 }

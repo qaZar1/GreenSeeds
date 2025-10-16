@@ -86,6 +86,11 @@ const dataProvider = {
                 case 'update': return `/api/assignments/update`;
                 case 'delete': return `/api/assignments/delete${idPart}`;
             }
+        } else if (resource === 'reports') {
+            switch (action) {
+                case 'list': return `/api/reports/get`;
+                case 'one': return `/api/reports/get${idPart}`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
@@ -133,6 +138,11 @@ const dataProvider = {
                 ...item,
                 id: item.id ?? item.id,
             };
+        } else if (resource === 'reports') {
+            return {
+                ...item,
+                id: item.id ?? item.id,
+            };
         }
         return item;
     },
@@ -159,8 +169,6 @@ const dataProvider = {
         }
     
         const data = await response.json();
-
-        console.log(data)
     
         const dataWithId = data.map(item =>
             dataProvider.transformData(resource, item)
