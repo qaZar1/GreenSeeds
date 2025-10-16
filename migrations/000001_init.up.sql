@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS green_seeds.users (
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.reports (
+    id SERIAL,
     shift BIGINT,
     number INT,
     receipt BIGINT,

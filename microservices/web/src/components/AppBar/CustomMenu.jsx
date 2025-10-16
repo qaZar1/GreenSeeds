@@ -42,6 +42,7 @@ const CustomMenu = () => {
             <MenuItemLink to="/receipts" primaryText="Рецепты" leftIcon={<ReceiptIcon />} />
             <MenuItemLink to="/shifts" primaryText="Смены" leftIcon={<DragIndicatorIcon />} />
             <MenuItemLink to="/assignments" primaryText="Задания" leftIcon={<AssignmentIcon />} />
+            <MenuItemLink to="/reports" primaryText="Отчеты" leftIcon={<AssignmentIcon />} />
         </Box>
       </Collapse>
     </Menu>

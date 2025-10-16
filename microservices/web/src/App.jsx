@@ -33,6 +33,8 @@ import AssignmentsList from './components/Assignments/Assign';
 import AssignmentsEdit from './components/Assignments/AssignEdit';
 import AssignmentsCreate from './components/Assignments/AssignCreate';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import ReportsList from './components/Reports/Reports';
+import ReportsShow from './components/Reports/ReportShow';
 
 function App() {
   return (
@@ -93,6 +95,14 @@ function App() {
           icon={AssignmentIcon}
           options={{ label: "Задания" }} 
         />
+        <Resource
+          name="reports"
+          list={ReportsList}
+          show={ReportsShow}
+          icon={AssignmentIcon}
+          options={{ label: "Отчеты" }} 
+        />
+
         <CustomRoutes>
           <Route path="/profile" element={<ProfilePage />} />
         </CustomRoutes>
