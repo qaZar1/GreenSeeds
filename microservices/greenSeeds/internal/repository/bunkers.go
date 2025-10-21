@@ -11,6 +11,7 @@ type IBunkersRepository interface {
 	GetBunkersById(id int) (models.Bunkers, error)
 	UpdateBunkers(bunkers models.Bunkers) (models.Bunkers, error)
 	DeleteBunkers(id int) (bool, error)
+	GetBunkersForPlacement() ([]models.Bunkers, error)
 }
 
 type bunkersRepository struct {
@@ -57,6 +58,21 @@ func (bunk *bunkersRepository) GetBunkers() ([]models.Bunkers, error) {
 	const query = `
 SELECT bunker, distance
 FROM green_seeds.bunkers
+ORDER BY bunker ASC`
+
+	var bunkers []models.Bunkers
+	if err := bunk.db.Select(&bunkers, query); err != nil {
+		return nil, err
+	}
+
+	return bunkers, nil
+}
+
+func (bunk *bunkersRepository) GetBunkersForPlacement() ([]models.Bunkers, error) {
+	const query = `
+SELECT bunker, distance
+FROM green_seeds.bunkers
+WHERE bunker NOT IN (SELECT bunker FROM green_seeds.placement)
 ORDER BY bunker ASC`
 
 	var bunkers []models.Bunkers

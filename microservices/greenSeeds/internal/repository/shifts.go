@@ -11,6 +11,7 @@ type IShiftsRepository interface {
 	UpdateShifts(shifts models.Shifts) (models.Shifts, error)
 	DeleteShifts(shift int) (bool, error)
 	GetShiftsByShift(shift int) (models.Shifts, error)
+	GetShiftsWithoutUser() ([]models.Shifts, error)
 }
 
 type shiftsRepository struct {
@@ -115,6 +116,21 @@ WHERE shift = $1`
 	var shifts models.Shifts
 	if err := sh.db.Get(&shifts, query, shift); err != nil {
 		return models.Shifts{}, err
+	}
+
+	return shifts, nil
+}
+
+func (sh *shiftsRepository) GetShiftsWithoutUser() ([]models.Shifts, error) {
+	const query = `
+SELECT shift, dt, username
+FROM green_seeds.shifts
+WHERE DATE(dt) = CURRENT_DATE AND username IS NULL
+ORDER BY shift ASC`
+
+	var shifts []models.Shifts
+	if err := sh.db.Select(&shifts, query); err != nil {
+		return nil, err
 	}
 
 	return shifts, nil

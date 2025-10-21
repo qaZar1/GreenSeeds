@@ -33,6 +33,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 	}))
 
 	router.Post("/api/login", transport.PostApiLoginUser)
+	router.Post("/register", transport.PostApiRegisterUser)
 
 	router.HandleFunc("/debug/pprof/", pprof.Index)
 	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -52,7 +53,6 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 
 	router.Route("/api", func(r chi.Router) {
 		r.Use(middlewares.BearerAuthMiddleware(infra, repo))
-		r.Post("/register", transport.PostApiRegisterUser)
 
 		r.Route("/seeds", func(r chi.Router) {
 			r.Post("/add", transport.PostApiSeedAdd)
@@ -68,6 +68,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 			r.Get("/get/{bunker}", transport.GetApiBunkerGetId)
 			r.Put("/update", transport.PutApiBunkerUpdate)
 			r.Delete("/delete/{bunker}", transport.DeleteApiBunkerDelete)
+			r.Get("/getForPlacement", transport.GetApiBunkerGetForPlacement)
 		})
 
 		r.Route("/users", func(r chi.Router) {
@@ -100,6 +101,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 			r.Get("/get/{shift}", transport.GetApiShiftsGetShift)
 			r.Put("/update", transport.PutApiShiftsUpdate)
 			r.Delete("/delete/{shift}", transport.DeleteApiShiftsDelete)
+			r.Get("/getWithoutUser", transport.GetApiShiftsGetWithoutUser)
 		})
 
 		r.Route("/assignments", func(r chi.Router) {
@@ -108,6 +110,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 			r.Get("/get/{id}", transport.GetApiAssignmentsGetAssignment)
 			r.Put("/update", transport.PutApiAssignmentsUpdate)
 			r.Delete("/delete/{id}", transport.DeleteApiAssignmentsDelete)
+			r.Get("/active-tasks/{username}", transport.GetApiActiveTasks)
 		})
 
 		r.Route("/reports", func(r chi.Router) {

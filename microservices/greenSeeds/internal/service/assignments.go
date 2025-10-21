@@ -43,3 +43,7 @@ func (s *Service) DeleteAssignments(idStr string) (bool, error) {
 
 	return s.repo.AsnRepo.DeleteAssignments(id)
 }
+
+func (s *Service) CheckActiveTasks(username string) ([]models.ActiveTask, error) {
+	return s.repo.AsnRepo.CheckActiveTasks(username)
+}

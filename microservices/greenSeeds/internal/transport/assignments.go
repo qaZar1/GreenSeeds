@@ -186,3 +186,36 @@ func (transport *Transport) DeleteApiAssignmentsDelete(w http.ResponseWriter, r 
 
 	utils.WriteNoContent(w)
 }
+
+// Set godoc
+//
+// @Router /api/assignments/active-tasks/{username} [get]
+// @Summary Получение списка активных заданий
+// @Description При обращении, возвращает список активных заданий
+//
+// @Tags Assignments
+// @Produce      application/json
+// @Consume      application/json
+//
+// @Param username path string true "Имя пользователя"
+//
+// @Success 200 {object} []activeTask "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiActiveTasks(w http.ResponseWriter, r *http.Request) {
+	username := chi.URLParam(r, "username")
+
+	activeTasks, err := transport.service.CheckActiveTasks(username)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get active task: %w", err))
+		return
+	}
+
+	if activeTasks == nil {
+		utils.WriteString(w, http.StatusNotFound, "Active tasks not found")
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, activeTasks)
+}
