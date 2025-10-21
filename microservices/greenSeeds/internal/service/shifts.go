@@ -43,3 +43,7 @@ func (s *Service) DeleteShifts(shift string) (bool, error) {
 
 	return s.repo.ShfRepo.DeleteShifts(shiftInt)
 }
+
+func (s *Service) GetShiftsWithoutUser() ([]models.Shifts, error) {
+	return s.repo.ShfRepo.GetShiftsWithoutUser()
+}

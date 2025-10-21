@@ -24,6 +24,11 @@ const CustomMenu = () => {
     <Menu>
       {/* ✅ Остальные отдельные пункты */}
       <MenuItemLink to="/users" primaryText="Пользователи" leftIcon={<PersonIcon />} />
+      <MenuItemLink to="/tasks" primaryText="Задания" leftIcon={<AssignmentIcon />} />
+
+      <MenuItemLink to="/shifts" primaryText="Смены" leftIcon={<DragIndicatorIcon />} />
+      <MenuItemLink to="/assignments" primaryText="Задания" leftIcon={<AssignmentIcon />} />
+      <MenuItemLink to="/reports" primaryText="Отчеты" leftIcon={<AssignmentIcon />} />
 
       {/* ✅ Секция справочников */}
       <ListItemButton onClick={handleToggleRefs} sx={{pl: 2, pr: 2, height: 36}}>
@@ -40,9 +45,6 @@ const CustomMenu = () => {
             <MenuItemLink to="/seeds" primaryText="Семена" leftIcon={<GrassIcon />} />
             <MenuItemLink to="/placements" primaryText="Расположение" leftIcon={<LinkIcon />} />
             <MenuItemLink to="/receipts" primaryText="Рецепты" leftIcon={<ReceiptIcon />} />
-            <MenuItemLink to="/shifts" primaryText="Смены" leftIcon={<DragIndicatorIcon />} />
-            <MenuItemLink to="/assignments" primaryText="Задания" leftIcon={<AssignmentIcon />} />
-            <MenuItemLink to="/reports" primaryText="Отчеты" leftIcon={<AssignmentIcon />} />
         </Box>
       </Collapse>
     </Menu>

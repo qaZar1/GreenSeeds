@@ -18,6 +18,10 @@ func (s *Service) GetBunkers() ([]models.Bunkers, error) {
 	return s.repo.BunkRepo.GetBunkers()
 }
 
+func (s *Service) GetBunkersForPlacement() ([]models.Bunkers, error) {
+	return s.repo.BunkRepo.GetBunkersForPlacement()
+}
+
 func (s *Service) GetBunkersById(bunkerId string) (models.Bunkers, error) {
 	bunkerIdInt, err := strconv.Atoi(bunkerId)
 	if err != nil {

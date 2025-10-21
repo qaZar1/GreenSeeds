@@ -72,7 +72,8 @@ SELECT
 	error,
 	solution,
 	mark
-FROM green_seeds.reports`
+FROM green_seeds.reports
+ORDER BY shift DESC`
 
 	var reports []models.Reports
 	if err := rep.db.Select(&reports, query); err != nil {

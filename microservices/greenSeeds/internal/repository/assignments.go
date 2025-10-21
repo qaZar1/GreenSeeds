@@ -11,6 +11,7 @@ type IAssignmentsRepository interface {
 	UpdateAssignments(assignments models.Assignments) (models.Assignments, error)
 	DeleteAssignments(number int) (bool, error)
 	GetAssignmentsByNumber(number int) (models.Assignments, error)
+	CheckActiveTasks(username string) ([]models.ActiveTask, error)
 }
 
 type assignmentsRepository struct {
@@ -129,4 +130,37 @@ WHERE id = $1;`
 	}
 
 	return assignments, nil
+}
+
+func (assign *assignmentsRepository) CheckActiveTasks(username string) ([]models.ActiveTask, error) {
+	const query = `
+SELECT 
+    a.shift,
+    a.number,
+    a.receipt,
+    s.dt,
+    a.amount,
+    COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) AS done_turns,
+    se.seed
+FROM green_seeds.assignments a
+JOIN green_seeds.shifts s ON s.shift = a.shift
+LEFT JOIN green_seeds.reports r 
+  ON r.shift = a.shift
+  AND r.number = a.number 
+  AND r.receipt = a.receipt
+left join green_seeds.receipts r2 
+  on r2.receipt = a.receipt
+left join green_seeds.seeds se
+  on se.seed = r2.seed 
+WHERE s.username = $1 and DATE(s.dt) = CURRENT_DATE
+GROUP BY a.shift, a.number, a.receipt, s.dt, a.amount, se.seed
+HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
+`
+
+	var activeTasks []models.ActiveTask
+	if err := assign.db.Select(&activeTasks, query, username); err != nil {
+		return nil, err
+	}
+
+	return activeTasks, nil
 }

@@ -184,3 +184,32 @@ func (transport *Transport) DeleteApiShiftsDelete(w http.ResponseWriter, r *http
 
 	utils.WriteNoContent(w)
 }
+
+// Set godoc
+//
+// @Router /api/shifts/getWithoutUser [get]
+// @Summary Получение списка смен
+// @Description При обращении, возвращает список смен
+//
+// @Tags Shifts
+// @Produce      application/json
+// @Consume      application/json
+//
+// @Success 200 {object} []shift "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiShiftsGetWithoutUser(w http.ResponseWriter, r *http.Request) {
+	shifts, err := transport.service.GetShiftsWithoutUser()
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get shifts: %w", err))
+		return
+	}
+
+	if shifts == nil {
+		utils.WriteString(w, http.StatusNotFound, fmt.Sprintf("Shifts not found"))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, shifts)
+}

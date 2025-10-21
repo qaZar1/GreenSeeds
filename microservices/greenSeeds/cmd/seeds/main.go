@@ -66,7 +66,7 @@ func main() {
 		},
 	), "pgx")
 
-	if postgres == nil {
+	if postgres.DB == nil {
 		log.Error().Msg("Invalid postgres connect")
 		return
 	}

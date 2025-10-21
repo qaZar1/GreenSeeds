@@ -1,6 +1,7 @@
 // src/dataProvider.js
 import { jwtDecode } from "jwt-decode";
 import { useNotify } from "react-admin";
+import { fetchUtils } from 'react-admin';
 
 export const getToken = () => {
     try {
@@ -15,7 +16,7 @@ export const getToken = () => {
     return null;
 };
 
-const dataProvider = {
+const baseProvider = {
     // --- Вспомогательные функции для определения API и трансформации данных ---
 
     /**
@@ -91,6 +92,12 @@ const dataProvider = {
                 case 'list': return `/api/reports/get`;
                 case 'one': return `/api/reports/get${idPart}`;
             }
+        } else if (resource === 'tasks') {
+            switch (action) {
+                case 'list': return `/api/shifts/getWithoutUser`;
+                case 'one': return `/api/tasks/get${idPart}`;
+                case 'update': return `/api/shifts/update`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
@@ -143,6 +150,11 @@ const dataProvider = {
                 ...item,
                 id: item.id ?? item.id,
             };
+        } else if (resource === 'tasks') {
+            return {
+                ...item,
+                id: item.id ?? item.shift,
+            };
         }
         return item;
     },
@@ -152,6 +164,7 @@ const dataProvider = {
     getList: async (resource, params) => {
         const token = getToken();
         const url = dataProvider.getApiUrl(resource, 'list');
+
         const response = await fetch(url, {
             headers: {
                 'Content-Type': 'application/json',
@@ -372,6 +385,12 @@ const dataProvider = {
                 receipt: params.data.receipt,
                 amount: params.data.amount,
             };
+        } else if (resource === 'tasks') {
+            bodyData = {
+                shift: params.data.id,
+                username: params.data.username,
+                dt: params.data.dt,
+            };
         } else {
             throw new Error(`Неподдерживаемый ресурс для обновления: ${resource}`);
         }
@@ -423,5 +442,38 @@ const dataProvider = {
         return { data: params.previousData };
     },
 };
+
+const dataProvider = {
+    ...baseProvider,
+    getList: async (resource, params) => {
+      if (resource === "bunkers" && params.filter?.free) {
+        try {
+            if (resource === "bunkers" && params.filter?.free) {
+              const response = await fetch("/api/bunkers/getForPlacement", {
+                headers: {
+                  'Authorization': `Bearer ${getToken()}`,
+                },
+              });
+              if (!response.ok) {
+                return { data: [], total: 0 };
+              }
+
+              const json = await response.json();
+              
+              return { data: json.map((item) => ({
+                ...item,
+                id: item.id ?? item.bunker,
+              })), total: json.length };
+            }
+            return baseProvider.getList(resource, params);
+          } catch (e) {
+            console.error("Error in getList:", e);
+            throw e;
+          }
+      }
+      return baseProvider.getList(resource, params);
+    },
+  };
+  
 
 export default dataProvider;
