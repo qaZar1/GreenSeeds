@@ -22,4 +22,9 @@ type Config struct {
 		Secret    string `yaml:"client_secret"`
 		ExpiresIn int    `yaml:"expires_in"`
 	}
+
+	Serial struct {
+		Port string `yaml:"port"`
+		Baud int    `yaml:"baud"`
+	}
 }
