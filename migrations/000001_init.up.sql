@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS green_seeds.bunkers (
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.seeds (
+    seed_ru VARCHAR(50),
     seed VARCHAR(50),
     min_density INT,
     max_density INT,

@@ -1,0 +1,89 @@
+import React from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Divider,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+
+const Tasks = ({ tasks }) => {
+  const navigate = useNavigate();
+
+  if (!tasks || tasks.length === 0) {
+    return (
+      <Box display="flex" justifyContent="center" p={2}>
+        <Typography variant="body1">Нет активных заданий</Typography>
+      </Box>
+    );
+  }
+
+  // 🔹 Группируем задачи по shift
+  const grouped = tasks.reduce((acc, t) => {
+    const shift = t.shift || "Без смены";
+    if (!acc[shift]) acc[shift] = [];
+    acc[shift].push(t);
+    return acc;
+  }, {});
+
+  return (
+    <Box display="flex" justifyContent="center" p={2}>
+      <Card sx={{ width: "100%", borderRadius: 3, boxShadow: 4 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom align="center">
+            Активные задания
+          </Typography>
+
+          {Object.entries(grouped).map(([shift, group]) => (
+            <Box key={shift} mb={3}>
+              <Typography
+                variant="subtitle1"
+                sx={{ fontWeight: "bold", mb: 1, color: "primary.main" }}
+              >
+                Смена: {shift}
+              </Typography>
+
+              <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Задание</TableCell>
+                      <TableCell>Кол-во</TableCell>
+                      <TableCell>Культура</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {group.map((t) => (
+                      <TableRow
+                        key={t.id}
+                        hover
+                        sx={{ cursor: "pointer" }}
+                        onClick={() => navigate(`/tasks/${t.id}`)}
+                      >
+                        <TableCell>{t.number}</TableCell>
+                        <TableCell>{t.amount}</TableCell>
+                        <TableCell>{t.seed || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <Divider sx={{ mt: 2, mb: 2 }} />
+            </Box>
+          ))}
+        </CardContent>
+      </Card>
+    </Box>
+  );
+};
+
+export default Tasks;

@@ -12,11 +12,10 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const Tasks = ({ tasks }) => {
-  if (!tasks || tasks.length === 0) {
-    return <Typography align="center">Нет заданий</Typography>;
-  }
+  const navigate = useNavigate();
 
   return (
     <Box display="flex" justifyContent="center" p={2}>
@@ -33,16 +32,14 @@ const Tasks = ({ tasks }) => {
                   <TableCell>Задание</TableCell>
                   <TableCell>Кол-во</TableCell>
                   <TableCell>Культура</TableCell>
-                  <TableCell>Статус</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {tasks.map((t, i) => (
-                  <TableRow key={t.id || i} hover>
+                  <TableRow key={t.id} hover onClick={() => navigate(`/tasks/${t.id}`)}>
                     <TableCell>{t.number}</TableCell>
                     <TableCell>{t.amount}</TableCell>
                     <TableCell>{t.seed || "—"}</TableCell>
-                    <TableCell>{t.status || "Ожидает выполнения"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -12,6 +12,7 @@ type IAssignmentsRepository interface {
 	DeleteAssignments(number int) (bool, error)
 	GetAssignmentsByNumber(number int) (models.Assignments, error)
 	CheckActiveTasks(username string) ([]models.ActiveTask, error)
+	GetTaskById(id int) (models.Task, error)
 }
 
 type assignmentsRepository struct {
@@ -134,7 +135,8 @@ WHERE id = $1;`
 
 func (assign *assignmentsRepository) CheckActiveTasks(username string) ([]models.ActiveTask, error) {
 	const query = `
-SELECT 
+SELECT
+	a.id,
     a.shift,
     a.number,
     a.receipt,
@@ -153,7 +155,7 @@ left join green_seeds.receipts r2
 left join green_seeds.seeds se
   on se.seed = r2.seed 
 WHERE s.username = $1 and DATE(s.dt) = CURRENT_DATE
-GROUP BY a.shift, a.number, a.receipt, s.dt, a.amount, se.seed
+GROUP BY a.id, a.shift, a.number, a.receipt, s.dt, a.amount, se.seed
 HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
 `
 
@@ -163,4 +165,29 @@ HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
 	}
 
 	return activeTasks, nil
+}
+
+func (assign *assignmentsRepository) GetTaskById(id int) (models.Task, error) {
+	const query = `
+select
+	a.id,
+    a.shift,
+    a.number,
+    r.seed,
+    a.amount AS required_amount,
+    COALESCE(SUM(CASE WHEN rp.success THEN 1 ELSE 0 END), 0) AS completed_amount
+FROM green_seeds.assignments a
+JOIN green_seeds.receipts r ON r.receipt = a.receipt
+LEFT JOIN green_seeds.reports rp
+    ON rp.shift = a.shift
+    AND rp.number = a.number
+WHERE a.id = $1
+GROUP BY a.id, a.shift, a.number, r.seed, a.amount;`
+
+	var task models.Task
+	if err := assign.db.Get(&task, query, id); err != nil {
+		return models.Task{}, err
+	}
+
+	return task, nil
 }

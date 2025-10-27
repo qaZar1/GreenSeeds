@@ -7,14 +7,14 @@ import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import { useResourceContext } from "react-admin";
 
-const BackButton = () => {
+const BackButton = ({ to }) => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
     const resource = useResourceContext();
 
     const handleClick = () => {
-        navigate(`/${resource}`);
+        navigate(to ? to : `/${resource}`);
     };
 
     return (
@@ -42,10 +42,10 @@ const BackButton = () => {
     );
 };
 
-const TopToolbarWithBackButton = () => {
+const TopToolbarWithBackButton = ({ to }) => {
     return (
         <TopToolbar sx={{ justifyContent: 'flex-start', p: 0 }}>
-            <BackButton />
+            <BackButton to={to} />
         </TopToolbar>
     );
 };

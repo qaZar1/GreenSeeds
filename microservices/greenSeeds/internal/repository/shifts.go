@@ -12,6 +12,7 @@ type IShiftsRepository interface {
 	DeleteShifts(shift int) (bool, error)
 	GetShiftsByShift(shift int) (models.Shifts, error)
 	GetShiftsWithoutUser() ([]models.Shifts, error)
+	GetShiftsByUsername(username string) ([]models.Shifts, error)
 }
 
 type shiftsRepository struct {
@@ -130,6 +131,20 @@ ORDER BY shift ASC`
 
 	var shifts []models.Shifts
 	if err := sh.db.Select(&shifts, query); err != nil {
+		return nil, err
+	}
+
+	return shifts, nil
+}
+
+func (sh *shiftsRepository) GetShiftsByUsername(username string) ([]models.Shifts, error) {
+	const query = `
+SELECT shift, dt, username
+FROM green_seeds.shifts
+WHERE DATE(dt) = CURRENT_DATE AND username = $1`
+
+	var shifts []models.Shifts
+	if err := sh.db.Select(&shifts, query, username); err != nil {
 		return nil, err
 	}
 

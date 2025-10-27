@@ -9,8 +9,11 @@ import {
   Receipt as ReceiptIcon,
   DragIndicator as DragIndicatorIcon,
   Assignment as AssignmentIcon,
+  Report as ReportIcon,
   Link as LinkIcon,
   People as PersonIcon,
+  Task as TaskIcon,
+  CalendarMonth as CalendarMonthIcon,
 } from "@mui/icons-material";
 import { Collapse, ListItemButton, ListItemText, Box } from "@mui/material";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
@@ -24,13 +27,14 @@ const CustomMenu = () => {
     <Menu>
       {/* ✅ Остальные отдельные пункты */}
       <MenuItemLink to="/users" primaryText="Пользователи" leftIcon={<PersonIcon />} />
-      <MenuItemLink to="/tasks" primaryText="Задания" leftIcon={<AssignmentIcon />} />
+      <MenuItemLink to="/choice" primaryText="Сменные задания" leftIcon={<CalendarMonthIcon />} />
+      <MenuItemLink to="/tasks" primaryText="Задания на смену" leftIcon={<TaskIcon />}/>
 
       <MenuItemLink to="/shifts" primaryText="Смены" leftIcon={<DragIndicatorIcon />} />
       <MenuItemLink to="/assignments" primaryText="Задания" leftIcon={<AssignmentIcon />} />
-      <MenuItemLink to="/reports" primaryText="Отчеты" leftIcon={<AssignmentIcon />} />
+      <MenuItemLink to="/reports" primaryText="Отчеты" leftIcon={<ReportIcon />} />
 
-      {/* ✅ Секция справочников */}
+      {/* ✅ Секция настроек */}
       <ListItemButton onClick={handleToggleRefs} sx={{pl: 2, pr: 2, height: 36}}>
         <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
           <SettingsApplicationsIcon sx={{ marginRight: 2 }} />

@@ -92,11 +92,19 @@ const baseProvider = {
                 case 'list': return `/api/reports/get`;
                 case 'one': return `/api/reports/get${idPart}`;
             }
-        } else if (resource === 'tasks') {
+        } else if (resource === 'choice') {
             switch (action) {
                 case 'list': return `/api/shifts/getWithoutUser`;
-                case 'one': return `/api/tasks/get${idPart}`;
                 case 'update': return `/api/shifts/update`;
+            }
+        } else if (resource === 'tasks') {
+            switch (action) {
+                case 'list': return `/api/assignments/active-tasks${idPart}`;
+                case 'one': return `/api/assignments/active-tasks${idPart}`;
+            }
+        } else if (resource === 'task') {
+            switch (action) {
+                case 'one': return `/api/assignments/task${idPart}`;
             }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
@@ -150,10 +158,20 @@ const baseProvider = {
                 ...item,
                 id: item.id ?? item.id,
             };
-        } else if (resource === 'tasks') {
+        } else if (resource === 'choice') {
             return {
                 ...item,
                 id: item.id ?? item.shift,
+            };
+        } else if (resource === 'tasks') {
+            return {
+                ...item,
+                id: item.id ?? item.username,
+            };
+        } else if (resource === 'task') {
+            return {
+                ...item,
+                id: item.id ?? item.id,
             };
         }
         return item;
@@ -163,7 +181,13 @@ const baseProvider = {
 
     getList: async (resource, params) => {
         const token = getToken();
-        const url = dataProvider.getApiUrl(resource, 'list');
+        
+        let url
+        if (resource === 'tasks'){
+            url = dataProvider.getApiUrl(resource, 'list', params.filter.username);
+        } else {
+            url = dataProvider.getApiUrl(resource, 'list');
+        }
 
         const response = await fetch(url, {
             headers: {
@@ -192,6 +216,13 @@ const baseProvider = {
         const start = (page - 1) * perPage;
         const end = start + perPage;
         const paginatedData = dataWithId.slice(start, end);
+
+        if (paginatedData.length === 0){
+            return {
+                data: dataWithId,
+                total: dataWithId.length,
+            };
+        }
     
         return {
             data: paginatedData,
@@ -391,6 +422,12 @@ const baseProvider = {
                 username: params.data.username,
                 dt: params.data.dt,
             };
+        } else if (resource === 'choice') {
+            bodyData = {
+                shift: params.data.id,
+                username: params.data.username,
+                dt: params.data.dt,
+            };
         } else {
             throw new Error(`Неподдерживаемый ресурс для обновления: ${resource}`);
         }
@@ -422,18 +459,14 @@ const baseProvider = {
     },
 
     delete: async (resource, params) => {
-        const token = getToken();
-        console.log("params.id", params.id)
+        const token = getToken()
         const url = dataProvider.getApiUrl(resource, 'delete', params.id);
-        console.log(url)
         const response = await fetch(url, {
             method: "DELETE",
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
         });
-
-        console.log(response)
 
         if (!response.ok) {
             throw new Error(`Ошибка удаления ${resource}`);
