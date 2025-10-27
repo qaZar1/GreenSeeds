@@ -13,6 +13,8 @@ const ReportsList = ({ ...props }) => {
             resource="reports"
             empty={<EmptyReports />}
             {...props}
+            pagination={false}
+            perPage={false}
             sx={{ padding: 2 }}
             actions={false}
         >

@@ -206,16 +206,49 @@ func (transport *Transport) DeleteApiAssignmentsDelete(w http.ResponseWriter, r 
 func (transport *Transport) GetApiActiveTasks(w http.ResponseWriter, r *http.Request) {
 	username := chi.URLParam(r, "username")
 
-	activeTasks, err := transport.service.CheckActiveTasks(username)
+	check, err := transport.service.CheckActiveTasks(username)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get active task: %w", err))
 		return
 	}
 
-	if activeTasks == nil {
+	if check == nil {
 		utils.WriteString(w, http.StatusNotFound, "Active tasks not found")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, activeTasks)
+	utils.WriteJSON(w, http.StatusOK, check)
+}
+
+// Set godoc
+//
+// @Router /api/assignments/task/{id} [get]
+// @Summary Получение списка активных заданий
+// @Description При обращении, возвращает список активных заданий
+//
+// @Tags Assignments
+// @Produce      application/json
+// @Consume      application/json
+//
+// @Param id path int true "ID задания"
+//
+// @Success 200 {object} []activeTask "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiTask(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+
+	task, err := transport.service.GetTaskById(idStr)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get task: %w", err))
+		return
+	}
+
+	if task == (models.Task{}) {
+		utils.WriteString(w, http.StatusNotFound, "Task not found")
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, task)
 }

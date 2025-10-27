@@ -11,11 +11,11 @@ const Task = ({ task, username }) => {
   const handleTakeTask = async () => {
     try {
       await update(
-        "tasks", // ресурс
+        "choice", // ресурс
         {
-          id: task.id, // обязательно!
+          id: task.shift, // обязательно!
           data: {
-            id: task.id, // чтобы попало в bodyData.shift
+            id: task.shift, // чтобы попало в bodyData.shift
             username: username, // логин текущего пользователя
             dt: task.dt,
           },
@@ -23,6 +23,7 @@ const Task = ({ task, username }) => {
         {
           onSuccess: () => {
             notify(`Задание ${task.id} успешно взято`);
+            window.location.reload();
           },
           onError: (error) => {
             console.error("Ошибка обновления:", error);
@@ -39,17 +40,12 @@ const Task = ({ task, username }) => {
     <Card
       key={task.id}
       sx={{
-        flex: "1 1 calc(50% - 16px)",
-        maxWidth: "calc(50% - 16px)",
+        flex: "1 1 350px",       // базовая ширина карточки
+        minWidth: "280px",       // не даёт стать слишком узкой
+        maxWidth: "100%",        // растягивается, если остаётся место
         boxShadow: 4,
         borderRadius: 3,
         overflow: "hidden",
-        minWidth: "300px",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: 6,
-        },
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",

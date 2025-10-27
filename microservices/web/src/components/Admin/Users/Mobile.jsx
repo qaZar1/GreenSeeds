@@ -29,7 +29,6 @@ const MobileActionsMenu = ({ record, currentUsername }) => {
 
     const handleToggle = async () => {
         const newValue = !record.is_admin;
-        console.log(newValue) // инвертируем текущую роль
 
         try {
             await fetch(`/api/users/update`, {

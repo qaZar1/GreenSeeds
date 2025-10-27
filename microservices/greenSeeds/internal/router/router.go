@@ -111,6 +111,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 			r.Put("/update", transport.PutApiAssignmentsUpdate)
 			r.Delete("/delete/{id}", transport.DeleteApiAssignmentsDelete)
 			r.Get("/active-tasks/{username}", transport.GetApiActiveTasks)
+			r.Get("/task/{id}", transport.GetApiTask)
 		})
 
 		r.Route("/reports", func(r chi.Router) {
