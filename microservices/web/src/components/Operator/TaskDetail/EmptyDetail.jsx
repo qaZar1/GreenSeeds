@@ -1,8 +1,8 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import AssignmentsListActions from "./Action";
+import BunkerListActions from "./Action";
 
-export const EmptyAssignments = () => (
+export const EmptyBunker = () => (
     <Box
         sx={{
             display: "flex",
@@ -14,10 +14,10 @@ export const EmptyAssignments = () => (
             color: "text.secondary",
         }}
     >
-        <Typography variant="h6">Нет данных о заданиях</Typography>
-        <Typography variant="body2">Добавьте задания через панель администратора</Typography>
+        <Typography variant="h6">Нет данных о бункерах</Typography>
+        <Typography variant="body2">Добавьте бункеры через панель администратора</Typography>
         <Box sx={{ mt: 2 }}>
-            <AssignmentsListActions />
+            <BunkerListActions />
         </Box>
     </Box>
 );

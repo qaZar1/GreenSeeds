@@ -47,3 +47,12 @@ func (s *Service) DeleteAssignments(idStr string) (bool, error) {
 func (s *Service) CheckActiveTasks(username string) ([]models.ActiveTask, error) {
 	return s.repo.AsnRepo.CheckActiveTasks(username)
 }
+
+func (s *Service) GetTaskById(idStr string) (models.Task, error) {
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return models.Task{}, err
+	}
+
+	return s.repo.AsnRepo.GetTaskById(id)
+}
