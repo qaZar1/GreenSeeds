@@ -13,6 +13,7 @@ import { Show, SimpleShowLayout, TextField } from "react-admin";
 import TopToolbarWithBackButton from "../../utils/Back";
 import TaskCard from "./Card";
 
+
 const TaskDetails = () => {
   const { id } = useParams();
 
@@ -24,6 +25,7 @@ const TaskDetails = () => {
       sx={{ padding: 2 }}
       actions={<TopToolbarWithBackButton to={`/tasks`} />}
       mutationMode="pessimistic"
+      component={Box}
     >
       <TaskCard />
     </Show>

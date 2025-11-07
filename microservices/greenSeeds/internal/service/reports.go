@@ -6,13 +6,13 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-// func (s *Service) AddAssignment(assignment models.Assignments) (models.Assignments, error) {
-// 	if err := s.validate.Struct(assignment); err != nil {
-// 		return models.Assignments{}, err
-// 	}
+func (s *Service) AddReport(report models.Reports) (models.Reports, error) {
+	if err := s.validate.Struct(report); err != nil {
+		return models.Reports{}, err
+	}
 
-// 	return s.repo.AsnRepo.AddAssignments(assignment)
-// }
+	return s.repo.RepRepo.AddReports(report)
+}
 
 func (s *Service) GetReports() ([]models.Reports, error) {
 	return s.repo.RepRepo.GetReports()

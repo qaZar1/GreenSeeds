@@ -10,7 +10,7 @@ const ReceiptEdit = () => {
         <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic">
             <SimpleForm toolbar={<ToolbarEdit />}>
                 <ReferenceInput source="seed" reference="seeds">
-                    <AutocompleteInput optionText="seed" id="seed" label="Семена"/>
+                    <AutocompleteInput optionText="seed_ru" id="seed" label="Семена"/>
                 </ReferenceInput>
                 <TextInput source="gcode" label="Код запуска" />
                 <TextInput source="description" label="Описание" />

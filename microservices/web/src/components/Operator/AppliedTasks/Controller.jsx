@@ -10,10 +10,8 @@ const TasksListContent = () => {
     if (isLoading) return <LoadingOverlay />;
 
     return (
-        <Box
-            p={2}
-            >
-                <Tasks tasks={data} />
+        <Box p={2} maxWidth={800} margin="auto">
+            <Tasks tasks={data} />
         </Box>
     )
 };

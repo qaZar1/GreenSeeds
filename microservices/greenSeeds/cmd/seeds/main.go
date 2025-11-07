@@ -12,6 +12,7 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/postgres"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/router"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/ws"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -75,7 +76,14 @@ func main() {
 		postgres,
 	)
 
-	router := router.NewRouter(repo, cfg)
+	ws, err := ws.NewServer(cfg.Serial.Port, cfg.Serial.Baud)
+	if err != nil {
+		log.Error().Err(err).Msg("Cannot create ws server")
+		return
+	}
+	defer ws.Close()
+
+	router := router.NewRouter(repo, cfg, ws)
 	if router == nil {
 		log.Error().Msg("Invalid router")
 		return
@@ -85,6 +93,25 @@ func main() {
 		Addr:    cfg.Server.Address,
 		Handler: router,
 	}
+
+	// serial, err := device.NewSerial(cfg.Serial.Port, cfg.Serial.Baud)
+	// if err != nil {
+	// 	log.Error().Err(err).Msg("Cannot open serial port")
+	// 	return
+	// }
+
+	// serial.Write([]byte("{\"id\": 1, \"gcode\": \"TEST\"}\r\n"))
+	// time.Sleep(1 * time.Second)
+
+	// data := make([]byte, 1024)
+	// _, err = serial.Read(data)
+	// if err != nil {
+	// 	log.Error().Err(err).Msg("Cannot read from serial port")
+	// 	return
+	// }
+	// log.Info().Msg(string(data))
+
+	// serial.Close()
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

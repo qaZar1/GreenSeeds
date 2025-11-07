@@ -12,13 +12,11 @@ const SeedListContent = ({ isSmall, isMedium }) => {
 
     return isSmall || isMedium ? (
         <SimpleList
-            primaryText={record => `Семена: ${record.seed}`}
+            primaryText={record => `Семена: ${record.seed_ru}`}
             secondaryText={record => (
                 <>
                     <span style={{ display: 'block' }}>Мин плотность: {record.min_density}</span>
-                    <span style={{ display: 'block' }}>Макс плотность: {record.max_density}</span>
                     <span style={{ display: 'block' }}>Количество семян в бункере: {record.tank_capacity}</span>
-                    <span style={{ display: 'block' }}>Задержка: {record.latency}</span>
                 </>
             )}
             
@@ -36,11 +34,8 @@ const SeedListContent = ({ isSmall, isMedium }) => {
             bulkActionButtons={false}
             empty={<EmptySeed />}
         >
-            <TextField source="seed" label="Семена" />
-            <TextField source="min_density" label="Минимальная плотность" />
-            <TextField source="max_density" label="Максимальная плотность" />
+            <TextField source="seed_ru" label="Семена" />
             <TextField source="tank_capacity" label="Количество семян в бункере" />
-            <TextField source="latency" label="Задержка" />
             <EditButton label="Редактировать" />
         </Datagrid>
     )

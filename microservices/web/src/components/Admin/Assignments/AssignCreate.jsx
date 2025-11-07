@@ -34,7 +34,7 @@ const AssignmentsCreate = () => {
                         label="Рецепт"
                     />
                 </ReferenceInput>
-                <NumberInput source="amount" label="Количество"/>
+                <NumberInput source="amount" label="Количество" min={1}/>
             </SimpleForm>
         </Create>
     );

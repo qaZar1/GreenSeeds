@@ -28,6 +28,8 @@ type Task struct {
 	Shift           int64  `json:"shift" db:"shift"`
 	Number          int    `json:"number" db:"number"`
 	Seed            string `json:"seed" db:"seed"`
+	Bunker          int64  `json:"bunker" db:"bunker"`
+	Gcode           string `json:"gcode" db:"gcode"`
 	RequiredAmount  int    `json:"required_amount" db:"required_amount"`
 	CompletedAmount int    `json:"completed_amount" db:"completed_amount"`
 }

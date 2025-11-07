@@ -174,6 +174,8 @@ select
     a.shift,
     a.number,
     r.seed,
+	p.bunker,
+	r.gcode,
     a.amount AS required_amount,
     COALESCE(SUM(CASE WHEN rp.success THEN 1 ELSE 0 END), 0) AS completed_amount
 FROM green_seeds.assignments a
@@ -181,8 +183,10 @@ JOIN green_seeds.receipts r ON r.receipt = a.receipt
 LEFT JOIN green_seeds.reports rp
     ON rp.shift = a.shift
     AND rp.number = a.number
+LEFT JOIN green_seeds.placement p
+	ON p.seed = r.seed
 WHERE a.id = $1
-GROUP BY a.id, a.shift, a.number, r.seed, a.amount;`
+GROUP BY a.id, a.shift, a.number, r.seed, p.bunker, r.gcode, a.amount;`
 
 	var task models.Task
 	if err := assign.db.Get(&task, query, id); err != nil {

@@ -9,6 +9,7 @@ const SeedEdit = () => {
         <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic">
             <SimpleForm toolbar={<ToolbarEdit />}>
                 <TextInput source="seed" label="Семена" disabled/>
+                <TextInput source="seed_ru" label="Семена (рус)"/>
                 <NumberInput source="min_density" label="Минимальная плотность" />
                 <NumberInput source="max_density" label="Максимальная плотность" />
                 <NumberInput source="tank_capacity" label="Емкость бункера" />

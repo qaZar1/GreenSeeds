@@ -35,7 +35,7 @@ const Tasks = ({ tasks }) => {
   }, {});
 
   return (
-    <Box display="flex" justifyContent="center" p={2}>
+    <Box display="flex" justifyContent="center" p={2} pl={5} pr={5}>
       <Card sx={{ width: "100%", borderRadius: 3, boxShadow: 4 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom align="center">
@@ -43,7 +43,7 @@ const Tasks = ({ tasks }) => {
           </Typography>
 
           {Object.entries(grouped).map(([shift, group]) => (
-            <Box key={shift} mb={3}>
+            <Box key={shift} mb={7}>
               <Typography
                 variant="subtitle1"
                 sx={{ fontWeight: "bold", mb: 1, color: "primary.main" }}
@@ -76,8 +76,6 @@ const Tasks = ({ tasks }) => {
                   </TableBody>
                 </Table>
               </TableContainer>
-
-              <Divider sx={{ mt: 2, mb: 2 }} />
             </Box>
           ))}
         </CardContent>

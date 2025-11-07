@@ -6,7 +6,7 @@ import (
 )
 
 type IReportsRepository interface {
-	AddReports(reports models.Reports) (bool, error)
+	AddReports(reports models.Reports) (models.Reports, error)
 	GetReports() ([]models.Reports, error)
 	UpdateReports(reports models.Reports) (bool, error)
 	DeleteReports(shift int, number int, receipt int) (bool, error)
@@ -23,7 +23,7 @@ func NewReportsRepository(db *sqlx.DB) *reportsRepository {
 	}
 }
 
-func (rep *reportsRepository) AddReports(reports models.Reports) (bool, error) {
+func (rep *reportsRepository) AddReports(reports models.Reports) (models.Reports, error) {
 	const query = `
 INSERT INTO green_seeds.reports (
 	shift,
@@ -44,19 +44,25 @@ VALUES (
 	:success,
 	:error,
 	:solution,
-	:mark)`
+	:mark)
+RETURNING id`
 
-	result, err := rep.db.NamedExec(query, reports)
+	rows, err := rep.db.NamedQuery(query, reports)
 	if err != nil {
-		return false, err
+		return models.Reports{}, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
+	defer rows.Close()
+
+	var inserted models.Reports
+	if rows.Next() {
+		err = rows.StructScan(&inserted)
+		if err != nil {
+			return models.Reports{}, err
+		}
 	}
 
-	return rowsAffected == 1, nil
+	return inserted, nil
 }
 
 func (rep *reportsRepository) GetReports() ([]models.Reports, error) {

@@ -43,7 +43,7 @@ const AppliedTaskList = ({ ...props }) => {
             {...props}
             pagination={false}
             perPage={false}
-            sx={{ padding: 2 }}
+            sx={{ padding: 2, width: "100%" }}
             actions={false}
             title="Задания на смену"
             component={Box}

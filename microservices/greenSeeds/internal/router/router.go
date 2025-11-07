@@ -14,10 +14,11 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/transport"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/ws"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
+func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *chi.Mux {
 	infra := infrastructure.New(cfg.JWT.ExpiresIn, cfg)
 	transport := transport.NewTransport(repo, cfg, infra)
 
@@ -50,6 +51,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	router.Handle("/swagger/*", httpSwagger.WrapHandler)
+	router.HandleFunc("/ws", ws.HandleWS)
 
 	router.Route("/api", func(r chi.Router) {
 		r.Use(middlewares.BearerAuthMiddleware(infra, repo))
@@ -115,7 +117,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 		})
 
 		r.Route("/reports", func(r chi.Router) {
-			// r.Post("/add", transport.PostApiAssignmentsAdd)
+			r.Post("/add", transport.PostApiReportsAdd)
 			r.Get("/get", transport.GetApiReports)
 			r.Get("/get/{id}", transport.GetApiReportsById)
 			// r.Put("/update", transport.PutApiAssignmentsUpdate)

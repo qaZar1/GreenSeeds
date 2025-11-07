@@ -292,6 +292,7 @@ const baseProvider = {
             // ** Использование требуемой структуры JSON для 'seeds' **
             bodyData = {
                 seed: params.data.seed,
+                seed_ru: params.data.seed_ru,
                 min_density: params.data.min_density,
                 max_density: params.data.max_density,
                 tank_capacity: params.data.tank_capacity,
@@ -372,6 +373,7 @@ const baseProvider = {
             // ** Использование требуемой структуры JSON для 'seeds' **
             bodyData = {
                 seed: params.data.id, // ID используется как 'seed' для обновления
+                seed_ru: params.data.seed_ru,
                 min_density: params.data.min_density,
                 max_density: params.data.max_density,
                 tank_capacity: params.data.tank_capacity,
