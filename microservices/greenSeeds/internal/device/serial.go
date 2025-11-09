@@ -14,7 +14,6 @@ import (
 type Serial struct {
 	port       *serial.Port
 	ResponseCh chan []byte
-	ErrCh      chan error
 	mu         sync.Mutex
 }
 
@@ -33,15 +32,6 @@ func NewSerial(port string, baud int, ctx context.Context) (*Serial, error) {
 	s := &Serial{
 		port:       p,
 		ResponseCh: make(chan []byte, 100),
-		ErrCh:      make(chan error, 10),
-	}
-
-	go s.Listen(ctx)
-
-	// Проверка связи
-	if err := s.bootHandshake(ctx); err != nil {
-		_ = s.Close()
-		return nil, err
 	}
 
 	return s, nil
@@ -80,17 +70,12 @@ func (s *Serial) Listen(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			close(s.ResponseCh)
-			close(s.ErrCh)
 			return
 		default:
 			n, err := s.port.Read(buf)
 			if err != nil {
 				if err == io.EOF {
 					continue
-				}
-				select {
-				case s.ErrCh <- err:
-				default:
 				}
 				return
 			}
@@ -112,28 +97,4 @@ func (s *Serial) Listen(ctx context.Context) {
 			}
 		}
 	}
-}
-
-func (s *Serial) bootHandshake(ctx context.Context) error {
-	boot := []byte("BOOT\x04")
-	start := time.Now()
-	for time.Since(start) < 10*time.Second {
-		if err := s.Write(boot); err != nil {
-			select {
-			case s.ErrCh <- err:
-			default:
-			}
-		}
-		select {
-		case data := <-s.ResponseCh:
-			if string(data) == "ACK BOOT" {
-				log.Println("ACK BOOT получен — STM готов")
-				return nil
-			}
-		case <-time.After(1 * time.Second):
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-	return fmt.Errorf("timeout: STM не ответил на BOOT")
 }
