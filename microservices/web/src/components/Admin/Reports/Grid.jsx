@@ -21,7 +21,7 @@ import { useTheme } from "@mui/material/styles";
 const GroupedDatagrid = () => {
   const { data, isLoading } = useListContext();
   const [openGroups, setOpenGroups] = useState({});
-  const [showHistory, setShowHistory] = useState(false); // новое состояние
+  const [showHistory, setShowHistory] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isMedium = useMediaQuery(theme.breakpoints.between("sm", "md"));

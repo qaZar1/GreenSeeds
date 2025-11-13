@@ -60,11 +60,13 @@ RETURNING id, shift, number, receipt, amount`
 
 func (assign *assignmentsRepository) GetAssignments() ([]models.Assignments, error) {
 	const query = `
-SELECT id, green_seeds.assignments.shift, number, receipt, amount
-FROM green_seeds.assignments
-JOIN green_seeds.shifts ON green_seeds.assignments.shift = green_seeds.shifts.shift
+SELECT id, a.shift, number, r.description, a.receipt, amount
+FROM green_seeds.assignments a
+JOIN green_seeds.shifts ON a.shift = green_seeds.shifts.shift
+LEFT JOIN green_seeds.receipts r
+ON r.receipt = a.receipt
 WHERE green_seeds.shifts.dt >= CURRENT_DATE
-ORDER BY green_seeds.assignments.shift, green_seeds.assignments.number;`
+ORDER BY a.shift, a.number;`
 
 	var assignments []models.Assignments
 	if err := assign.db.Select(&assignments, query); err != nil {
@@ -143,7 +145,8 @@ SELECT
     s.dt,
     a.amount,
     COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) AS done_turns,
-    se.seed
+    se.seed,
+    se.seed_ru
 FROM green_seeds.assignments a
 JOIN green_seeds.shifts s ON s.shift = a.shift
 LEFT JOIN green_seeds.reports r 
@@ -155,7 +158,7 @@ left join green_seeds.receipts r2
 left join green_seeds.seeds se
   on se.seed = r2.seed 
 WHERE s.username = $1 and DATE(s.dt) = CURRENT_DATE
-GROUP BY a.id, a.shift, a.number, a.receipt, s.dt, a.amount, se.seed
+GROUP BY a.id, a.shift, a.number, a.receipt, s.dt, a.amount, se.seed, se.seed_ru 
 HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
 `
 
@@ -169,11 +172,12 @@ HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
 
 func (assign *assignmentsRepository) GetTaskById(id int) (models.Task, error) {
 	const query = `
-select
+SELECT
 	a.id,
     a.shift,
     a.number,
     r.seed,
+    se.seed_ru,
 	p.bunker,
 	r.gcode,
     a.amount AS required_amount,
@@ -185,8 +189,10 @@ LEFT JOIN green_seeds.reports rp
     AND rp.number = a.number
 LEFT JOIN green_seeds.placement p
 	ON p.seed = r.seed
+LEFT JOIN green_seeds.seeds se
+	ON r.seed = se.seed 
 WHERE a.id = $1
-GROUP BY a.id, a.shift, a.number, r.seed, p.bunker, r.gcode, a.amount;`
+GROUP BY a.id, a.shift, a.number, r.seed, se.seed_ru, p.bunker, r.gcode, a.amount;`
 
 	var task models.Task
 	if err := assign.db.Get(&task, query, id); err != nil {

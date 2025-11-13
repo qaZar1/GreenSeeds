@@ -5,7 +5,7 @@ import BackButton from "../../utils/Back";
 
 const ShiftCreate = () => {
     return (
-        <Create sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic">
+        <Create sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Создание смены">
             <SimpleForm toolbar={<ToolbarSave />}>
                 <DateTimeInput source="dt" label="Дата"/>
             </SimpleForm>

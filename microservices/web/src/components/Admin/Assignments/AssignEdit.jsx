@@ -7,7 +7,7 @@ import { ReferenceInput, SelectInput, AutocompleteInput } from "react-admin";
 
 const AssignmentsEdit = () => {
     return (
-        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic">
+        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Редактирование сменного задания">
             <SimpleForm toolbar={<ToolbarEdit />}>
                 <ReferenceInput source="shift" reference="shifts">
                     <AutocompleteInput

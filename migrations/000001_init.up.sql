@@ -12,13 +12,12 @@ CREATE TABLE IF NOT EXISTS green_seeds.seeds (
     min_density INT,
     max_density INT,
     tank_capacity INT,
-    latency INT,
     PRIMARY KEY (seed)
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.placement (
     bunker INT UNIQUE,
-    seed VARCHAR(50) UNIQUE,
+    seed VARCHAR(50),
     FOREIGN KEY (bunker) REFERENCES green_seeds.bunkers(bunker),
     FOREIGN KEY (seed) REFERENCES green_seeds.seeds(seed)
 );

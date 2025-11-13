@@ -15,6 +15,8 @@ const AssignmentsList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<AssignmentsListActions />}
+            title="Сменные задания"
+            pagination={false}
         >
             <AssignmentsListContent isSmall={isSmall} />
         </List>

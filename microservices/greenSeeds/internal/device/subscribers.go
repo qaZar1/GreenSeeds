@@ -1,7 +1,7 @@
 package device
 
 func (m *SerialManager) Subscribe() <-chan []byte {
-	ch := make(chan []byte, 10)
+	ch := make(chan []byte, 50)
 	m.subsMu.Lock()
 	m.subs = append(m.subs, ch)
 	m.subsMu.Unlock()

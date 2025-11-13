@@ -31,71 +31,83 @@ import ReportsShow from './components/Admin/Reports/ReportShow';
 import ChoiceList from "./components/Operator/ChoiceTasks/Choice";
 import TaskDetails from "./components/Operator/TaskDetail/TaskDetails";
 import AppliedTaskList from "./components/Operator/AppliedTasks/Applied";
+import { getRole } from "./authProvider";
 
 function App() {
+  const role = getRole();
   return (
     <>
       <Admin dataProvider={dataProvider} authProvider={authProvider} layout={CustomLayout}>
-        <Resource
-          name="bunkers"
-          list={BunkerList}
-          edit={BunkerEdit}
-          create={CreateBunker}
-        />
-        <Resource
-          name="seeds"
-          list={SeedList}
-          edit={SeedEdit}
-          create={CreateSeed}
-        />
-        <Resource
-          name="users"
-          list={UserList}
-          create={UserCreate}
-        />
-        <Resource
-          name="placements"
-          list={PlacementList}
-          create={PlacementCreate}
-          edit={PlacementEdit}
-        />
-        <Resource
-          name="receipts"
-          list={ReceiptList}
-          create={ReceiptCreate}
-          edit={ReceiptEdit}
-        />
-        <Resource
-          name="shifts"
-          list={ShiftList}
-          create={ShiftCreate}
-          edit={ShiftEdit}
-        />
-        <Resource
-          name="assignments"
-          list={AssignmentsList}
-          create={AssignmentsCreate}
-          edit={AssignmentsEdit}
-        />
-        <Resource
-          name="reports"
-          list={ReportsList}
-          show={ReportsShow}
-        />
+        {role === 'admin' && (
+          <>
+            <Resource
+              name="bunkers"
+              list={BunkerList}
+              edit={BunkerEdit}
+              create={CreateBunker}
+            />
+            <Resource
+              name="seeds"
+              list={SeedList}
+              edit={SeedEdit}
+              create={CreateSeed}
+            />
+            <Resource
+              name="users"
+              list={UserList}
+              create={UserCreate}
+            />
+            <Resource
+              name="placements"
+              list={PlacementList}
+              create={PlacementCreate}
+              edit={PlacementEdit}
+            />
+            <Resource
+              name="receipts"
+              list={ReceiptList}
+              create={ReceiptCreate}
+              edit={ReceiptEdit}
+            />
+            <Resource
+              name="shifts"
+              list={ShiftList}
+              create={ShiftCreate}
+              edit={ShiftEdit}
+            />
+            <Resource
+              name="assignments"
+              list={AssignmentsList}
+              create={AssignmentsCreate}
+              edit={AssignmentsEdit}
+            />
+            <Resource
+              name="reports"
+              list={ReportsList}
+              show={ReportsShow}
+            />
+          </>
+        )}
 
-        <Resource
-          name="choice"
-          list={ChoiceList}
-        />
+        {role === 'operator' && (
+          <>
+            <Resource
+              name="choice"
+              list={ChoiceList}
+            />
 
-        <Resource
-          name="tasks"
-          list={AppliedTaskList}
-        />
+            <Resource
+              name="tasks"
+              list={AppliedTaskList}
+            />
+          </>
+        )}
 
         <CustomRoutes>
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/tasks/:id" element={<TaskDetails />} />
+          {role === 'operator' && (
+            <Route path="/tasks/:id" element={<TaskDetails />} />
+          )}
         </CustomRoutes>
       </Admin>
     </>

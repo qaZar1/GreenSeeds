@@ -7,14 +7,14 @@ import { ReferenceInput, SelectInput, AutocompleteInput } from "react-admin";
 
 const PlacementEdit = () => {
     return (
-        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic">
+        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Редактирование расположения семян">
             <SimpleForm toolbar={<ToolbarEdit />}>
                 <ReferenceInput source="bunker" reference="bunkers">
                     <AutocompleteInput optionText="bunker" id="bunker" label="Бункер"/>
                 </ReferenceInput>
 
                 <ReferenceInput source="seed" reference="seeds">
-                    <AutocompleteInput optionText="seed" id="seed" label="Семена"/>
+                    <AutocompleteInput optionText="seed_ru" id="seed" label="Семена"/>
                 </ReferenceInput>
             </SimpleForm>
         </Edit>

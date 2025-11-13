@@ -1,5 +1,18 @@
 import { jwtDecode } from "jwt-decode";
 
+export const getRole = () => {
+    try {
+        const stored = localStorage.getItem("auth");
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            return parsed?.role || null;
+        }
+    } catch (e) {
+        console.warn("Ошибка получения профиля:", e);
+    }
+    return null;
+};
+
 export const authProvider = {
   login: async ({ username, password }) => {
     const response = await fetch("/api/login", {
@@ -23,6 +36,12 @@ export const authProvider = {
       "auth",
       JSON.stringify({ token: access_token, role })
     );
+
+    if (role === "operator") {
+      window.location.href = "/choice";
+    } else {
+      window.location.href = "/shifts";
+    }
   },
 
   logout: () => {

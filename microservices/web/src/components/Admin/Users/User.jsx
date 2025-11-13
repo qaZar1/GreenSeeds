@@ -44,6 +44,7 @@ const UserList = (props) => {
             {...props}
             sx={{ padding: 2 }}
             actions={isSmall ? <CreateButton /> : <UserListActions />}
+            title="Пользователи"
         >
             <UserListContent isSmall={isSmall} currentUsername={currentUsername} />
         </List>

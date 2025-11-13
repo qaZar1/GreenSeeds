@@ -100,7 +100,6 @@ const baseProvider = {
         } else if (resource === 'tasks') {
             switch (action) {
                 case 'list': return `/api/assignments/active-tasks${idPart}`;
-                case 'one': return `/api/assignments/active-tasks${idPart}`;
             }
         } else if (resource === 'task') {
             switch (action) {
@@ -212,20 +211,14 @@ const baseProvider = {
         );
     
         // --- фронтэнд пагинация ---
-        const { page = 1, perPage = 10 } = params.pagination || {};
-        const start = (page - 1) * perPage;
-        const end = start + perPage;
-        const paginatedData = dataWithId.slice(start, end);
+        // const { page = 1, perPage = 10 } = params.pagination || {};
+        // const start = (page - 1) * perPage;
+        // const end = start + perPage;
+        // const paginatedData = dataWithId.slice(start, end);
 
-        if (paginatedData.length === 0){
-            return {
-                data: dataWithId,
-                total: dataWithId.length,
-            };
-        }
     
         return {
-            data: paginatedData,
+            data: dataWithId,
             total: dataWithId.length, // RA использует total для пагинации
         };
     },
@@ -289,14 +282,12 @@ const baseProvider = {
                 distance: params.data.distance,
             };
         } else if (resource === 'seeds') {
-            // ** Использование требуемой структуры JSON для 'seeds' **
             bodyData = {
                 seed: params.data.seed,
                 seed_ru: params.data.seed_ru,
                 min_density: params.data.min_density,
                 max_density: params.data.max_density,
                 tank_capacity: params.data.tank_capacity,
-                latency: params.data.latency,
             };
         } else if (resource === 'users') {
             bodyData = {
@@ -395,6 +386,7 @@ const baseProvider = {
             bodyData = {
                 bunker: params.data.id,
                 seed: params.data.seed,
+                seed_ru: params.data.seed_ru,
             };
         } else if (resource === 'receipts') {
             bodyData = {

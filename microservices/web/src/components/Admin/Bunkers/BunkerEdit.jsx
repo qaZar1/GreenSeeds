@@ -6,7 +6,7 @@ import BackButton from "../../utils/Back";
 
 const BunkerEdit = () => {
     return (
-        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic">
+        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Редактирование бункера">
             <SimpleForm toolbar={<ToolbarEdit />}>
                 <NumberInput source="bunker" label="Бункер" disabled/>
                 <NumberInput source="distance" label="Расстояние" />

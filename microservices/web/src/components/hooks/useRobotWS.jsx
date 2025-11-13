@@ -8,22 +8,24 @@ const robotStateTranslate = {
   READY: "Готов",
   BUSY: "В процессе выполнения",
   ERR: "Ошибка",
-  END: "Задание выполнено",
+  END: "Задание выполнено. Ожидание контроля качества.",
   RETURN: "Возврат каретки",
   UNKNOWN: "Неизвестно",
   MANUAL_MODE: "Ручной режим",
+  WAIT: "Выполняется возврат каретки"
 };
 
 export function useRobotWS(params = {}) {
   const { record } = params;
 
   const wsRef = useRef(null);
+  const reconnectTimeout = useRef(null);
+  const isMountedRef = useRef(false);
+
   const [state, setState] = useState("STAND_BY");
   const [isBoot, setIsBoot] = useState(false);
   const [dots, setDots] = useState("");
-  const reconnectTimeout = useRef(null);
 
-  // Анимация точек для BUSY
   useEffect(() => {
     if (state !== "BUSY") {
       setDots("");
@@ -35,7 +37,6 @@ export function useRobotWS(params = {}) {
     return () => clearInterval(interval);
   }, [state]);
 
-  // Вызов API при END
   useEffect(() => {
     if (state === "END" && record) {
       fetch("/api/reports/add", {
@@ -48,20 +49,20 @@ export function useRobotWS(params = {}) {
           success: true,
         }),
       })
-      .then(res => res.json())
-      .then(data => console.log("END API called:", data))
-      .catch(err => console.error(err));
+        .then(res => res.json())
+        .then(data => console.log("END API called:", data))
+        .catch(err => console.error(err));
     }
   }, [state, record]);
 
-  // --- Функция подключения к WS с авто-статусом и авто-реконнектом ---
   const connectWS = () => {
+    if (!isMountedRef.current) return;
+
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
 
     ws.onopen = () => {
       console.log("WebSocket connected");
-      // Отправляем STATUS при подключении
       ws.send(encodeMsg("BOOT"));
       ws.send(encodeMsg("STATUS"));
     };
@@ -74,40 +75,55 @@ export function useRobotWS(params = {}) {
       else if (msg.includes("READY")) setState("READY");
       else if (msg.includes("BEGIN") || msg.includes("ACK")) setState("BUSY");
       else if (msg.includes("END")) setState("END");
-      else if (msg.includes("RETURN")) setState("RETURN");
+      else if (msg.includes("RETURN")){
+        setState("RETURN");
+        
+      }
       else if (msg.includes("STAND BY")) setState("STAND_BY");
       else if (msg.includes("ERR")) setState("ERR");
       else if (msg.includes("Disconnected")) setIsBoot(false);
       else if (msg.includes("MANUAL_MODE")) setState("MANUAL_MODE");
+      else if (msg.includes("WAIT")) setState("WAIT");
     };
 
     ws.onclose = () => {
-      console.log("WebSocket disconnected. Reconnecting in 2s...");
-      reconnectTimeout.current = setTimeout(connectWS, 2000);
+      console.log("WebSocket disconnected");
+      if (isMountedRef.current) {
+        console.log("Reconnecting in 2s...");
+        reconnectTimeout.current = setTimeout(connectWS, 2000);
+      }
     };
 
     ws.onerror = (err) => {
       console.error("WebSocket error:", err);
-      ws.close(); // триггерим onclose для реконнекта
+      ws.close();
     };
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     connectWS();
+
     return () => {
+      isMountedRef.current = false;
       clearTimeout(reconnectTimeout.current);
       wsRef.current?.close();
     };
   }, []);
 
-  const displayState = state === "BUSY" ? robotStateTranslate[state] + dots : robotStateTranslate[state] || state;
+  const displayState =
+    state === "BUSY"
+      ? robotStateTranslate[state] + dots
+      : robotStateTranslate[state] || state;
 
-  return { 
-    rawState: state, 
-    displayState, 
-    sendCommand: (msg) => wsRef.current?.send(encodeMsg(msg)), 
-    sendGcode: (gcode, displayText, bunker, shift, number, amount) => 
-      wsRef.current?.send(encodeGcode(gcode, displayText, bunker, shift, number, amount)),
+  return {
+    rawState: state,
+    displayState,
+    sendCommand: (msg) => wsRef.current?.send(encodeMsg(msg)),
+    sendGcode: (gcode, displayText, bunker, shift, number, amount) =>
+      wsRef.current?.send(
+        encodeGcode(gcode, displayText, bunker, shift, number, amount)
+      ),
     isBoot,
   };
 }

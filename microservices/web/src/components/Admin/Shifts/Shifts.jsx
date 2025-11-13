@@ -15,6 +15,8 @@ const ShiftList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<ShiftListActions />}
+            title="План производства"
+            pagination={false}
         >
             <ShiftListContent isSmall={isSmall} />
         </List>

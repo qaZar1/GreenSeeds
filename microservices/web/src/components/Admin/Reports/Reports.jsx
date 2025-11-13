@@ -17,6 +17,7 @@ const ReportsList = ({ ...props }) => {
             perPage={false}
             sx={{ padding: 2 }}
             actions={false}
+            title="Отчеты"
         >
             <ReportsListContent isSmall={isSmall} isMedium={isMedium} />
         </List>

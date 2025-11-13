@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/config"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/postgres"
@@ -26,6 +29,7 @@ import (
 // @description API для работы с ITops
 // @BasePath /
 func main() {
+	fmt.Println(time.Now())
 	var configPath string
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
@@ -76,10 +80,16 @@ func main() {
 		postgres,
 	)
 
-	ws, err := ws.NewServer(cfg.Serial.Port, cfg.Serial.Baud)
+	camera := camera.NewCamera(
+		cfg.Camera.Name,
+		cfg.Camera.InputDevice,
+		cfg.Camera.Framerate,
+		cfg.Camera.VideoSize,
+	)
+
+	ws, err := ws.NewServer(cfg.Serial.Port, cfg.Serial.Baud, camera)
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot create ws server")
-		return
 	}
 	defer ws.Close()
 
@@ -94,31 +104,13 @@ func main() {
 		Handler: router,
 	}
 
-	// serial, err := device.NewSerial(cfg.Serial.Port, cfg.Serial.Baud)
-	// if err != nil {
-	// 	log.Error().Err(err).Msg("Cannot open serial port")
-	// 	return
-	// }
-
-	// serial.Write([]byte("{\"id\": 1, \"gcode\": \"TEST\"}\r\n"))
-	// time.Sleep(1 * time.Second)
-
-	// data := make([]byte, 1024)
-	// _, err = serial.Read(data)
-	// if err != nil {
-	// 	log.Error().Err(err).Msg("Cannot read from serial port")
-	// 	return
-	// }
-	// log.Info().Msg(string(data))
-
-	// serial.Close()
-
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			return
 		}
 		log.Info().Msg("Service stopped")
 	}()
+	log.Info().Msg("🚀 Запуск программы: Hortus")
 	log.Info().Msg("Service started on " + cfg.Server.Address)
 
 	channel := make(chan os.Signal, 1)

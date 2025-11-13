@@ -16,6 +16,7 @@ const BunkerList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<BunkerListActions />}
+            title="Бункеры"
         >
             <BunkerListContent isSmall={isSmall} />
         </List>

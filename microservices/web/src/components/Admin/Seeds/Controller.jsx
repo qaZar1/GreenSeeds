@@ -15,8 +15,7 @@ const SeedListContent = ({ isSmall, isMedium }) => {
             primaryText={record => `Семена: ${record.seed_ru}`}
             secondaryText={record => (
                 <>
-                    <span style={{ display: 'block' }}>Мин плотность: {record.min_density}</span>
-                    <span style={{ display: 'block' }}>Количество семян в бункере: {record.tank_capacity}</span>
+                    <span style={{ display: 'block' }}>Емкость бункера (кол-во лотков): {record.tank_capacity}</span>
                 </>
             )}
             
@@ -35,7 +34,7 @@ const SeedListContent = ({ isSmall, isMedium }) => {
             empty={<EmptySeed />}
         >
             <TextField source="seed_ru" label="Семена" />
-            <TextField source="tank_capacity" label="Количество семян в бункере" />
+            <TextField source="tank_capacity" label="Емкость бункера (кол-во лотков)" />
             <EditButton label="Редактировать" />
         </Datagrid>
     )

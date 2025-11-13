@@ -55,8 +55,10 @@ RETURNING bunker, seed`
 
 func (pl *placementRepository) GetPlacement() ([]models.Placement, error) {
 	const query = `
-SELECT bunker, seed
-FROM green_seeds.placement
+SELECT p.bunker, p.seed, se.seed_ru
+FROM green_seeds.placement p
+LEFT JOIN green_seeds.seeds se
+	ON p.seed = se.seed
 ORDER BY bunker ASC`
 
 	var placement []models.Placement
@@ -112,8 +114,10 @@ WHERE bunker = $1`
 
 func (pl *placementRepository) GetPlacementByBunker(bunker int) (models.Placement, error) {
 	const query = `
-SELECT bunker, seed
-FROM green_seeds.placement
+SELECT p.bunker, p.seed, se.seed_ru
+FROM green_seeds.placement p
+LEFT JOIN green_seeds.seeds se
+	ON p.seed = se.seed
 WHERE bunker = $1`
 
 	var placement models.Placement

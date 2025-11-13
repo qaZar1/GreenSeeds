@@ -15,6 +15,8 @@ const ReceiptList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<ReceiptListActions />}
+            title="Рецепты"
+            pagination={false}
         >
             <ReceiptListContent isSmall={isSmall} />
         </List>

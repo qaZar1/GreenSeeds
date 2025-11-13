@@ -16,6 +16,7 @@ const PlacementList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<PlacementListActions />}
+            title="Расположение семян"
         >
             <PlacementListContent isSmall={isSmall} />
         </List>

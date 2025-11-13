@@ -13,7 +13,6 @@ import { Show, SimpleShowLayout, TextField } from "react-admin";
 import TopToolbarWithBackButton from "../../utils/Back";
 import TaskCard from "./Card";
 
-
 const TaskDetails = () => {
   const { id } = useParams();
 

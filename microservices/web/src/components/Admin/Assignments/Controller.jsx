@@ -18,8 +18,8 @@ const AssignmentsListContent = ({ isSmall }) => {
             secondaryText={record => (
                 <>
                     <span style={{ display: 'block' }}>Номер сменного задания: {record.number}</span>
-                    <span style={{ display: 'block' }}>Получение: {record.receipt}</span>
-                    <span style={{ display: 'block' }}>Количество: {record.amount}</span>
+                    <span style={{ display: 'block' }}>Название рецепта: {record.description}</span>
+                    <span style={{ display: 'block' }}>Количество (лотков): {record.amount}</span>
                     
                 </>
             )}
@@ -39,8 +39,8 @@ const AssignmentsListContent = ({ isSmall }) => {
         >
             <TextField source="shift" label="Номер смены" />
             <TextField source="number" label="Номер сменного задания" />
-            <TextField source="receipt" label="Номер рецепта" />
-            <TextField source="amount" label="Количество"/>
+            <TextField source="description" label="Название рецепта" />
+            <TextField source="amount" label="Количество (лотков)"/>
             <EditButton label="Редактировать"/>
         </Datagrid>
     )

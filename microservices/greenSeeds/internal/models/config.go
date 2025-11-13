@@ -27,4 +27,11 @@ type Config struct {
 		Port string `yaml:"port"`
 		Baud int    `yaml:"baud"`
 	}
+
+	Camera struct {
+		Name        string `yaml:"name"`
+		InputDevice string `yaml:"input_device"`
+		Framerate   string `yaml:"framerate"`
+		VideoSize   string `yaml:"video_size"`
+	}
 }

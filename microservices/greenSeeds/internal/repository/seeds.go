@@ -30,18 +30,16 @@ INSERT INTO green_seeds.seeds (
 	seed_ru,
 	min_density,
 	max_density,
-	tank_capacity,
-	latency
+	tank_capacity
 )
 VALUES (
 	:seed,
 	:seed_ru,
 	:min_density,
 	:max_density,
-	:tank_capacity,
-	:latency
+	:tank_capacity
 )
-RETURNING seed, seed_ru, min_density, max_density, tank_capacity, latency`
+RETURNING seed, seed_ru, min_density, max_density, tank_capacity`
 
 	rows, err := se.db.NamedQuery(query, seeds)
 	if err != nil {
@@ -63,7 +61,7 @@ RETURNING seed, seed_ru, min_density, max_density, tank_capacity, latency`
 
 func (se *seedsRepository) GetSeeds() ([]models.Seeds, error) {
 	const query = `
-SELECT seed, seed_ru, min_density, max_density, tank_capacity, latency
+SELECT seed, seed_ru, min_density, max_density, tank_capacity
 FROM green_seeds.seeds`
 
 	var seeds []models.Seeds
@@ -76,7 +74,7 @@ FROM green_seeds.seeds`
 
 func (se *seedsRepository) GetSeedsBySeed(seedName string) (models.Seeds, error) {
 	const query = `
-SELECT seed, seed_ru, min_density, max_density, tank_capacity, latency
+SELECT seed, seed_ru, min_density, max_density, tank_capacity
 FROM green_seeds.seeds
 WHERE seed = $1`
 
@@ -94,10 +92,9 @@ UPDATE green_seeds.seeds
 SET	seed_ru = :seed_ru,
 	min_density = :min_density,
 	max_density = :max_density,
-	tank_capacity = :tank_capacity,
-	latency = :latency
+	tank_capacity = :tank_capacity
 WHERE seed = :seed
-RETURNING seed, seed_ru, min_density, max_density, tank_capacity, latency`
+RETURNING seed, seed_ru, min_density, max_density, tank_capacity`
 
 	rows, err := se.db.NamedQuery(query, seeds)
 	if err != nil {

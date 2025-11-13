@@ -51,17 +51,6 @@ func (s *Serial) Write(data []byte) error {
 	return nil
 }
 
-func (s *Serial) Close() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.port != nil {
-		err := s.port.Close()
-		s.port = nil
-		return err
-	}
-	return nil
-}
-
 func (s *Serial) Listen(ctx context.Context) {
 	buf := make([]byte, 128)
 	var msg []byte
@@ -83,12 +72,13 @@ func (s *Serial) Listen(ctx context.Context) {
 				continue
 			}
 			for _, b := range buf[:n] {
-				if b == 0x04 {
-					data := append([]byte(nil), msg...)
+				if b == delimeter {
+					data := make([]byte, len(msg))
+					data = append(data, msg...)
 					select {
 					case s.ResponseCh <- data:
 					default:
-						log.Println("⚠️ ResponseCh переполнен, сообщение потеряно")
+						log.Println("ResponseCh overflow, message lost")
 					}
 					msg = msg[:0]
 				} else {
@@ -97,4 +87,15 @@ func (s *Serial) Listen(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func (s *Serial) Close() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.port != nil {
+		err := s.port.Close()
+		s.port = nil
+		return err
+	}
+	return nil
 }

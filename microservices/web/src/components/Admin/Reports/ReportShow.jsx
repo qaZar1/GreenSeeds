@@ -1,5 +1,5 @@
 import React from "react";
-import { Show, SimpleShowLayout, TextField, DateField } from "react-admin";
+import { Show, SimpleShowLayout, TextField, DateField, FunctionField } from "react-admin";
 import BackButton from "../../utils/Back";
 import { Card, CardContent, Typography, Divider, Box } from "@mui/material";
 import { useMediaQuery } from "@mui/material";
@@ -9,7 +9,7 @@ const ReportShow = () => {
     const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
     
     return (
-        <Show actions={<BackButton />} sx={{ p: 3 }}>
+        <Show actions={<BackButton />} sx={{ p: 3 }} title="Отчет">
             <Card sx={{ borderRadius: 3, boxShadow: 3, p: 2 }}>
                 <CardContent sx={{ fontSize: 20 }}>
                     <Typography variant="h6" gutterBottom>
@@ -24,10 +24,14 @@ const ReportShow = () => {
                             <TextField source="receipt" emptyText="-" label="Рецепт" />
                             <TextField source="turn" emptyText="-" label="Номер выполнения" />
                             <DateField source="dt" showTime locales="ru-RU" label="Дата" />
-                            <TextField source="success" emptyText="-" label="Успешно" />
+                            <FunctionField
+                                label="Успешно"
+                                render={record => (record.success ? "Да" : "Нет")}
+                            />
                             <TextField source="error" emptyText="-" label="Ошибка" />
                             <TextField source="solution" emptyText="-" label="Решение" />
                             <TextField source="mark" emptyText="-" label="Маркировка" />
+                            <TextField source="responsible" label="Ответственный" />
                         </SimpleShowLayout>
                     ) : (
                     <Box sx={{ display: "flex", flexDirection: "row", width: "100%"}}>
@@ -42,10 +46,14 @@ const ReportShow = () => {
                         </Box>
                         <Box sx={{ display: "flex", flexDirection: "column", flex: 1}}>
                             <SimpleShowLayout>
-                                <TextField source="success" emptyText="-" label="Успешно" />
+                                <FunctionField
+                                    label="Успешно"
+                                    render={record => (record.success ? "Да" : "Нет")}
+                                />
                                 <TextField source="error" emptyText="-" label="Ошибка" />
                                 <TextField source="solution" emptyText="-" label="Решение" />
                                 <TextField source="mark" emptyText="-" label="Маркировка" />
+                                <TextField source="responsible" label="Ответственный" />
                             </SimpleShowLayout>
                         </Box>
                     </Box>

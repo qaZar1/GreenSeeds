@@ -138,18 +138,23 @@ WHERE shift = $1 AND number = $2 AND receipt = $3`
 func (rep *reportsRepository) GetReportsById(id int) (models.Reports, error) {
 	const query = `
 SELECT
-	id,
-	shift,
-	number,
-	receipt,
-	turn,
-	dt,
-	success,
-	error,
-	solution,
-	mark
-FROM green_seeds.reports
-WHERE id = $1`
+	r.id,
+	r.shift,
+	r.number,
+	r.receipt,
+	r.turn,
+	r.dt,
+	r.success,
+	r.error,
+	r.solution,
+	r.mark,
+	u.full_name
+FROM green_seeds.reports r
+left join green_seeds.shifts s
+on s.shift = r.shift
+left join green_seeds.users u
+on s.username = u.username
+WHERE id = $1;`
 
 	var report models.Reports
 	if err := rep.db.Get(&report, query, id); err != nil {

@@ -7,12 +7,12 @@ import { ReferenceInput, SelectInput, AutocompleteInput } from "react-admin";
 
 const ReceiptEdit = () => {
     return (
-        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic">
+        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Редактирование рецепта">
             <SimpleForm toolbar={<ToolbarEdit />}>
                 <ReferenceInput source="seed" reference="seeds">
                     <AutocompleteInput optionText="seed_ru" id="seed" label="Семена"/>
                 </ReferenceInput>
-                <TextInput source="gcode" label="Код запуска" />
+                <TextInput source="gcode" label="Код запуска" multiline/>
                 <TextInput source="description" label="Описание" />
             </SimpleForm>
         </Edit>

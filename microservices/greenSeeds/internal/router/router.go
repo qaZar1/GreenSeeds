@@ -34,7 +34,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *c
 	}))
 
 	router.Post("/api/login", transport.PostApiLoginUser)
-	router.Post("/register", transport.PostApiRegisterUser)
+	router.Post("/api/register", transport.PostApiRegisterUser)
 
 	router.HandleFunc("/debug/pprof/", pprof.Index)
 	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -120,18 +120,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *c
 			r.Post("/add", transport.PostApiReportsAdd)
 			r.Get("/get", transport.GetApiReports)
 			r.Get("/get/{id}", transport.GetApiReportsById)
-			// r.Put("/update", transport.PutApiAssignmentsUpdate)
-			// r.Delete("/delete/{id}", transport.DeleteApiAssignmentsDelete)
 		})
-
-		// 	r.Get("/checkByUuid/{uuid}", transport.GetApiCheckUserByUuidUuid)
-		// 	r.Get("/checkRoles/{uuid}", transport.GetApiCheckRolesUuid)
-		// 	r.Get("/checkAll", transport.GetApiCheckAllUsers)
-		// 	r.Put("/updateRole", transport.PutApiUpdateRole)
-		// 	r.Put("/change-password", transport.PutApiChangePassword)
-		// 	r.Put("/reset-password/{uuid}", transport.PutApiResetPassword)
-		// 	r.Delete("/removeUser", transport.DeleteApiRemoveUser)
-		// })
 	})
 
 	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
@@ -140,13 +129,13 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *c
 			return
 		}
 
-		path := "./build" + r.URL.Path
+		path := "./dist" + r.URL.Path
 		if info, err := os.Stat(path); err == nil && !info.IsDir() {
 			http.ServeFile(w, r, path)
 			return
 		}
 
-		http.ServeFile(w, r, "./build/index.html")
+		http.ServeFile(w, r, "./dist/index.html")
 	})
 
 	return router

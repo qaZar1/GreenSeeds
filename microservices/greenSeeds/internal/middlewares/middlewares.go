@@ -55,7 +55,7 @@ func BearerAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository
 func validateJWT(claims models.Claims, repo *repository.Repository) (bool, error) {
 	now := time.Now().Unix()
 
-	// Проверяем, что токен не просрочен (exp)
+	// Проверяем, что токен не просрочен
 	if claims.ExpiresAt.Unix() < now {
 		return false, ErrTokenExpired
 	}
@@ -65,7 +65,7 @@ func validateJWT(claims models.Claims, repo *repository.Repository) (bool, error
 		return false, ErrTokenNotValidYet
 	}
 
-	// Проверяем, что токен предназначен нашему сервису (aud)
+	// Проверяем, что токен предназначен нам
 	if claims.Audience[0] != "service.green_seeds.api" {
 		return false, ErrInvalidAudience
 	}
@@ -78,10 +78,6 @@ func validateJWT(claims models.Claims, repo *repository.Repository) (bool, error
 	if user == (models.User{}) {
 		return false, ErrInvalidSubject
 	}
-
-	// if claims.Resources["service.green_seeds.api"] != "service.green_seeds.api:"+*user.Role {
-	// 	return false, ErrInvalidSubject
-	// }
 
 	return true, nil
 }

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/device"
 )
 
@@ -20,8 +21,8 @@ type Server struct {
 	mu         sync.RWMutex
 }
 
-func NewServer(comPath string, baud int) (*Server, error) {
-	serial := device.NewSerialManager(comPath, baud)
+func NewServer(comPath string, baud int, camera *camera.Camera) (*Server, error) {
+	serial := device.NewSerialManager(comPath, baud, camera)
 
 	server := &Server{
 		Clients:    make(map[*Client]bool),
@@ -29,23 +30,26 @@ func NewServer(comPath string, baud int) (*Server, error) {
 		Serial:     serial,
 	}
 
+	// Чтение данных с COM
 	go func() {
-		for {
-			if serial.Serial == nil {
-				continue
-			}
+		ch := server.Serial.Subscribe()
+		defer server.Serial.Unsubscribe(ch)
 
-			for msg := range serial.ResponseCh {
-				log.Println("COM read full:", string(msg))
+		for {
+			for msg := range ch {
+				log.Println("COM read:", string(msg))
 				server.broadcast(msg)
 			}
 		}
 	}()
 
-	// --- Отправка данных с WS в COM ---
+	// Отправка данных с WS в COM
 	go func() {
 		for data := range server.WsToSerial {
-			server.Serial.Write(data)
+			if !server.Serial.Active {
+				continue
+			}
+			server.Serial.UserCommand(data)
 		}
 	}()
 
@@ -63,7 +67,6 @@ func (s *Server) broadcast(data []byte) {
 	}
 }
 
-// ------------------ WS Handler ------------------
 func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("New client connected")
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -98,7 +101,6 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 	}()
 }
 
-// ------------------ Close ------------------
 func (s *Server) Close() {
 	s.Serial.Close()
 	log.Println("COM port closed")

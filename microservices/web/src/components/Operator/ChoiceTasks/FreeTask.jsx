@@ -11,12 +11,12 @@ const Task = ({ task, username }) => {
   const handleTakeTask = async () => {
     try {
       await update(
-        "choice", // ресурс
+        "choice",
         {
-          id: task.shift, // обязательно!
+          id: task.shift,
           data: {
-            id: task.shift, // чтобы попало в bodyData.shift
-            username: username, // логин текущего пользователя
+            id: task.shift,
+            username: username,
             dt: task.dt,
           },
         },
@@ -72,12 +72,12 @@ const Task = ({ task, username }) => {
       <CardContent sx={{ flexGrow: 1 }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
           <strong>Дата:</strong>{" "}
-          <DateField source="dt" record={task} showTime={true} />
+          <DateField source="dt" record={task} />
         </Typography>
 
         <Typography variant="body1" sx={{ mb: 1 }}>
-          <strong>Ответственный:</strong>{" "}
-          {task.username || <em>не назначен</em>}
+          <strong>Время:</strong>{" "}
+          <DateField source="dt" record={task} showTime={true} showDate={false}/>
         </Typography>
 
         <Typography variant="body2" sx={{ color: "text.secondary" }}>

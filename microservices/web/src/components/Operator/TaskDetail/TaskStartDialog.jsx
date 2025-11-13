@@ -30,7 +30,7 @@ const TaskStartDialog = ({ open, onClose, onConfirm, task }) => {
       <DialogTitle>Подтверждение старта задания</DialogTitle>
 
       <DialogContent dividers>
-        <Typography>Вы уверены, что хотите запустить робота?</Typography>
+        <Typography>Вы уверены, что хотите запустить выполнение задания?</Typography>
 
         <Box mt={2}>
           <Typography variant="subtitle2">Номер задания:</Typography>
@@ -40,7 +40,7 @@ const TaskStartDialog = ({ open, onClose, onConfirm, task }) => {
           <Typography>{task.shift}</Typography>
 
           <Typography variant="subtitle2" mt={2}>Семена:</Typography>
-          <Typography>{task.seed}</Typography>
+          <Typography>{task.seed_ru}</Typography>
 
           <Typography variant="subtitle2" mt={2}>Требуется:</Typography>
           <Typography>{task.required_amount}</Typography>
@@ -49,7 +49,6 @@ const TaskStartDialog = ({ open, onClose, onConfirm, task }) => {
           <Typography>{task.completed_amount}</Typography>
         </Box>
 
-        {/* NEW: checkbox */}
         <Box mt={3}>
           <FormControlLabel
             control={
