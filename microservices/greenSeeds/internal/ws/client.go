@@ -1,21 +1,23 @@
 package ws
 
 import (
+	"encoding/json"
 	"log"
 
 	"github.com/gorilla/websocket"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
 type Client struct {
 	Conn *websocket.Conn
-	Send chan []byte
+	Send chan models.WSMessage
 	done chan struct{}
 }
 
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		Conn: conn,
-		Send: make(chan []byte, 10),
+		Send: make(chan models.WSMessage, 10),
 		done: make(chan struct{}),
 	}
 }
@@ -39,7 +41,13 @@ func (c *Client) ListenWrite() {
 			if !ok {
 				return
 			}
-			if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			data, err := json.Marshal(msg)
+			if err != nil {
+				log.Println("Can not marshal data:", err)
+				return
+			}
+
+			if err := c.Conn.WriteMessage(websocket.TextMessage, data); err != nil {
 				log.Println("WS write error:", err)
 				return
 			}

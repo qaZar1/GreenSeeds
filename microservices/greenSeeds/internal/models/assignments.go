@@ -33,6 +33,7 @@ type Task struct {
 	SeedRu          string `json:"seed_ru" db:"seed_ru"`
 	Bunker          int64  `json:"bunker" db:"bunker"`
 	Gcode           string `json:"gcode" db:"gcode"`
+	Receipt         int64  `json:"receipt" db:"receipt"`
 	RequiredAmount  int    `json:"required_amount" db:"required_amount"`
 	CompletedAmount int    `json:"completed_amount" db:"completed_amount"`
 }

@@ -14,4 +14,6 @@ const (
 	ACK_BOOT     = "ACK BOOT"
 	BOOT         = "BOOT"
 	STATUS       = "STATUS"
+
+	SETSTATUS_READY = "SETSTATUS READY"
 )

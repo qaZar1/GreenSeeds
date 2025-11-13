@@ -13,5 +13,5 @@ type Reports struct {
 	Error       *string    `json:"error" db:"error"`
 	Solution    *string    `json:"solution" db:"solution"`
 	Mark        *string    `json:"mark" db:"mark"`
-	Responsible string     `json:"responsible" db:"full_name"`
+	Responsible *string    `json:"responsible" db:"full_name"`
 }

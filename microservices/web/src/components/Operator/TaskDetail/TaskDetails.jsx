@@ -12,9 +12,18 @@ import {
 import { Show, SimpleShowLayout, TextField } from "react-admin";
 import TopToolbarWithBackButton from "../../utils/Back";
 import TaskCard from "./Card";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const TaskDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!id || id === "undefined" || id === "null") {
+      navigate("/tasks", { replace: true });
+    }
+  }, [id, navigate]);
 
   return (
     <Show

@@ -1,111 +1,212 @@
 package device
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-func (m *SerialManager) UserCommand(data []byte) {
+func (m *SerialManager) UserCommand(msg models.WSMessage) {
 	m.resetIdleTimer(90 * time.Second)
 	// подписка на ответ
 	ch := m.Subscribe()
 	defer m.Unsubscribe(ch)
 
-	// перед выполнением задания проверяем состояние устройства
-	log.Println(time.Now())
-	if strings.Contains(string(data), BEGIN) {
-		if err := m.Write([]byte(BOOT + delimeterStr)); err != nil {
-			m.Active = false
+	switch msg.Type {
+	case BEGIN:
+		m.mu.Lock()
+		m.Control = false
+		m.mu.Unlock()
+		sorrel := ""
+		if msg.Params.ExtraMode {
+			sorrel = m.buildSorrel(msg)
+		}
+		data := m.buildGcode(msg, sorrel)
+		if err := m.Boot(ch); err != nil {
+			m.Status(ch)
 			return
 		}
-		start := time.Now()
-		for time.Since(start) < 5*time.Second {
-			select {
-			case data := <-ch:
-				log.Println("ACK_BOOT", time.Now())
-				if strings.Contains(string(data), ACK_BOOT) {
-					continue
-				}
-			case <-time.After(1 * time.Second):
-			case <-m.ctx.Done():
-				return
+		data = append(data, []byte(delimeterStr)...)
+		m.Begin(data, ch, msg)
+	case STATUS:
+		m.Status(ch)
+	case BOOT:
+		if err := m.Boot(ch); err != nil {
+			m.Status(ch)
+		}
+	case SETSTATUS_READY:
+		if err := m.SetStatusReady(ch); err != nil {
+			m.Status(ch)
+		}
+	}
+}
+
+func (m *SerialManager) Boot(ch <-chan []byte) error {
+	if err := m.Write([]byte(BOOT + delimeterStr)); err != nil {
+		m.Active = false
+		return err
+	}
+	start := time.Now()
+	for time.Since(start) < 5*time.Second {
+		select {
+		case data := <-ch:
+			if strings.Contains(string(data), ACK_BOOT) {
+				return nil
 			}
+		case <-time.After(1 * time.Second):
+		case <-m.ctx.Done():
+			return errors.New("timeout")
 		}
 	}
 
-	// отправка команды и ожидание ответа
-	if err := m.Write(data); err != nil {
+	return errors.New("timeout")
+}
+
+func (m *SerialManager) Status(ch <-chan []byte) {
+	if err := m.Write([]byte(STATUS + delimeterStr)); err != nil {
 		m.Active = false
 		return
 	}
+
 	start := time.Now()
-	for time.Since(start) < 20*time.Second {
+	for time.Since(start) < 5*time.Second {
 		select {
 		case data := <-ch:
-			log.Println("ACK_BOOT", time.Now())
-			if strings.Contains(string(data), ACK_BOOT) ||
-				strings.Contains(string(data), WAIT) ||
-				strings.Contains(string(data), RETURN) ||
-				strings.Contains(string(data), BUSY) ||
+			if strings.Contains(string(data), BUSY) ||
 				strings.Contains(string(data), READY) ||
 				strings.Contains(string(data), STAND_BY) ||
 				strings.Contains(string(data), ERR) {
 				return
 			}
+		case <-time.After(1 * time.Second):
+		case <-m.ctx.Done():
+			return
+		}
+	}
+}
 
+func (m *SerialManager) Begin(data []byte, ch <-chan []byte, msg models.WSMessage) error {
+	if err := m.Write(data); err != nil {
+		m.Active = false
+		return err
+	}
+	start := time.Now()
+	for time.Since(start) < 20*time.Second {
+		select {
+		case data := <-ch:
 			if strings.Contains(string(data), END) {
 				_, err := m.camera.TakePhoto()
 				_ = err
-				// if err != nil {
-				// 	return
-				// }
-				// os.WriteFile("photo.jpg", buf.Bytes(), 0644)
 
-				// TODO: подключить ИИ
+				ok := true
+				m.mu.Lock()
+				m.Control = ok
+				m.mu.Unlock()
+
+				var report models.Reports
+				now := time.Now()
+				if ok {
+					report = models.Reports{
+						Shift:   int64(msg.Params.Shift),
+						Number:  int(msg.Params.Number),
+						Receipt: int64(msg.Params.Receipt),
+						Turn:    int(msg.Params.Amount),
+						Success: ok,
+						Dt:      &now,
+					}
+				} else {
+					solution := ""
+					err := "Error"
+					report = models.Reports{
+						Shift:    int64(msg.Params.Shift),
+						Number:   int(msg.Params.Number),
+						Receipt:  int64(msg.Params.Receipt),
+						Turn:     int(msg.Params.Amount),
+						Success:  ok,
+						Error:    &err,
+						Solution: &solution,
+						Dt:       &now,
+					}
+				}
+
+				_, err = m.repo.RepRepo.AddReports(report)
+				if err != nil {
+					log.Println("Error inserting report:", err)
+				}
+
 				m.Write([]byte(RETURN + delimeterStr))
 				start = time.Now()
 				for time.Since(start) < 5*time.Second {
 					select {
 					case data := <-ch:
 						if strings.Contains(string(data), RETURN) {
-							return
+							return nil
 						}
 					case <-time.After(1 * time.Second):
 					case <-m.ctx.Done():
-						return
+						return errors.New("timeout")
 					}
 				}
-				return
+				return nil
 			}
 		case <-time.After(1 * time.Second):
 		case <-m.ctx.Done():
-			return
+			return errors.New("timeout")
 		}
 	}
 
-	// если нет ответа за 20с, делаем запрос на статус
-	if err := m.Write([]byte(STATUS + delimeterStr)); err != nil {
-		m.Active = false
-		return
-	}
+	return errors.New("timeout")
+}
 
-	start = time.Now()
+func (m *SerialManager) SetStatusReady(ch <-chan []byte) error {
+	if err := m.Write([]byte(SETSTATUS_READY + delimeterStr)); err != nil {
+		m.Active = false
+		return err
+	}
+	start := time.Now()
 	for time.Since(start) < 5*time.Second {
 		select {
 		case data := <-ch:
-			if strings.Contains(string(data), ACK_BOOT) ||
-				strings.Contains(string(data), WAIT) ||
-				strings.Contains(string(data), RETURN) ||
-				strings.Contains(string(data), BUSY) ||
-				strings.Contains(string(data), READY) ||
-				strings.Contains(string(data), STAND_BY) ||
-				strings.Contains(string(data), ERR) {
-				return
+			if strings.Contains(string(data), READY) {
+				return nil
 			}
 		case <-time.After(1 * time.Second):
 		case <-m.ctx.Done():
-			return
+			return errors.New("timeout")
 		}
 	}
+
+	return errors.New("timeout")
+}
+
+func (m *SerialManager) buildGcode(msg models.WSMessage, sorrel string) []byte {
+	const query = `
+BEGIN %d/%d/%d
+BUNKER %d
+\x02%s\x03%s`
+
+	data := fmt.Sprintf(query,
+		msg.Params.Shift,
+		msg.Params.Number,
+		msg.Params.Amount,
+		msg.Params.Bunker,
+		msg.Params.Gcode,
+		sorrel)
+	return []byte(data)
+}
+
+func (m *SerialManager) buildSorrel(msg models.WSMessage) string {
+	const query = `
+\x07Sorrel\x0A%d/%d\x0A%d/%d\x0A\x0D`
+
+	data := fmt.Sprintf(query,
+		msg.Params.Shift,
+		msg.Params.Number,
+		msg.Params.CompletedAmount+1,
+		msg.Params.RequiredAmount)
+	return data
 }

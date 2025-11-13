@@ -9,16 +9,19 @@ import (
 	"time"
 
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 )
 
 type SerialManager struct {
 	portName string
 	baud     int
 
-	mu     sync.RWMutex
-	Serial *Serial
-	camera *camera.Camera
-	Active bool
+	mu      sync.RWMutex
+	Serial  *Serial
+	camera  *camera.Camera
+	repo    *repository.Repository
+	Active  bool
+	Control bool
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -32,17 +35,19 @@ type SerialManager struct {
 	subs   []chan []byte
 }
 
-func NewSerialManager(port string, baud int, camera *camera.Camera) *SerialManager {
+func NewSerialManager(port string, baud int, camera *camera.Camera, repo *repository.Repository) *SerialManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	m := &SerialManager{
 		portName:   port,
 		baud:       baud,
 		camera:     camera,
+		repo:       repo,
 		ctx:        ctx,
 		cancel:     cancel,
 		ResponseCh: make(chan []byte, 100),
 		Active:     false,
+		Control:    false,
 	}
 
 	m.idleTimer = time.NewTimer(20 * time.Second)
