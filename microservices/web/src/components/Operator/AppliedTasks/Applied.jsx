@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, CircularProgress, Typography, Card, CardContent } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { jwtDecode } from "jwt-decode";
 import EmptyTasks from "./EmptyTasks";
 import { List } from "react-admin";

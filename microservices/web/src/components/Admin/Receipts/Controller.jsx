@@ -17,8 +17,11 @@ const ReceiptListContent = ({ isSmall }) => {
             secondaryText={record => (
                 <>
                     <span style={{ display: 'block' }}>Описание: {record.description}</span>
-                    <span style={{ display: 'block' }}>Обновлено: <DateField source="updated" showTime locales="ru-RU" /></span>
-                    
+                    <span style={{ display: 'block' }}>Обновлено: <DateField
+                        source="updated"
+                        showTime
+                        locales="ru-RU"
+                    /></span>
                 </>
             )}
             tertiaryText={record => (

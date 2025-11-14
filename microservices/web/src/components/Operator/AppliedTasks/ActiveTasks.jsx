@@ -11,7 +11,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Divider,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import EmptyTasks from "./EmptyTasks";

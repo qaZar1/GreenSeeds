@@ -2,7 +2,6 @@ import React from "react";
 import { getToken } from "../../../dataProvider";
 import { Button } from "@mui/material";
 
-// Кнопка сброса пароля
 const ResetPasswordButton = ({ record, fullWidth = false }) => {
     const token = getToken();
     

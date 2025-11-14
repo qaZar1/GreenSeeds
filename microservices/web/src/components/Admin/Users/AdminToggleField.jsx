@@ -12,7 +12,6 @@ const AdminToggleField = ({ record, currentUsername }) => {
         const token = getToken();
 
         try {
-            // Здесь вызываем ваш API или dataProvider
             await fetch(`/api/users/update`, {
                 method: 'PUT',
                 headers: {
@@ -26,7 +25,7 @@ const AdminToggleField = ({ record, currentUsername }) => {
                 }),
             });
             notify('Роль обновлена', { type: 'success' });
-            refresh(); // обновляем таблицу
+            refresh();
         } catch (err) {
             notify('Ошибка при обновлении роли', { type: 'error' });
         }

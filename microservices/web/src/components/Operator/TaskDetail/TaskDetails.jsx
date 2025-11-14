@@ -1,15 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Divider,
-  Stack,
-  Chip,
-} from "@mui/material";
-import { Show, SimpleShowLayout, TextField } from "react-admin";
+import { Box } from "@mui/material";
+import { Show } from "react-admin";
 import TopToolbarWithBackButton from "../../utils/Back";
 import TaskCard from "./Card";
 import { useNavigate } from "react-router-dom";

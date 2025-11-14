@@ -1,4 +1,3 @@
-// src/components/layout/CustomMenu.jsx
 import React, { useState } from "react";
 import { Menu, MenuItemLink } from "react-admin";
 import {
@@ -14,7 +13,6 @@ import {
   People as PersonIcon,
   Task as TaskIcon,
   CalendarMonth as CalendarMonthIcon,
-  Camera as CameraIcon,
 } from "@mui/icons-material";
 import { Collapse, ListItemButton, ListItemText, Box } from "@mui/material";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
@@ -28,7 +26,6 @@ const CustomMenu = () => {
 
   return (
     <Menu>
-      {/* Остальные отдельные пункты */}
       {role === 'admin' && [
       <MenuItemLink key="users" to="/users" primaryText="Пользователи" leftIcon={<PersonIcon />} />,
       ]}

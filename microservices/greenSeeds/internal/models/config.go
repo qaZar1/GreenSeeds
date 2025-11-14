@@ -34,4 +34,8 @@ type Config struct {
 		Framerate   string `yaml:"framerate"`
 		VideoSize   string `yaml:"video_size"`
 	}
+
+	API struct {
+		URL string `yaml:"url"`
+	}
 }

@@ -40,9 +40,9 @@ const Task = ({ task, username }) => {
     <Card
       key={task.id}
       sx={{
-        flex: "1 1 350px",       // базовая ширина карточки
-        minWidth: "280px",       // не даёт стать слишком узкой
-        maxWidth: "100%",        // растягивается, если остаётся место
+        flex: "1 1 350px",
+        minWidth: "280px",
+        maxWidth: "100%",
         boxShadow: 4,
         borderRadius: 3,
         overflow: "hidden",
@@ -51,10 +51,10 @@ const Task = ({ task, username }) => {
         justifyContent: "space-between",
       }}
     >
-      {/* Верхняя часть — “шапка” */}
+      {/* Верхняя часть */}
       <Box
         sx={{
-          backgroundColor: "#2e7d32", // зелёный MUI success.dark
+          backgroundColor: "#2e7d32",
           color: "white",
           p: 2,
           display: "flex",
@@ -87,7 +87,7 @@ const Task = ({ task, username }) => {
 
       <Divider />
 
-      {/* Кнопка снизу */}
+      {/* Кнопка */}
       <Box sx={{ display: "flex", justifyContent: "center", p: 2, pt: 1 }}>
         <Button
           variant="contained"

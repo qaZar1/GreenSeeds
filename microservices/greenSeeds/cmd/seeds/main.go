@@ -84,7 +84,7 @@ func main() {
 		cfg.Camera.VideoSize,
 	)
 
-	ws, err := ws.NewServer(cfg.Serial.Port, cfg.Serial.Baud, camera, repo)
+	ws, err := ws.NewServer(cfg.Serial.Port, cfg.Serial.Baud, camera, repo, cfg.API.URL)
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot create ws server")
 	}

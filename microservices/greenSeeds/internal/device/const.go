@@ -1,5 +1,7 @@
 package device
 
+import "time"
+
 const (
 	delimeter    = 0x04
 	delimeterStr = "\x04"
@@ -16,4 +18,6 @@ const (
 	STATUS       = "STATUS"
 
 	SETSTATUS_READY = "SETSTATUS READY"
+
+	ackTimeout = 20 * time.Second
 )

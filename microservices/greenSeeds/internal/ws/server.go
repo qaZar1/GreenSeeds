@@ -28,8 +28,8 @@ type Server struct {
 	amount      int
 }
 
-func NewServer(comPath string, baud int, camera *camera.Camera, repo *repository.Repository) (*Server, error) {
-	serial := device.NewSerialManager(comPath, baud, camera, repo)
+func NewServer(comPath string, baud int, camera *camera.Camera, repo *repository.Repository, url string) (*Server, error) {
+	serial := device.NewSerialManager(comPath, baud, url, camera, repo)
 
 	server := &Server{
 		Clients:    make(map[*Client]bool),

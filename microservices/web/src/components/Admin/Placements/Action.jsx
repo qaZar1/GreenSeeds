@@ -15,8 +15,8 @@ const PlacementListActions = () => {
                 color: theme.palette.primary.main,
                 '&:hover': {
                     bgcolor: theme.palette.mode === 'light'
-                        ? alpha(theme.palette.primary.main, 0.15) // чуть ярче на светлой теме
-                        : alpha(theme.palette.primary.main, 0.1), // чуть мягче на темной
+                        ? alpha(theme.palette.primary.main, 0.15)
+                        : alpha(theme.palette.primary.main, 0.1),
                     color: theme.palette.primary.main,
                 },
             })}

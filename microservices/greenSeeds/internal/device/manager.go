@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/api"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 )
@@ -20,6 +21,7 @@ type SerialManager struct {
 	Serial  *Serial
 	camera  *camera.Camera
 	repo    *repository.Repository
+	API     *api.API
 	Active  bool
 	Control bool
 
@@ -35,14 +37,18 @@ type SerialManager struct {
 	subs   []chan []byte
 }
 
-func NewSerialManager(port string, baud int, camera *camera.Camera, repo *repository.Repository) *SerialManager {
+func NewSerialManager(port string, baud int, url string, camera *camera.Camera, repo *repository.Repository) *SerialManager {
 	ctx, cancel := context.WithCancel(context.Background())
+
+	// инициализируем API
+	api := api.NewAPI(url)
 
 	m := &SerialManager{
 		portName:   port,
 		baud:       baud,
 		camera:     camera,
 		repo:       repo,
+		API:        api,
 		ctx:        ctx,
 		cancel:     cancel,
 		ResponseCh: make(chan []byte, 100),

@@ -8,14 +8,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/docs"
+
+	// "github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/docs"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/transport"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/ws"
-	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *chi.Mux {
@@ -43,14 +43,14 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *c
 	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	// swagger
-	docs.SwaggerInfo.Title = "GreenSeeds API"
-	docs.SwaggerInfo.Description = "API для работы с GreenSeeds"
-	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "localhost:8001"
-	docs.SwaggerInfo.BasePath = "/"
-	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+	// docs.SwaggerInfo.Title = "GreenSeeds API"
+	// docs.SwaggerInfo.Description = "API для работы с GreenSeeds"
+	// docs.SwaggerInfo.Version = "1.0"
+	// docs.SwaggerInfo.Host = "localhost:8001"
+	// docs.SwaggerInfo.BasePath = "/"
+	// docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
-	router.Handle("/swagger/*", httpSwagger.WrapHandler)
+	// router.Handle("/swagger/*", httpSwagger.WrapHandler)
 	router.HandleFunc("/ws", ws.HandleWS)
 
 	router.Route("/api", func(r chi.Router) {

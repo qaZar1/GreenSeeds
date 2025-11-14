@@ -51,13 +51,16 @@ func (m *SerialManager) Boot(ch <-chan []byte) error {
 		return err
 	}
 	start := time.Now()
-	for time.Since(start) < 5*time.Second {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for time.Since(start) < ackTimeout {
 		select {
 		case data := <-ch:
 			if strings.Contains(string(data), ACK_BOOT) {
 				return nil
 			}
-		case <-time.After(1 * time.Second):
+		case <-ticker.C:
 		case <-m.ctx.Done():
 			return errors.New("timeout")
 		}
@@ -73,7 +76,10 @@ func (m *SerialManager) Status(ch <-chan []byte) {
 	}
 
 	start := time.Now()
-	for time.Since(start) < 5*time.Second {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for time.Since(start) < ackTimeout {
 		select {
 		case data := <-ch:
 			if strings.Contains(string(data), BUSY) ||
@@ -82,7 +88,7 @@ func (m *SerialManager) Status(ch <-chan []byte) {
 				strings.Contains(string(data), ERR) {
 				return
 			}
-		case <-time.After(1 * time.Second):
+		case <-ticker.C:
 		case <-m.ctx.Done():
 			return
 		}
@@ -95,13 +101,43 @@ func (m *SerialManager) Begin(data []byte, ch <-chan []byte, msg models.WSMessag
 		return err
 	}
 	start := time.Now()
-	for time.Since(start) < 20*time.Second {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for time.Since(start) < ackTimeout {
 		select {
 		case data := <-ch:
 			if strings.Contains(string(data), END) {
-				_, err := m.camera.TakePhoto()
-				_ = err
+				// Делаем фото
+				buf, err := m.camera.TakePhoto()
+				if err != nil || buf == nil {
+					ok := false
+					m.mu.Lock()
+					m.Control = ok
+					m.mu.Unlock()
+					return errors.New("Error taking photo")
+				}
 
+				// Отправляем фото на проверку
+				response, err := m.API.RequestAI(msg.Params.Seed, *buf)
+				if err != nil {
+					ok := false
+					m.mu.Lock()
+					m.Control = ok
+					m.mu.Unlock()
+					return err
+				}
+
+				// Если процент совпадения меньше 0.5 - считаем ее неудачной
+				if response.PercentOfMatch < 0.5 {
+					ok := false
+					m.mu.Lock()
+					m.Control = ok
+					m.mu.Unlock()
+					return errors.New("Not enough similarity")
+				}
+
+				// Если все в порядке - считаем ее удачной
 				ok := true
 				m.mu.Lock()
 				m.Control = ok
@@ -133,27 +169,32 @@ func (m *SerialManager) Begin(data []byte, ch <-chan []byte, msg models.WSMessag
 					}
 				}
 
+				// добавляем отчет в базу
 				_, err = m.repo.RepRepo.AddReports(report)
 				if err != nil {
 					log.Println("Error inserting report:", err)
 				}
 
+				// возвращаем каретку
 				m.Write([]byte(RETURN + delimeterStr))
 				start = time.Now()
-				for time.Since(start) < 5*time.Second {
+				ticker := time.NewTicker(1 * time.Second)
+				defer ticker.Stop()
+
+				for time.Since(start) < ackTimeout {
 					select {
 					case data := <-ch:
 						if strings.Contains(string(data), RETURN) {
 							return nil
 						}
-					case <-time.After(1 * time.Second):
+					case <-ticker.C:
 					case <-m.ctx.Done():
 						return errors.New("timeout")
 					}
 				}
 				return nil
 			}
-		case <-time.After(1 * time.Second):
+		case <-ticker.C:
 		case <-m.ctx.Done():
 			return errors.New("timeout")
 		}
@@ -168,13 +209,16 @@ func (m *SerialManager) SetStatusReady(ch <-chan []byte) error {
 		return err
 	}
 	start := time.Now()
-	for time.Since(start) < 5*time.Second {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for time.Since(start) < ackTimeout {
 		select {
 		case data := <-ch:
 			if strings.Contains(string(data), READY) {
 				return nil
 			}
-		case <-time.After(1 * time.Second):
+		case <-ticker.C:
 		case <-m.ctx.Done():
 			return errors.New("timeout")
 		}

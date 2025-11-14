@@ -25,4 +25,6 @@ camera:
   input_device: "avfoundation"                             # Входное устройство
   framerate: "30"                                          # Кадровая частота
   video_size: "1920x1080"                                  # Размер видео
-  
+
+api:
+  url: "http://localhost:8001"                             # URL API

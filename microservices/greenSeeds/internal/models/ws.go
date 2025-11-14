@@ -18,6 +18,7 @@ type Params struct {
 	Bunker          int    `json:"bunker"`
 	Gcode           string `json:"gcode"`
 	ExtraMode       bool   `json:"extraMode"`
+	Seed            string `json:"seed"`
 }
 
 type PayloadWs struct {

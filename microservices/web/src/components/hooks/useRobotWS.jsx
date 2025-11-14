@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { encodeMsg, encodeGcode } from "../utils/robotProtocol";
 import { useNotify } from "react-admin";
 
 const WS_URL = "ws://localhost:8001/ws";
@@ -110,24 +109,6 @@ export function useRobotWS(params = {}) {
     return () => clearInterval(interval);
   }, [state]);
 
-  // useEffect(() => {
-  //   if (state === "END" && record) {
-  //     fetch("/api/reports/add", {
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         shift: record.shift,
-  //         number: record.number,
-  //         receipt: record.receipt,
-  //         turn: record.turn,
-  //         success: true,
-  //       }),
-  //     })
-  //       .then(res => res.json())
-  //       .then(data => console.log("END API called:", data))
-  //       .catch(err => console.error(err));
-  //   }
-  // }, [state, record]);
-
   const connectWS = () => {
     if (!isMountedRef.current) return;
 
@@ -195,10 +176,6 @@ export function useRobotWS(params = {}) {
     rawState: state,
     displayState,
     sendMessage,
-    sendGcode: (gcode, displayText, bunker, shift, number, amount) =>
-      wsRef.current?.send(
-        encodeGcode(gcode, displayText, bunker, shift, number, amount)
-      ),
     isBoot,
     control,
     amount,

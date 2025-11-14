@@ -7,13 +7,14 @@ import {
   LinearProgress,
   Button,
 } from "@mui/material";
-import { BooleanField, SimpleShowLayout, TextField, useRecordContext } from "react-admin";
-import { useRobotWS } from "../../hooks/useRobotWs";
+import { SimpleShowLayout, TextField, useRecordContext } from "react-admin";
+import { useRobotWS } from "../../hooks/useRobotWS";
 import TaskStartDialog from "./TaskStartDialog";
+import { useNavigate } from "react-router-dom";
 
 const TaskCard = () => {
   const record = useRecordContext() || {};
-  const { rawState, displayState, sendMessage, sendGcode, isBoot, control, amount } = useRobotWS({ record });
+  const { rawState, displayState, sendMessage, isBoot, control, amount } = useRobotWS({ record });
 
   const [openDialog, setOpenDialog] = useState(false);
   const [pendingExtraMode, setPendingExtraMode] = useState("");
@@ -77,6 +78,7 @@ const TaskCard = () => {
           shift: record.shift,
           number: record.number,
           receipt: record.receipt,
+          seed: record.seed,
           amount: completedAmount + 1,
           completed_amount: completedAmount,
           required_amount: record.required_amount,
@@ -87,17 +89,6 @@ const TaskCard = () => {
       });
     }
   }, [isRunning, rawState]);
-
-  // const startTask = (extraMode) => {
-  //   if (!record?.gcode || !record?.bunker || !record?.shift || !record?.number) return;
-
-  //   let displayText = extraMode
-  //     ? `\x07Sorrel\x0A${record.shift}/${record.number}\x0A${record.completed_amount + 1}/${record.required_amount}\x0A\x0D`
-  //     : "";
-
-  //   sendGcode(record.gcode, record.bunker, record.shift, record.number, record.completed_amount + 1, displayText);
-  //   setIsRunning(true);
-  // };
 
   return (
     <Card sx={{ borderRadius: 3, boxShadow: 4, p: 3, width: "100%", maxWidth: 600, margin: "auto", position: "relative" }}>

@@ -27,10 +27,10 @@ export const authProvider = {
 
     const { access_token } = await response.json();
 
-    // Раскодируем JWT
+    // Декодим JWT
     const decoded = jwtDecode(access_token);
 
-    const role = decoded.role; // в твоем примере "admin"
+    const role = decoded.role;
 
     localStorage.setItem(
       "auth",

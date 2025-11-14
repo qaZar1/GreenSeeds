@@ -1,4 +1,3 @@
-// SeedCreate.jsx
 import React from "react";
 import { Create, SimpleForm, TextInput, BooleanInput } from "react-admin";
 import { ToolbarSave } from "../../utils/Toolbars";

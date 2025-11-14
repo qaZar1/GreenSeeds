@@ -1,22 +1,10 @@
 import React from "react";
-import { 
-    List, 
-    Datagrid, 
-    TextField, 
-    DeleteButton,
-    FunctionField
-} from "react-admin";
-import { useMediaQuery, Button } from "@mui/material";
+import { List } from "react-admin";
+import { useMediaQuery } from "@mui/material";
 import { EmptyUser } from "./EmptyUser";
 import UserListActions from "./Action";
 import { CreateButton } from "react-admin";
 import { jwtDecode } from "jwt-decode";
-import { IconButton, Menu, MenuItem } from "@mui/material";
-import { useDataProvider } from "react-admin";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { useNotify } from "react-admin";
-import { useRefresh } from "react-admin";
-import { getToken } from "../../../dataProvider";
 import UserListContent from "./Controller";
 
 const UserList = (props) => {
