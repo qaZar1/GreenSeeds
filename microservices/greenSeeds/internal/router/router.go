@@ -10,15 +10,17 @@ import (
 	"github.com/go-chi/cors"
 
 	// "github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/docs"
+	core "github.com/Impisigmatus/service_core/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/transport"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/ws"
+	"github.com/rs/zerolog"
 )
 
-func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *chi.Mux {
+func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server, logger zerolog.Logger) *chi.Mux {
 	infra := infrastructure.New(cfg.JWT.ExpiresIn, cfg)
 	transport := transport.NewTransport(repo, cfg, infra)
 
@@ -51,10 +53,15 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *c
 	// docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	// router.Handle("/swagger/*", httpSwagger.WrapHandler)
-	router.HandleFunc("/ws", ws.HandleWS)
 
 	router.Route("/api", func(r chi.Router) {
-		r.Use(middlewares.BearerAuthMiddleware(infra, repo))
+		r.Use(
+			core.RequestID(logger),
+			core.ContextLogger(),
+			middlewares.BearerAuthMiddleware(infra, repo),
+		)
+
+		r.HandleFunc("/ws", ws.HandleWS)
 
 		r.Route("/seeds", func(r chi.Router) {
 			r.Post("/add", transport.PostApiSeedAdd)
@@ -120,6 +127,10 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server) *c
 			r.Post("/add", transport.PostApiReportsAdd)
 			r.Get("/get", transport.GetApiReports)
 			r.Get("/get/{id}", transport.GetApiReportsById)
+		})
+
+		r.Route("/logs", func(r chi.Router) {
+			r.Get("/get", transport.GetApiLogsGet)
 		})
 	})
 

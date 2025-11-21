@@ -1,12 +1,15 @@
 package transport
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/Impisigmatus/service_core/log"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/utils"
+	"github.com/rs/zerolog"
 )
 
 // Set godoc
@@ -26,6 +29,12 @@ import (
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) PostApiRegisterUser(w http.ResponseWriter, r *http.Request) {
+	log, ok := r.Context().Value(log.CtxKey).(zerolog.Logger)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid logger")
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
@@ -44,6 +53,7 @@ func (transport *Transport) PostApiRegisterUser(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	log.Warn().Ctx(r.Context()).Msg(fmt.Sprintf("User registered: %s", regUser.Username))
 	utils.WriteNoContent(w)
 }
 

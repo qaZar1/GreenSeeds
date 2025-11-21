@@ -26,17 +26,17 @@ func NewPostgres(cfg Config) *sql.DB {
 
 	config, err := pgx.ParseConfig(pattern)
 	if err != nil {
-		return nil
+		panic(err)
 	}
 
 	connection := stdlib.RegisterConnConfig(config)
 	db, err := sql.Open(driver, connection)
 	if err != nil {
-		return nil
+		panic(err)
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil
+		panic(err)
 	}
 
 	return db

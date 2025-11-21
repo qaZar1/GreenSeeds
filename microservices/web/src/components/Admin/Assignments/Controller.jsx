@@ -6,13 +6,13 @@ import { EmptyAssignments } from "./EmptyAssign";
 import { DateField } from "react-admin";
 
 
-const AssignmentsListContent = ({ isSmall }) => {
+const AssignmentsListContent = ({ isSmall, isMedium }) => {
     const { isLoading, ids, data, error } = useListContext();
 
     if (isLoading) return <LoadingOverlay />;
     if (error) return <EmptyAssignments />;
 
-    return isSmall ? (
+    return isSmall || isMedium ? (
         <SimpleList
             primaryText={record => `Смена: ${record.shift}`}
             secondaryText={record => (

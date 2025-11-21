@@ -26,3 +26,11 @@ func (s *Service) GetReportsByReport(idStr string) (models.Reports, error) {
 
 	return s.repo.RepRepo.GetReportsById(id)
 }
+
+func (s *Service) UpdateReport(report models.Reports) (bool, error) {
+	if err := s.validate.Struct(report); err != nil {
+		return false, err
+	}
+
+	return s.repo.RepRepo.UpdateReports(report)
+}

@@ -2,7 +2,7 @@ package camera
 
 import (
 	"bytes"
-	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/rs/zerolog/log"
@@ -59,7 +59,7 @@ func (cam *Camera) TakePhoto() (*bytes.Buffer, error) {
 
 	if n == 0 {
 		log.Error().Msg("Photo is empty")
-		return nil, fmt.Errorf("photo is empty")
+		return nil, err
 	}
 
 	if err = cmd.Wait(); err != nil {
@@ -67,5 +67,15 @@ func (cam *Camera) TakePhoto() (*bytes.Buffer, error) {
 		return nil, err
 	}
 
+	return buf, nil
+}
+
+func (cam *Camera) GetBytesFromPhoto() (*bytes.Buffer, error) {
+	data, err := os.ReadFile("photo.jpg")
+	if err != nil {
+		return nil, err
+	}
+
+	buf := bytes.NewBuffer(data)
 	return buf, nil
 }

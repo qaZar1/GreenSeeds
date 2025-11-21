@@ -32,14 +32,20 @@ const GroupedDatagrid = () => {
   today.setHours(0, 0, 0, 0);
 
   // Разделяем сегодняшние и исторические данные
-  const todaysData = data.filter((item) => new Date(item.dt) >= today);
-  const historyData = data.filter((item) => new Date(item.dt) < today);
-
-  // Группировка по сменам
-  const grouped = (showHistory ? data : todaysData).reduce((acc, item) => {
-    acc[item.shift] = acc[item.shift] ? [...acc[item.shift], item] : [item];
+  const allGroups = data.reduce((acc, item) => {
+    if (!acc[item.shift]) acc[item.shift] = [];
+    acc[item.shift].push(item);
     return acc;
   }, {});
+
+  const grouped = Object.fromEntries(
+    Object.entries(allGroups).filter(([shift, items]) => {
+      if (showHistory) return true;
+
+      return items.some((item) => new Date(item.dt) >= today);
+    })
+  );
+
 
   const toggleGroup = (shift) => setOpenGroups((prev) => ({ ...prev, [shift]: !prev[shift] }));
 
@@ -97,7 +103,10 @@ const GroupedDatagrid = () => {
                   }}
                 >
                   {reports
-                    .sort((a, b) => a.number - b.number)
+                    .sort((a, b) => {
+                      if (a.number !== b.number) return a.number - b.number;
+                      return a.turn - b.turn;
+                    })
                     .map((rec, i) => (
                       <Card
                         key={rec.id || i}
@@ -137,7 +146,10 @@ const GroupedDatagrid = () => {
                   </TableHead>
                   <TableBody>
                     {reports
-                      .sort((a, b) => a.number - b.number)
+                      .sort((a, b) => {
+                        if (a.number !== b.number) return a.number - b.number;
+                        return a.turn - b.turn;
+                      })
                       .map((rec) => (
                         <TableRow key={rec.id}>
                           <TableCell>{rec.number}</TableCell>

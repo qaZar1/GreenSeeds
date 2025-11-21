@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
+	"github.com/rs/zerolog/log"
 )
 
 type API struct {
@@ -27,7 +28,7 @@ func NewAPI(url string) *API {
 func (a *API) RequestAI(seed string, buf bytes.Buffer) (models.ResponseAPI, error) {
 	req, err := http.NewRequest(POST, a.url, &buf)
 	if err != nil {
-		return models.ResponseAPI{}, err
+		log.Err(err).Msg("Cannot create request")
 	}
 
 	query := req.URL.Query()
@@ -36,22 +37,26 @@ func (a *API) RequestAI(seed string, buf bytes.Buffer) (models.ResponseAPI, erro
 
 	resp, err := a.http.Do(req)
 	if err != nil {
+		log.Err(err).Msg("Cannot create request")
 		return models.ResponseAPI{}, err
 	}
 	defer resp.Body.Close()
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
+		log.Err(err).Msg("Cannot create request")
 		return models.ResponseAPI{}, err
 	}
 
 	var response models.ResponseAPI
 	if err := json.Unmarshal(data, &response); err != nil {
+		log.Err(err).Msg("Cannot create request")
 		return models.ResponseAPI{}, err
 	}
 
 	response, err = a.CheckAI(seed, buf)
 	if err != nil {
+		log.Err(err).Msg("Cannot create request")
 		return models.ResponseAPI{}, err
 	}
 

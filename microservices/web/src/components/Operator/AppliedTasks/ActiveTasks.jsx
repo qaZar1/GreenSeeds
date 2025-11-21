@@ -33,7 +33,7 @@ const Tasks = ({ tasks }) => {
   }, {});
 
   return (
-    <Box display="flex" justifyContent="center" p={2} pl={5} pr={5}>
+    <Box display="flex" justifyContent="center" p={2}>
       <Card sx={{ width: "100%", borderRadius: 3, boxShadow: 4 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom align="center">

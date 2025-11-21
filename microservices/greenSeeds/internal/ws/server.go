@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/api"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/device"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
+	"github.com/rs/zerolog"
 )
 
 var upgrader = websocket.Upgrader{
@@ -19,106 +20,66 @@ var upgrader = websocket.Upgrader{
 }
 
 type Server struct {
-	Clients     map[*Client]bool
-	Serial      *device.SerialManager
-	WsToSerial  chan []byte
-	mu          sync.RWMutex
-	isBusy      bool
-	commandType string
-	amount      int
+	Clients    map[*Client]bool
+	Serial     *device.SerialManager
+	WsToSerial chan models.WSMessage
+	SerialToWs chan models.WSMessage
+	mu         sync.RWMutex
+	isBusy     bool
+	log        zerolog.Logger
 }
 
-func NewServer(comPath string, baud int, camera *camera.Camera, repo *repository.Repository, url string) (*Server, error) {
-	serial := device.NewSerialManager(comPath, baud, url, camera, repo)
+func NewServer(
+	comPath string,
+	baud int,
+	camera *camera.Camera,
+	repo *repository.Repository,
+	url string,
+	log zerolog.Logger,
+) (*Server, error) {
+	api := api.NewAPI(url)
+	serial := device.NewSerialManager(comPath, baud, camera, repo, api, log)
 
 	server := &Server{
 		Clients:    make(map[*Client]bool),
-		WsToSerial: make(chan []byte, 10),
+		WsToSerial: make(chan models.WSMessage, 10),
 		Serial:     serial,
+		log:        log,
 	}
 
 	// Чтение данных с COM
+	ch := serial.Subscribe()
+	defer serial.Unsubscribe(ch)
+
 	go func() {
-		ch := server.Serial.Subscribe()
-		defer server.Serial.Unsubscribe(ch)
-
-		for msg := range ch {
-			log.Println("COM read:", string(msg))
-			cleanedMsg := strings.Trim(string(msg), "\x00")
-
-			var wsMsg models.WSMessage
-
-			server.mu.Lock()
-			commandType := server.commandType
-			amount := server.amount
-			server.mu.Unlock()
-
-			// Берём актуальное значение control из Serial
-			control := server.Serial.Control
-
-			if cleanedMsg == "ACK BOOT" {
-				wsMsg = models.WSMessage{
-					Type:   "BOOT",
-					Status: &cleanedMsg,
-				}
-			} else {
-				wsMsg = models.WSMessage{
-					Type:   commandType,
-					Status: &cleanedMsg,
-					Params: &models.Params{
-						Amount: amount,
-					},
-					Payload: &models.PayloadWs{
-						Control: control,
-					},
-				}
-			}
-
-			server.broadcast(wsMsg)
-
-			server.mu.Lock()
-			server.isBusy = false
-			server.mu.Unlock()
+		for msg := range server.Serial.ResponseModelCh {
+			server.broadcast(msg)
 		}
 	}()
 
 	// Отправка данных с WS в COM
 	go func() {
-		for data := range server.WsToSerial {
-			// анмаршалим данные в модель
-			var msg models.WSMessage
-			if err := json.Unmarshal(data, &msg); err != nil {
-				log.Println("WS to COM error:", err)
-				err := "Failed to parse message"
-				wsMsg := models.WSMessage{
-					Type:  "ERR",
-					Error: &err,
-				}
-				server.broadcast(wsMsg)
-				continue
+		for msg := range server.WsToSerial {
+			if msg.Type == "DECISION" {
+				server.Serial.DecisionCh <- msg
 			}
-
 			// устройство занято или неактивно
-			if !server.Serial.Active || server.isBusy {
+			if !server.Serial.Active {
 				err := "Device is not active"
 				wsMsg := models.WSMessage{
 					Type:  msg.Type,
 					Error: &err,
 				}
-				server.broadcast(wsMsg)
+				server.Serial.ResponseModelCh <- wsMsg
 				continue
 			}
 
-			// устанавливаем флаг занятости, копируем тип команды и количество
+			// устанавливаем флаг занятости
 			server.mu.Lock()
 			server.isBusy = true
-			server.commandType = msg.Type
-			if msg.Params != nil && msg.Params.Amount != 0 {
-				server.amount = msg.Params.Amount
-			}
 			server.mu.Unlock()
 
-			server.Serial.UserCommand(msg)
+			go server.Serial.UserCommand(msg)
 		}
 	}()
 
@@ -137,7 +98,6 @@ func (s *Server) broadcast(msg models.WSMessage) {
 }
 
 func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
-	log.Println("New client connected")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("WS upgrade error:", err)
@@ -151,9 +111,13 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 
 	// Чтение сообщений от клиента
 	go client.ListenRead(func(msg []byte) {
-		msgCopy := make([]byte, len(msg))
-		copy(msgCopy, msg)
-		s.WsToSerial <- msgCopy
+		var wsMsg models.WSMessage
+		if err := json.Unmarshal(msg, &wsMsg); err != nil {
+			log.Println("WS to COM error:", err)
+			return
+		}
+
+		s.WsToSerial <- wsMsg
 	})
 
 	// Отправка сообщений клиенту

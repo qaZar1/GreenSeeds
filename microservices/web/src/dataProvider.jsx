@@ -2,6 +2,8 @@ import { jwtDecode } from "jwt-decode";
 import { useNotify } from "react-admin";
 import { fetchUtils } from 'react-admin';
 
+const LIMIT = 50;
+
 export const getToken = () => {
     try {
         const stored = localStorage.getItem("auth");
@@ -99,6 +101,10 @@ const baseProvider = {
             switch (action) {
                 case 'one': return `/api/assignments/task${idPart}`;
             }
+        } else if (resource === 'logs') {
+            switch (action) {
+                case 'list': return `/api/logs/get`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
@@ -162,6 +168,11 @@ const baseProvider = {
                 ...item,
                 id: item.id ?? item.id,
             };
+        } else if (resource === 'logs') {
+            return {
+                ...item,
+                id: item.id ?? item.id,
+            }
         }
         return item;
     },
@@ -173,6 +184,25 @@ const baseProvider = {
         let url
         if (resource === 'tasks'){
             url = dataProvider.getApiUrl(resource, 'list', params.filter.username);
+        } else if (resource === 'logs'){
+            const search = params.filter?.search || "";
+            const level = params.filter?.level || "ALL";
+            const page = params.pagination?.page || 1;
+            const perPage = params.pagination?.perPage || 50;
+            const offset = (page - 1) * perPage;
+            const dateFrom = params.filter?.date_from || "";
+            const dateTo = params.filter?.date_to || ""
+
+            const qs = new URLSearchParams({
+                search,
+                level,
+                limit: perPage,
+                offset,
+                date_from: dateFrom,
+                date_to: dateTo,
+            });
+
+            url = `/api/logs/get?${qs.toString()}`;
         } else {
             url = dataProvider.getApiUrl(resource, 'list');
         }

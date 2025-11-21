@@ -31,6 +31,7 @@ import ReportsShow from './components/Admin/Reports/ReportShow';
 import ChoiceList from "./components/Operator/ChoiceTasks/Choice";
 import TaskDetails from "./components/Operator/TaskDetail/TaskDetails";
 import AppliedTaskList from "./components/Operator/AppliedTasks/Applied";
+import LogsPage from "./components/Admin/Logs/Logs";
 import { getRole } from "./authProvider";
 
 function App() {
@@ -108,6 +109,7 @@ function App() {
           {role === 'operator' && (
             <Route path="/tasks/:id" element={<TaskDetails />} />
           )}
+          <Route path="/logs" element={<LogsPage />} />
         </CustomRoutes>
       </Admin>
     </>

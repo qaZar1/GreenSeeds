@@ -45,6 +45,7 @@ VALUES (
 	:error,
 	:solution,
 	:mark)
+ON CONFLICT (shift, number, receipt, turn) DO NOTHING
 RETURNING id`
 
 	rows, err := rep.db.NamedQuery(query, reports)
@@ -74,7 +75,7 @@ SELECT
 	receipt,
 	turn,
 	dt,
-	success,
+	COALESCE(success, FALSE) as success,
 	error,
 	solution,
 	mark
@@ -92,16 +93,16 @@ ORDER BY shift DESC`
 func (rep *reportsRepository) UpdateReports(reports models.Reports) (bool, error) {
 	const query = `
 UPDATE green_seeds.reports
-SET turn = :turn,
-	dt = :dt,
-	success = :success,
-	error = :error,
-	solution = :solution,
-	mark = :mark
+SET	dt = COALESCE(:dt, dt),
+	success = COALESCE(:success, success),
+	error = COALESCE(:error, error),
+	solution = COALESCE(:solution, solution),
+	mark = COALESCE(:mark, mark)
 WHERE
 	shift = :shift AND
 	number = :number AND
-	receipt = :receipt
+	receipt = :receipt AND
+	turn = :turn
 `
 
 	result, err := rep.db.NamedExec(query, reports)
@@ -144,7 +145,7 @@ SELECT
 	r.receipt,
 	r.turn,
 	r.dt,
-	r.success,
+	COALESCE(r.success, FALSE) as success,
 	r.error,
 	r.solution,
 	r.mark,

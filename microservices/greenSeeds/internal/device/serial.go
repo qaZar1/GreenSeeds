@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/tarm/serial"
 )
 
@@ -15,9 +15,10 @@ type Serial struct {
 	port       *serial.Port
 	ResponseCh chan []byte
 	mu         sync.Mutex
+	log        zerolog.Logger
 }
 
-func NewSerial(port string, baud int, ctx context.Context) (*Serial, error) {
+func NewSerial(port string, baud int, ctx context.Context, log zerolog.Logger) (*Serial, error) {
 	config := &serial.Config{
 		Name:        port,
 		Baud:        baud,
@@ -26,12 +27,14 @@ func NewSerial(port string, baud int, ctx context.Context) (*Serial, error) {
 
 	p, err := serial.OpenPort(config)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to open port")
 		return nil, err
 	}
 
 	s := &Serial{
 		port:       p,
 		ResponseCh: make(chan []byte, 100),
+		log:        log,
 	}
 
 	return s, nil
@@ -47,7 +50,6 @@ func (s *Serial) Write(data []byte) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("COM write: %s", string(data))
 	return nil
 }
 
@@ -75,10 +77,10 @@ func (s *Serial) Listen(ctx context.Context) {
 				if b == delimeter {
 					data := make([]byte, len(msg))
 					data = append(data, msg...)
+
 					select {
 					case s.ResponseCh <- data:
 					default:
-						log.Println("ResponseCh overflow, message lost")
 					}
 					msg = msg[:0]
 				} else {

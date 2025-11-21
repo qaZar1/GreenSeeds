@@ -5,13 +5,13 @@ import { EditButton } from "react-admin";
 import { EmptyReceipt } from "./EmptyReceipt";
 import { DateField } from "react-admin";
 
-const ReceiptListContent = ({ isSmall }) => {
+const ReceiptListContent = ({ isSmall, isMedium }) => {
     const { isLoading, ids, data, error } = useListContext();
 
     if (isLoading) return <LoadingOverlay />;
     if (error) return <EmptyReceipt />;
 
-    return isSmall ? (
+    return isSmall || isMedium ? (
         <SimpleList
             primaryText={record => `Семена: ${record.seed_ru}`}
             secondaryText={record => (

@@ -9,6 +9,7 @@ import UserListContent from "./Controller";
 
 const UserList = (props) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+    const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
 
     let currentUsername = null;
     try {
@@ -34,7 +35,7 @@ const UserList = (props) => {
             actions={isSmall ? <CreateButton /> : <UserListActions />}
             title="Пользователи"
         >
-            <UserListContent isSmall={isSmall} currentUsername={currentUsername} />
+            <UserListContent isSmall={isSmall} isMedium={isMedium} currentUsername={currentUsername} />
         </List>
     );
 };

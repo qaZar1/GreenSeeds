@@ -111,48 +111,48 @@ func (transport *Transport) GetApiReportsById(w http.ResponseWriter, r *http.Req
 	utils.WriteJSON(w, http.StatusOK, reports)
 }
 
-// // Set godoc
-// //
-// // @Router /api/assignments/update [put]
-// // @Summary Обновление данных о задании на смену
-// // @Description При обращении, обновляет данные о задании на смену
-// //
-// // @Tags Assignments
-// // @Produce      application/json
-// // @Consume      application/json
-// //
-// // @Param request body assignment true "Тело запроса"
-// //
-// // @Success 200 {object} assignment "Запрос выполнен успешно"
-// // @Failure 400 {object} nil "Ошибка валидации данных"
-// // @Failure 401 {object} nil "Ошибка авторизации"
-// // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-// func (transport *Transport) PutApiAssignmentsUpdate(w http.ResponseWriter, r *http.Request) {
-// 	data, err := io.ReadAll(r.Body)
-// 	if err != nil {
-// 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
-// 		return
-// 	}
+// Set godoc
+//
+// @Router /api/reports/update [put]
+// @Summary Обновление данных о задании на смену
+// @Description При обращении, обновляет данные о задании на смену
+//
+// @Tags Reports
+// @Produce      application/json
+// @Consume      application/json
+//
+// @Param request body report true "Тело запроса"
+//
+// @Success 200 {object} report "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) PutApiReportsUpdate(w http.ResponseWriter, r *http.Request) {
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		return
+	}
 
-// 	var assignment models.Assignments
-// 	if err := jsoniter.Unmarshal(data, &assignment); err != nil {
-// 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
-// 		return
-// 	}
+	var report models.Reports
+	if err := jsoniter.Unmarshal(data, &report); err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		return
+	}
 
-// 	updatedAssignment, err := transport.service.UpdateAssignment(assignment)
-// 	if err != nil {
-// 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update assignment: %w", err))
-// 		return
-// 	}
+	ok, err := transport.service.UpdateReport(report)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update report: %w", err))
+		return
+	}
 
-// 	if updatedAssignment == (models.Assignments{}) {
-// 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update assignment: %w", err))
-// 		return
-// 	}
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update report: %w", err))
+		return
+	}
 
-// 	utils.WriteJSON(w, http.StatusOK, updatedAssignment)
-// }
+	utils.WriteJSON(w, http.StatusOK, "OK")
+}
 
 // // Set godoc
 // //

@@ -10,7 +10,9 @@ import (
 
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/api"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
+	"github.com/rs/zerolog"
 )
 
 type SerialManager struct {
@@ -21,39 +23,51 @@ type SerialManager struct {
 	Serial  *Serial
 	camera  *camera.Camera
 	repo    *repository.Repository
-	API     *api.API
+	api     *api.API
 	Active  bool
 	Control bool
 
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	ResponseCh chan []byte
+	ResponseCh      chan []byte
+	ResponseModelCh chan models.WSMessage
+	DecisionCh      chan models.WSMessage
 
 	idleTimer *time.Timer
 	idleMu    sync.Mutex
 
 	subsMu sync.RWMutex
 	subs   []chan []byte
+
+	log zerolog.Logger
 }
 
-func NewSerialManager(port string, baud int, url string, camera *camera.Camera, repo *repository.Repository) *SerialManager {
+func NewSerialManager(
+	port string,
+	baud int,
+	camera *camera.Camera,
+	repo *repository.Repository,
+	api *api.API,
+	log zerolog.Logger,
+) *SerialManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// инициализируем API
-	api := api.NewAPI(url)
-
 	m := &SerialManager{
-		portName:   port,
-		baud:       baud,
-		camera:     camera,
-		repo:       repo,
-		API:        api,
-		ctx:        ctx,
-		cancel:     cancel,
-		ResponseCh: make(chan []byte, 100),
-		Active:     false,
-		Control:    false,
+		portName:        port,
+		baud:            baud,
+		camera:          camera,
+		repo:            repo,
+		api:             api,
+		ctx:             ctx,
+		cancel:          cancel,
+		ResponseCh:      make(chan []byte, 100),
+		ResponseModelCh: make(chan models.WSMessage, 100),
+		DecisionCh:      make(chan models.WSMessage, 1),
+		Active:          false,
+		Control:         false,
+
+		log: log,
 	}
 
 	m.idleTimer = time.NewTimer(20 * time.Second)
@@ -86,12 +100,16 @@ func (m *SerialManager) idleWatcher() {
 			for time.Since(start) < 15*time.Second {
 				select {
 				case data := <-ch:
-					if strings.Contains(string(data), ACK_BOOT) ||
-						strings.Contains(string(data), END) {
+					dataStr := string(data)
+					if strings.Contains(dataStr, ACK_BOOT) {
 						if !m.Active {
 							m.Active = true
 						}
 						m.resetIdleTimer(1 * time.Minute)
+						m.ResponseModelCh <- models.WSMessage{
+							Type:   BOOT,
+							Status: &dataStr,
+						}
 						continue
 					}
 				case <-time.After(1 * time.Second):
@@ -107,7 +125,7 @@ func (m *SerialManager) idleWatcher() {
 
 func (m *SerialManager) reconnect() {
 	localCtx, cancel := context.WithCancel(m.ctx)
-	serialInst, err := NewSerial(m.portName, m.baud, localCtx)
+	serialInst, err := NewSerial(m.portName, m.baud, localCtx, m.log)
 	if err != nil {
 		cancel()
 		log.Println("Failed to connect:", err)
@@ -148,11 +166,17 @@ func (m *SerialManager) initialHandshake() bool {
 	for time.Since(start) < 20*time.Second {
 		select {
 		case data := <-ch:
-			if strings.Contains(string(data), ACK_BOOT) {
+			dataStr := string(data)
+			log.Println("COM read: ", dataStr)
+			if strings.Contains(dataStr, ACK_BOOT) {
 				if !m.Active {
 					m.Active = true
 				}
 				m.resetIdleTimer(1 * time.Minute)
+				m.ResponseModelCh <- models.WSMessage{
+					Type:   BOOT,
+					Status: &dataStr,
+				}
 				return true
 			}
 		case <-time.After(1 * time.Second):
@@ -207,12 +231,13 @@ func (m *SerialManager) listenSerial(s *Serial, cancel context.CancelFunc) {
 				return
 			}
 
+			dataStr := strings.Trim(string(data), emptyLetter)
+
 			m.subsMu.Lock()
 			for _, sub := range m.subs {
 				select {
-				case sub <- data:
+				case sub <- []byte(dataStr):
 				default:
-					log.Println("ResponseCh overflow, message lost")
 				}
 			}
 			m.subsMu.Unlock()

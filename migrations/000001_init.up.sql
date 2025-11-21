@@ -74,3 +74,14 @@ CREATE TABLE IF NOT EXISTS green_seeds.reports (
         REFERENCES green_seeds.assignments (shift, number, receipt),
     PRIMARY KEY (shift, number, receipt, turn)
 );
+
+CREATE TABLE IF NOT EXISTS green_seeds.logs (
+    id SERIAL,
+    dt TIMESTAMP WITH TIME ZONE,
+    lvl VARCHAR(10),
+    request_id VARCHAR(255),
+    msg TEXT,
+    caller VARCHAR(512),
+    username VARCHAR(20),
+    PRIMARY KEY (id)
+);

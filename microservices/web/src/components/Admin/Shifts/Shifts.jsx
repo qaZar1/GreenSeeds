@@ -7,6 +7,7 @@ import ShiftListContent from "./Controller";
 
 const ShiftList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+    const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
 
     return (
         <List
@@ -18,7 +19,7 @@ const ShiftList = ({ ...props }) => {
             title="План производства"
             pagination={false}
         >
-            <ShiftListContent isSmall={isSmall} />
+            <ShiftListContent isSmall={isSmall} isMedium={isMedium} />
         </List>
     );
 };

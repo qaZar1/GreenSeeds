@@ -6,6 +6,7 @@ import { TopToolbar } from "react-admin";
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import { useResourceContext } from "react-admin";
+import { Box } from "@mui/material";
 
 const BackButton = ({ to }) => {
     const navigate = useNavigate();
@@ -44,7 +45,10 @@ const BackButton = ({ to }) => {
 
 const TopToolbarWithBackButton = ({ to }) => {
     return (
-        <TopToolbar sx={{ justifyContent: 'flex-start', p: 0 }}>
+        <TopToolbar
+            sx={{ justifyContent: 'flex-start', p: 0 }}
+            component={Box}
+        >
             <BackButton to={to} />
         </TopToolbar>
     );

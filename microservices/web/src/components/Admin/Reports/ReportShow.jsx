@@ -31,7 +31,7 @@ const ReportShow = () => {
                             <TextField source="error" emptyText="-" label="Ошибка" />
                             <TextField source="solution" emptyText="-" label="Решение" />
                             <TextField source="mark" emptyText="-" label="Маркировка" />
-                            <TextField source="responsible" label="Ответственный" />
+                            <TextField source="responsible" label="Ответственный" emptyText="-"/>
                         </SimpleShowLayout>
                     ) : (
                     <Box sx={{ display: "flex", flexDirection: "row", width: "100%"}}>
@@ -53,7 +53,7 @@ const ReportShow = () => {
                                 <TextField source="error" emptyText="-" label="Ошибка" />
                                 <TextField source="solution" emptyText="-" label="Решение" />
                                 <TextField source="mark" emptyText="-" label="Маркировка" />
-                                <TextField source="responsible" label="Ответственный" />
+                                <TextField source="responsible" label="Ответственный" emptyText="-"/>
                             </SimpleShowLayout>
                         </Box>
                     </Box>

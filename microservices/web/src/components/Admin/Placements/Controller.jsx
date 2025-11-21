@@ -4,13 +4,13 @@ import { LoadingOverlay } from "../../utils/Loading";
 import { EditButton } from "react-admin";
 import { EmptyPlacement } from "./EmptyPlacement";
 
-const PlacementListContent = ({ isSmall }) => {
+const PlacementListContent = ({ isSmall, isMedium }) => {
     const { isLoading, ids, data, error } = useListContext();
 
     if (isLoading) return <LoadingOverlay />;
     if (error) return <EmptyPlacement />;
 
-    return isSmall ? (
+    return isSmall || isMedium ? (
         <SimpleList
             primaryText={record => `Бункер: ${record.bunker}`}
             secondaryText={record => `Семена: ${record.seed_ru}`}

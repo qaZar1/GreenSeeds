@@ -1,10 +1,10 @@
 .env
 **/vendor
-**/logs
 **/docs
 **/.DS_Store
 .vscode
-
+microservices/greenSeeds/cmd/seeds/logs
+**/photo
 ##### For Web
 # Logs
 *.log

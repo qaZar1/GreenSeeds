@@ -17,6 +17,7 @@ import {
 import { Collapse, ListItemButton, ListItemText, Box } from "@mui/material";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { getRole } from "../../authProvider";
+import ListAltIcon from '@mui/icons-material/ListAlt';
 
 const CustomMenu = () => {
   const [openRefs, setOpenRefs] = useState(false);
@@ -39,6 +40,7 @@ const CustomMenu = () => {
           <MenuItemLink key="shifts" to="/shifts" primaryText="План производства" leftIcon={<CalendarMonthIcon />} />,
           <MenuItemLink key="assignments" to="/assignments" primaryText="Сменные задания" leftIcon={<AssignmentIcon />} />,
           <MenuItemLink key="reports" to="/reports" primaryText="Отчеты" leftIcon={<ReportIcon />} />,
+          <MenuItemLink key="logs" to="/logs" primaryText="Логи" leftIcon={<ListAltIcon />} />,
       ]}
 
       {/* Секция настроек */}

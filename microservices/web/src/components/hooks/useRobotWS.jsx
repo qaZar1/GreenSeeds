@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNotify } from "react-admin";
 
-const WS_URL = "ws://localhost:8001/ws";
+const WS_URL = "/ws";
 
 const robotStateTranslate = {
   "STAND BY": "Ожидает нажатия кнопки",
@@ -16,7 +16,7 @@ const robotStateTranslate = {
 };
 
 export function useRobotWS(params = {}) {
-  const { record } = params;
+  const { record, onSuccessStep, onErrorStep } = params;
 
   const wsRef = useRef(null);
   const reconnectTimeout = useRef(null);
@@ -25,16 +25,25 @@ export function useRobotWS(params = {}) {
   const [state, setState] = useState("STAND BY");
   const [isBoot, setIsBoot] = useState(false);
   const [dots, setDots] = useState("");
-  const [control, setControl] = useState(false);
-  const [amount, setAmount] = useState(0);
+  const [control, setControl] = useState(null);
+  const [turn, setTurn] = useState(0);
+  const [decisionModal, setDecisionModal] = useState({
+    open: false,
+    reason: "",
+    photo: null,
+  });
 
   const notify = useNotify();
 
   const handleWSMessage = (msg) => {
     const { type, status, payload, error } = msg;
 
-    if (error){
+    if (type === "ERR"){
       notify(error, {type:"error"});
+      if (onErrorStep && msg.params?.turn) {
+        onErrorStep(msg.params.turn, error);
+      }
+    
       setIsBoot(false);
       setState("ERR");
       return;
@@ -65,22 +74,44 @@ export function useRobotWS(params = {}) {
         break;
       
       case "BEGIN":
-        if (msg.status.includes("ACK")) {
-          setState("BUSY");
+        if (msg.status.includes("RETURN")) {
+          setState("RETURN");
         } else if (msg.status.includes("END")) {
           setState("END");
-        } else if (msg.status.includes("RETURN")) {
-          setState("RETURN");
+        } else if (msg.status.includes("ACK")) {
+          setState("BUSY");
+          setControl(null);
         } else if (msg.status.includes("STAND BY")) {
-          if (msg.params && typeof msg.params.amount !== "undefined") {
-            setAmount(msg.params.amount);
-          }
           setState("STAND BY");
+          if (msg.error !== undefined) {
+            notify(msg.error, {type:"error"});
+            if (onErrorStep && msg.params?.turn) {
+              onErrorStep(msg.params.turn, msg.error);
+            }
+
+            if (payload && "control" in payload) {
+              setControl(payload.control);
+            }
+            break;
+          } else if (msg.params && typeof msg.params.turn !== "undefined") {
+            setTurn(msg.params.turn);
+          }
           notify("Задание успешно выполнено!", {type: "success"});
+          if (onSuccessStep) onSuccessStep();
         }
 
-        if (msg.payload && typeof msg.payload.control !== "undefined") {
-          setControl(msg.payload.control);
+        if (payload && "control" in payload) {
+          setControl(payload.control);
+        }
+        break;
+
+      case "NEED_DECISION":
+        if (msg.payload && typeof msg.payload.reason !== "undefined") {
+          setDecisionModal({
+            open: true,
+            reason: msg.payload.reason,
+            photo: msg.payload.photo,
+          });
         }
         break;
       
@@ -178,6 +209,8 @@ export function useRobotWS(params = {}) {
     sendMessage,
     isBoot,
     control,
-    amount,
+    turn,
+    decisionModal,
+    setDecisionModal
   };
 }

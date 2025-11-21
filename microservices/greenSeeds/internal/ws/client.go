@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gorilla/websocket"
+
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
@@ -17,7 +18,7 @@ type Client struct {
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		Conn: conn,
-		Send: make(chan models.WSMessage, 10),
+		Send: make(chan models.WSMessage),
 		done: make(chan struct{}),
 	}
 }
@@ -41,6 +42,7 @@ func (c *Client) ListenWrite() {
 			if !ok {
 				return
 			}
+
 			data, err := json.Marshal(msg)
 			if err != nil {
 				log.Println("Can not marshal data:", err)

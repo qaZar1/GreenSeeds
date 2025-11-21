@@ -5,10 +5,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Impisigmatus/service_core/log"
 	"github.com/go-chi/chi/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/utils"
+	"github.com/rs/zerolog"
 )
 
 // Set godoc
@@ -77,6 +79,12 @@ func (transport *Transport) GetApiCheckAllUsers(w http.ResponseWriter, r *http.R
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) PutApiChangePassword(w http.ResponseWriter, r *http.Request) {
+	log, ok := r.Context().Value(log.CtxKey).(zerolog.Logger)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid logger")
+		return
+	}
+
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
@@ -89,7 +97,7 @@ func (transport *Transport) PutApiChangePassword(w http.ResponseWriter, r *http.
 		return
 	}
 
-	ok, err := transport.service.ChangePassword(updatePassword)
+	ok, err = transport.service.ChangePassword(updatePassword)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not change password: %w", err))
 		return
@@ -99,6 +107,13 @@ func (transport *Transport) PutApiChangePassword(w http.ResponseWriter, r *http.
 		utils.WriteString(w, http.StatusNotFound, "User not found")
 		return
 	}
+
+	log.Warn().Ctx(r.Context()).Msg(
+		fmt.Sprintf(
+			"The password has been reset for: %s",
+			updatePassword.Username,
+		),
+	)
 
 	utils.WriteNoContent(w)
 }
@@ -120,6 +135,12 @@ func (transport *Transport) PutApiChangePassword(w http.ResponseWriter, r *http.
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) DeleteApiRemoveUser(w http.ResponseWriter, r *http.Request) {
+	log, ok := r.Context().Value(log.CtxKey).(zerolog.Logger)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid logger")
+		return
+	}
+
 	username := chi.URLParam(r, "username")
 
 	ok, err := transport.service.RemoveUser(username)
@@ -132,6 +153,8 @@ func (transport *Transport) DeleteApiRemoveUser(w http.ResponseWriter, r *http.R
 		utils.WriteString(w, http.StatusNotFound, "User not found")
 		return
 	}
+
+	log.Warn().Ctx(r.Context()).Msg(fmt.Sprintf("User removed: %s", username))
 
 	utils.WriteNoContent(w)
 }

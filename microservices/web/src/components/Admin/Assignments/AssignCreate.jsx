@@ -1,16 +1,33 @@
-// BunkerCreate.jsx
 import React from "react";
 import { Create, SimpleForm, TextInput, NumberInput } from "react-admin";
 import { ToolbarSave } from "../../utils/Toolbars";
 import BackButton from "../../utils/Back";
-import { ReferenceInput, AutocompleteInput } from "react-admin";
+import { useDataProvider, ReferenceInput, AutocompleteInput } from "react-admin";
+import { useEffect, useState } from "react";
 
 const AssignmentsCreate = () => {
+     const dataProvider = useDataProvider();
+    const [shifts, setShifts] = useState([]);
+
+    useEffect(() => {
+        dataProvider
+            .getList("shifts")
+            .then(({ data }) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const filtered = data.filter((shift) => new Date(shift.dt) >= today);
+                const sorted = filtered.sort((a, b) => new Date(a.dt) - new Date(b.dt));
+                setShifts(sorted);
+            });
+    }, [dataProvider]);
+
     return (
         <Create sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Создание сменного задания">
             <SimpleForm toolbar={<ToolbarSave />}>
                 <ReferenceInput source="shift" reference="shifts">
                     <AutocompleteInput
+                        source="shift"
+                        choices={shifts}
                         optionText={(record) => 
                             new Date(record.dt).toLocaleDateString('ru-RU', {
                                 year: 'numeric',
@@ -21,7 +38,6 @@ const AssignmentsCreate = () => {
                             })
                         }
                         optionValue="shift"
-                        id="shift"
                         label="Смена"
                     />
                 </ReferenceInput>
