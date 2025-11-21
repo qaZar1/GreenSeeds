@@ -16,6 +16,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/
 import { BooleanInput } from "react-admin";
 import { EmptyProfile } from "./EmptyProfile";
 import { LoadingOverlay } from "../../utils/Loading";
+import { getToken } from "../../../dataProvider";
 
 const Profile = () => {
     const [username, setUsername] = useState(null);
@@ -27,6 +28,7 @@ const Profile = () => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
     const notify = useNotify();
     const { data, isLoading, error } = useGetOne("profile", { id: username });
+    const token = getToken();
 
 
     useEffect(() => {
@@ -46,7 +48,7 @@ const Profile = () => {
 
     const handlePasswordReset = async () => {
         if (newPassword !== confirmPassword) {
-            notify("Новые пароли не совпадают", "error");
+            notify("Новые пароли не совпадают", {type:"error"});
             return;
         }
 
@@ -54,6 +56,7 @@ const Profile = () => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({
                 username: username,
@@ -63,11 +66,11 @@ const Profile = () => {
         });
 
         if (response.status !== 204) {
-            notify("Ошибка обновления пароля", "error");
+            notify("Ошибка обновления пароля", {type:"error"});
             return;
         }
 
-        notify("Пароль успешно обновлен", "success");
+        notify("Пароль успешно обновлен", {type:"success"});
 
         setOpenDialog(false);
         setOldPassword("");
@@ -100,6 +103,7 @@ const Profile = () => {
     if (!username || isLoading) return <LoadingOverlay text="Загрузка профиля..." />;
 
     if (error) return <EmptyProfile />;
+    if (!data) return null;
 
     return (
         <>
@@ -110,7 +114,7 @@ const Profile = () => {
                 title="Профиль"
                 sx={{
                     display: 'flex',
-                    justifyContent: 'center',  // центрируем по горизонтали
+                    justifyContent: 'center',
                     padding: 2,
                 }}
             >

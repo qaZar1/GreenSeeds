@@ -7,6 +7,7 @@ import ReceiptListContent from "./Controller";
 
 const ReceiptList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+    const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
 
     return (
         <List
@@ -15,8 +16,10 @@ const ReceiptList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<ReceiptListActions />}
+            title="Рецепты"
+            pagination={false}
         >
-            <ReceiptListContent isSmall={isSmall} />
+            <ReceiptListContent isSmall={isSmall} isMedium={isMedium} />
         </List>
     );
 };

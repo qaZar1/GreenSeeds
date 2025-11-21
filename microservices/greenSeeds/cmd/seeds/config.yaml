@@ -15,3 +15,16 @@ database:
 jwt:
   client_secret: "dev"                                     # Секретный ключ
   expires_in: 1800000                                      # Срок действия токена
+
+serial:
+  port: "/dev/cu.usbmodem3377395B33351"                    # Порт устройства
+  baud: 115200                                             # Скорость передачи данных
+
+camera:
+  name: "HD Pro Webcam C920"                               # Название камеры
+  input_device: "avfoundation"                             # Входное устройство
+  framerate: "30"                                          # Кадровая частота
+  video_size: "1920x1080"                                  # Размер видео
+
+api:
+  url: "http://localhost:8001"                             # URL API

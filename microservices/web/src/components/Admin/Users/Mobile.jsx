@@ -74,7 +74,7 @@ const MobileActionsMenu = ({ record, currentUsername }) => {
                 </MenuItem>
 
                 <MenuItem onClick={() => { 
-                    if (record.username === currentUsername) return; // предотвращаем клик
+                    if (record.username === currentUsername) return;
                     handleClose(); 
                     handleToggle(); 
                     }}

@@ -1,7 +1,8 @@
-// src/dataProvider.js
 import { jwtDecode } from "jwt-decode";
 import { useNotify } from "react-admin";
 import { fetchUtils } from 'react-admin';
+
+const LIMIT = 50;
 
 export const getToken = () => {
     try {
@@ -17,11 +18,7 @@ export const getToken = () => {
 };
 
 const baseProvider = {
-    // --- Вспомогательные функции для определения API и трансформации данных ---
-
-    /**
-     * Возвращает полный URL для API-запроса
-     */
+    /* Возвращает полный URL для API-запроса */
     getApiUrl: (resource, action, id) => {
         const idPart = id !== undefined && id !== null ? `/${id}` : '';
 
@@ -34,7 +31,6 @@ const baseProvider = {
                 case 'delete': return `/api/bunkers/delete${idPart}`;
             }
         } else if (resource === 'seeds') {
-            // Предполагаемые эндпоинты для ресурса 'seeds'
             switch (action) {
                 case 'list': return `/api/seeds/get`;
                 case 'one': return `/api/seeds/get${idPart}`;
@@ -100,30 +96,29 @@ const baseProvider = {
         } else if (resource === 'tasks') {
             switch (action) {
                 case 'list': return `/api/assignments/active-tasks${idPart}`;
-                case 'one': return `/api/assignments/active-tasks${idPart}`;
             }
         } else if (resource === 'task') {
             switch (action) {
                 case 'one': return `/api/assignments/task${idPart}`;
             }
+        } else if (resource === 'logs') {
+            switch (action) {
+                case 'list': return `/api/logs/get`;
+            }
         }
         throw new Error(`Неподдерживаемый ресурс или действие: ${resource}/${action}`);
     },
 
-    /**
-     * Добавляет поле 'id' к элементу, используя уникальный ключ ресурса, если 'id' отсутствует
-     */
+    /* Добавляет поле 'id' к элементу */
     transformData: (resource, item) => {
         if (!item) return item;
 
         if (resource === 'bunkers') {
-            // Для 'bunkers' уникальный ключ — 'bunker'
             return {
                 ...item,
                 id: item.id ?? item.bunker,
             };
         } else if (resource === 'seeds') {
-            // Для 'seeds' уникальный ключ — 'seed'
             return {
                 ...item,
                 id: item.id ?? item.seed,
@@ -173,18 +168,41 @@ const baseProvider = {
                 ...item,
                 id: item.id ?? item.id,
             };
+        } else if (resource === 'logs') {
+            return {
+                ...item,
+                id: item.id ?? item.id,
+            }
         }
         return item;
     },
 
-    // --- Методы CRUD ---
-
+    /* Методы CRUD */
     getList: async (resource, params) => {
         const token = getToken();
         
         let url
         if (resource === 'tasks'){
             url = dataProvider.getApiUrl(resource, 'list', params.filter.username);
+        } else if (resource === 'logs'){
+            const search = params.filter?.search || "";
+            const level = params.filter?.level || "ALL";
+            const page = params.pagination?.page || 1;
+            const perPage = params.pagination?.perPage || 50;
+            const offset = (page - 1) * perPage;
+            const dateFrom = params.filter?.date_from || "";
+            const dateTo = params.filter?.date_to || ""
+
+            const qs = new URLSearchParams({
+                search,
+                level,
+                limit: perPage,
+                offset,
+                date_from: dateFrom,
+                date_to: dateTo,
+            });
+
+            url = `/api/logs/get?${qs.toString()}`;
         } else {
             url = dataProvider.getApiUrl(resource, 'list');
         }
@@ -211,29 +229,16 @@ const baseProvider = {
             dataProvider.transformData(resource, item)
         );
     
-        // --- фронтэнд пагинация ---
-        const { page = 1, perPage = 10 } = params.pagination || {};
-        const start = (page - 1) * perPage;
-        const end = start + perPage;
-        const paginatedData = dataWithId.slice(start, end);
-
-        if (paginatedData.length === 0){
-            return {
-                data: dataWithId,
-                total: dataWithId.length,
-            };
-        }
-    
         return {
-            data: paginatedData,
-            total: dataWithId.length, // RA использует total для пагинации
+            data: dataWithId,
+            total: dataWithId.length,
         };
     },
     
 
     getMany: async (resource, params) => {
         const token = getToken();
-        const url = dataProvider.getApiUrl(resource, 'list'); // Используем общий эндпоинт для получения списка
+        const url = dataProvider.getApiUrl(resource, 'list');
 
         const response = await fetch(url, {
             headers: {
@@ -289,13 +294,12 @@ const baseProvider = {
                 distance: params.data.distance,
             };
         } else if (resource === 'seeds') {
-            // ** Использование требуемой структуры JSON для 'seeds' **
             bodyData = {
                 seed: params.data.seed,
+                seed_ru: params.data.seed_ru,
                 min_density: params.data.min_density,
                 max_density: params.data.max_density,
                 tank_capacity: params.data.tank_capacity,
-                latency: params.data.latency,
             };
         } else if (resource === 'users') {
             bodyData = {
@@ -365,13 +369,13 @@ const baseProvider = {
         let bodyData = {};
         if (resource === 'bunkers') {
             bodyData = {
-                bunker: params.data.id, // ID используется как 'bunker' для обновления
+                bunker: params.data.id,
                 distance: params.data.distance,
             };
         } else if (resource === 'seeds') {
-            // ** Использование требуемой структуры JSON для 'seeds' **
             bodyData = {
-                seed: params.data.id, // ID используется как 'seed' для обновления
+                seed: params.data.id,
+                seed_ru: params.data.seed_ru,
                 min_density: params.data.min_density,
                 max_density: params.data.max_density,
                 tank_capacity: params.data.tank_capacity,
@@ -393,6 +397,7 @@ const baseProvider = {
             bodyData = {
                 bunker: params.data.id,
                 seed: params.data.seed,
+                seed_ru: params.data.seed_ru,
             };
         } else if (resource === 'receipts') {
             bodyData = {

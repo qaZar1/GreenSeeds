@@ -2,29 +2,44 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/config"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/logger"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/logger/writer"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/postgres"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/router"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
-	"github.com/jmoiron/sqlx"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/ws"
+	zerolog "github.com/rs/zerolog"
 
 	_ "gopkg.in/yaml.v3"
 )
 
-// @title ITops API
+const logo = `
+ _   _   ___   ____   ______   _   _   ______
+| | | | / _ \ |  _ \ |______| | | | | / ____/
+| |_| || | | || |_) |   | |   | | | | | (___
+|  _  || | | ||  _ <    | |   | | | |  \_____\
+| | | || |_| || | \ \   | |   | |_| |  ____) |
+|_| |_| \___/ |_|  \_\  |_|    \___/  /_____/
+`
+
+// @title GreenSeeds API
 // @version 1.0
-// @description API для работы с ITops
+// @description API для работы c GreenSeeds
 // @BasePath /
 func main() {
+	fmt.Println(logo)
+	log := logger.New(zerolog.DebugLevel)
+
 	var configPath string
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
@@ -34,27 +49,8 @@ func main() {
 
 	cfg := config.MakeConfig(configPath)
 	if cfg == (models.Config{}) {
-		log.Error().Msg("Invalid config")
-		return
+		panic("Invalid config")
 	}
-
-	if err := os.MkdirAll(cfg.Server.PathToLog, 0755); err != nil {
-		log.Error().Err(err).Msg("Cannot create log directory")
-		return
-	}
-
-	file, err := os.OpenFile(cfg.Server.PathToLog+"/server.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Error().Err(err).Msg("Cannot open log file")
-		return
-	}
-	defer file.Close()
-
-	log.Logger = zerolog.New(file).With().
-		Timestamp().
-		Logger()
-
-	log.Info().Msg("Logger initialized")
 
 	postgres := sqlx.NewDb(postgres.NewPostgres(
 		postgres.Config{
@@ -66,16 +62,35 @@ func main() {
 		},
 	), "pgx")
 
-	if postgres.DB == nil {
-		log.Error().Msg("Invalid postgres connect")
-		return
-	}
+	db := writer.NewDbWriter(postgres)
+	multi := zerolog.MultiLevelWriter(os.Stdout, db)
+	log = log.Output(multi)
 
 	repo := repository.NewRepository(
 		postgres,
 	)
 
-	router := router.NewRouter(repo, cfg)
+	camera := camera.NewCamera(
+		cfg.Camera.Name,
+		cfg.Camera.InputDevice,
+		cfg.Camera.Framerate,
+		cfg.Camera.VideoSize,
+	)
+
+	ws, err := ws.NewServer(
+		cfg.Serial.Port,
+		cfg.Serial.Baud,
+		camera,
+		repo,
+		cfg.API.URL,
+		log,
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("Cannot create ws server")
+	}
+	defer ws.Close()
+
+	router := router.NewRouter(repo, cfg, ws, log)
 	if router == nil {
 		log.Error().Msg("Invalid router")
 		return
@@ -92,6 +107,7 @@ func main() {
 		}
 		log.Info().Msg("Service stopped")
 	}()
+	log.Info().Msg("🚀 Запуск программы: Hortus")
 	log.Info().Msg("Service started on " + cfg.Server.Address)
 
 	channel := make(chan os.Signal, 1)

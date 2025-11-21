@@ -57,9 +57,18 @@ RETURNING receipt, seed, gcode, description, updated`
 
 func (rec *receiptsRepository) GetReceipts() ([]models.Receipts, error) {
 	const query = `
-SELECT receipt, seed, gcode, updated, description
+SELECT 
+    receipts.receipt, 
+    receipts.seed, 
+    seeds.seed_ru,
+    receipts.gcode, 
+    receipts.updated, 
+    receipts.description
 FROM green_seeds.receipts
-ORDER BY seed ASC`
+LEFT JOIN green_seeds.seeds 
+    ON seeds.seed = receipts.seed
+ORDER BY receipts.seed ASC;
+`
 
 	var receipts []models.Receipts
 	if err := rec.db.Select(&receipts, query); err != nil {
@@ -118,9 +127,17 @@ WHERE receipt = $1`
 
 func (rec *receiptsRepository) GetReceiptsByReceipt(receiptName string) (models.Receipts, error) {
 	const query = `
-SELECT receipt, seed, gcode, updated, description
+SELECT 
+    receipts.receipt, 
+    receipts.seed, 
+    seeds.seed_ru,
+    receipts.gcode, 
+    receipts.updated, 
+    receipts.description
 FROM green_seeds.receipts
-WHERE receipt = $1`
+LEFT JOIN green_seeds.seeds 
+    ON seeds.seed = receipts.seed
+WHERE receipt = $1;`
 
 	var receipt models.Receipts
 	if err := rec.db.Get(&receipt, query, receiptName); err != nil {

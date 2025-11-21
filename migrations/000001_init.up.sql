@@ -12,13 +12,12 @@ CREATE TABLE IF NOT EXISTS green_seeds.seeds (
     min_density INT,
     max_density INT,
     tank_capacity INT,
-    latency INT,
     PRIMARY KEY (seed)
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.placement (
     bunker INT UNIQUE,
-    seed VARCHAR(50) UNIQUE,
+    seed VARCHAR(50),
     FOREIGN KEY (bunker) REFERENCES green_seeds.bunkers(bunker),
     FOREIGN KEY (seed) REFERENCES green_seeds.seeds(seed)
 );
@@ -74,4 +73,15 @@ CREATE TABLE IF NOT EXISTS green_seeds.reports (
     FOREIGN KEY (shift, number, receipt)
         REFERENCES green_seeds.assignments (shift, number, receipt),
     PRIMARY KEY (shift, number, receipt, turn)
+);
+
+CREATE TABLE IF NOT EXISTS green_seeds.logs (
+    id SERIAL,
+    dt TIMESTAMP WITH TIME ZONE,
+    lvl VARCHAR(10),
+    request_id VARCHAR(255),
+    msg TEXT,
+    caller VARCHAR(512),
+    username VARCHAR(20),
+    PRIMARY KEY (id)
 );

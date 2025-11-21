@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Box, CircularProgress, Typography, Card, CardContent } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { jwtDecode } from "jwt-decode";
-import { Show, SimpleShowLayout, useShowContext } from "react-admin";
-import Task from "./FreeTask";
 import EmptyChoice from "./EmptyChoice";
 import { List } from "react-admin";
 import { useMediaQuery } from "@mui/material";

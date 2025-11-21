@@ -16,6 +16,8 @@ const SeedList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<SeedListActions />}
+            title="Семена"
+            pagination={false}
         >
             <SeedListContent isSmall={isSmall} isMedium={isMedium} />
         </List>

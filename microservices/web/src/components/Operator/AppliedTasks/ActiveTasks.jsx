@@ -11,22 +11,20 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Divider,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import EmptyTasks from "./EmptyTasks";
 
 const Tasks = ({ tasks }) => {
   const navigate = useNavigate();
 
   if (!tasks || tasks.length === 0) {
     return (
-      <Box display="flex" justifyContent="center" p={2}>
-        <Typography variant="body1">Нет активных заданий</Typography>
-      </Box>
+      <EmptyTasks />
     );
   }
 
-  // 🔹 Группируем задачи по shift
+  // Группируем задачи по shift
   const grouped = tasks.reduce((acc, t) => {
     const shift = t.shift || "Без смены";
     if (!acc[shift]) acc[shift] = [];
@@ -43,7 +41,7 @@ const Tasks = ({ tasks }) => {
           </Typography>
 
           {Object.entries(grouped).map(([shift, group]) => (
-            <Box key={shift} mb={3}>
+            <Box key={shift} mb={7}>
               <Typography
                 variant="subtitle1"
                 sx={{ fontWeight: "bold", mb: 1, color: "primary.main" }}
@@ -70,14 +68,12 @@ const Tasks = ({ tasks }) => {
                       >
                         <TableCell>{t.number}</TableCell>
                         <TableCell>{t.amount}</TableCell>
-                        <TableCell>{t.seed || "—"}</TableCell>
+                        <TableCell>{t.seed_ru || "—"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
-
-              <Divider sx={{ mt: 2, mb: 2 }} />
             </Box>
           ))}
         </CardContent>

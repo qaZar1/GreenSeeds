@@ -4,13 +4,13 @@ import { LoadingOverlay } from "../../utils/Loading";
 import { EditButton } from "react-admin";
 import { EmptyBunker } from "./EmptyBunker";
 
-const BunkerListContent = ({ isSmall }) => {
+const BunkerListContent = ({ isSmall, isMedium }) => {
     const { isLoading, ids, data, error } = useListContext();
 
     if (isLoading) return <LoadingOverlay />;
     if (error) return <EmptyBunker />;
 
-    return isSmall ? (
+    return isSmall || isMedium ? (
         <SimpleList
             primaryText={record => `Бункер: ${record.bunker}`}
             secondaryText={record => `Расстояние: ${record.distance}`}

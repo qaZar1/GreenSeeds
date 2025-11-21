@@ -8,15 +8,19 @@ import { DeleteButton } from "react-admin";
 import ResetPasswordButton from "./ResetPwd";
 import { FunctionField } from "react-admin";
 
-const UserListContent = ({ isSmall, currentUsername }) => {
+const UserListContent = ({ isSmall, isMedium, currentUsername }) => {
     const { isLoading, ids, data, error } = useListContext();
 
     if (isLoading) return <LoadingOverlay/>;
     if (error) return <EmptyUser />;
 
-    return isSmall ? (
+    return isSmall || isMedium ? (
         <SimpleList
-            primaryText={(record) => record.full_name}
+            primaryText={(record) => (
+                <span style={{ display: "inline-block", width: "300px", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {record.full_name}
+                </span>
+            )}
             secondaryText={(record) =>
                 record.is_admin ? "Администратор" : "Пользователь"
             }

@@ -5,20 +5,23 @@ import { EditButton } from "react-admin";
 import { EmptyReceipt } from "./EmptyReceipt";
 import { DateField } from "react-admin";
 
-const ReceiptListContent = ({ isSmall }) => {
+const ReceiptListContent = ({ isSmall, isMedium }) => {
     const { isLoading, ids, data, error } = useListContext();
 
     if (isLoading) return <LoadingOverlay />;
     if (error) return <EmptyReceipt />;
 
-    return isSmall ? (
+    return isSmall || isMedium ? (
         <SimpleList
-            primaryText={record => `Семена: ${record.seed}`}
+            primaryText={record => `Семена: ${record.seed_ru}`}
             secondaryText={record => (
                 <>
                     <span style={{ display: 'block' }}>Описание: {record.description}</span>
-                    <span style={{ display: 'block' }}>Обновлено: <DateField source="updated" showTime locales="ru-RU" /></span>
-                    
+                    <span style={{ display: 'block' }}>Обновлено: <DateField
+                        source="updated"
+                        showTime
+                        locales="ru-RU"
+                    /></span>
                 </>
             )}
             tertiaryText={record => (
@@ -35,7 +38,7 @@ const ReceiptListContent = ({ isSmall }) => {
             bulkActionButtons={false}
             empty={<EmptyReceipt />}
         >
-            <TextField source="seed" label="Семена" />
+            <TextField source="seed_ru" label="Семена" />
             <TextField source="description" label="Описание" />
             <DateField source="updated" showTime locales="ru-RU" label="Обновлено"/>
             <EditButton label="Редактировать"/>

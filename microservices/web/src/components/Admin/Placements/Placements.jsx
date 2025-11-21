@@ -7,6 +7,7 @@ import PlacementListContent from "./Controller";
 
 const PlacementList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+    const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
 
     return (
         <List
@@ -16,8 +17,9 @@ const PlacementList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<PlacementListActions />}
+            title="Расположение семян"
         >
-            <PlacementListContent isSmall={isSmall} />
+            <PlacementListContent isSmall={isSmall} isMedium={isMedium} />
         </List>
     );
 };

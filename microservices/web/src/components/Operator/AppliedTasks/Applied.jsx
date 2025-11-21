@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, CircularProgress, Typography, Card, CardContent } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { jwtDecode } from "jwt-decode";
 import EmptyTasks from "./EmptyTasks";
 import { List } from "react-admin";
@@ -43,7 +43,7 @@ const AppliedTaskList = ({ ...props }) => {
             {...props}
             pagination={false}
             perPage={false}
-            sx={{ padding: 2 }}
+            sx={{ padding: 2, width: "100%" }}
             actions={false}
             title="Задания на смену"
             component={Box}

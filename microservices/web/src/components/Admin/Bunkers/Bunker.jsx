@@ -7,6 +7,7 @@ import BunkerListContent from "./Controller";
 
 const BunkerList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+    const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
 
     return (
         <List
@@ -16,8 +17,9 @@ const BunkerList = ({ ...props }) => {
             {...props}
             sx={{ padding: 2 }}
             actions={<BunkerListActions />}
+            title="Бункеры"
         >
-            <BunkerListContent isSmall={isSmall} />
+            <BunkerListContent isSmall={isSmall} isMedium={isMedium} />
         </List>
     );
 };

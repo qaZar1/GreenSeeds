@@ -55,8 +55,8 @@ func (sh *shiftsRepository) GetShifts() ([]models.Shifts, error) {
 	const query = `
 SELECT shift, dt, username
 FROM green_seeds.shifts
-WHERE dt >= CURRENT_DATE
-ORDER BY shift ASC`
+WHERE dt >= (CURRENT_DATE AT TIME ZONE 'UTC+5') - INTERVAL '7 days'
+ORDER BY shift ASC;`
 
 	var shifts []models.Shifts
 	if err := sh.db.Select(&shifts, query); err != nil {

@@ -11,12 +11,12 @@ const Task = ({ task, username }) => {
   const handleTakeTask = async () => {
     try {
       await update(
-        "choice", // ресурс
+        "choice",
         {
-          id: task.shift, // обязательно!
+          id: task.shift,
           data: {
-            id: task.shift, // чтобы попало в bodyData.shift
-            username: username, // логин текущего пользователя
+            id: task.shift,
+            username: username,
             dt: task.dt,
           },
         },
@@ -40,9 +40,9 @@ const Task = ({ task, username }) => {
     <Card
       key={task.id}
       sx={{
-        flex: "1 1 350px",       // базовая ширина карточки
-        minWidth: "280px",       // не даёт стать слишком узкой
-        maxWidth: "100%",        // растягивается, если остаётся место
+        flex: "1 1 350px",
+        minWidth: "280px",
+        maxWidth: "100%",
         boxShadow: 4,
         borderRadius: 3,
         overflow: "hidden",
@@ -51,10 +51,10 @@ const Task = ({ task, username }) => {
         justifyContent: "space-between",
       }}
     >
-      {/* Верхняя часть — “шапка” */}
+      {/* Верхняя часть */}
       <Box
         sx={{
-          backgroundColor: "#2e7d32", // зелёный MUI success.dark
+          backgroundColor: "#2e7d32",
           color: "white",
           p: 2,
           display: "flex",
@@ -72,12 +72,12 @@ const Task = ({ task, username }) => {
       <CardContent sx={{ flexGrow: 1 }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
           <strong>Дата:</strong>{" "}
-          <DateField source="dt" record={task} showTime={true} />
+          <DateField source="dt" record={task} />
         </Typography>
 
         <Typography variant="body1" sx={{ mb: 1 }}>
-          <strong>Ответственный:</strong>{" "}
-          {task.username || <em>не назначен</em>}
+          <strong>Время:</strong>{" "}
+          <DateField source="dt" record={task} showTime={true} showDate={false}/>
         </Typography>
 
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -87,7 +87,7 @@ const Task = ({ task, username }) => {
 
       <Divider />
 
-      {/* Кнопка снизу */}
+      {/* Кнопка */}
       <Box sx={{ display: "flex", justifyContent: "center", p: 2, pt: 1 }}>
         <Button
           variant="contained"

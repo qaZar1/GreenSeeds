@@ -8,16 +8,19 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/docs"
+
+	// "github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/docs"
+	core "github.com/Impisigmatus/service_core/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/transport"
-	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/ws"
+	"github.com/rs/zerolog"
 )
 
-func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
+func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server, logger zerolog.Logger) *chi.Mux {
 	infra := infrastructure.New(cfg.JWT.ExpiresIn, cfg)
 	transport := transport.NewTransport(repo, cfg, infra)
 
@@ -33,7 +36,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 	}))
 
 	router.Post("/api/login", transport.PostApiLoginUser)
-	router.Post("/register", transport.PostApiRegisterUser)
+	router.Post("/api/register", transport.PostApiRegisterUser)
 
 	router.HandleFunc("/debug/pprof/", pprof.Index)
 	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -42,17 +45,23 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	// swagger
-	docs.SwaggerInfo.Title = "GreenSeeds API"
-	docs.SwaggerInfo.Description = "API для работы с GreenSeeds"
-	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "localhost:8001"
-	docs.SwaggerInfo.BasePath = "/"
-	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+	// docs.SwaggerInfo.Title = "GreenSeeds API"
+	// docs.SwaggerInfo.Description = "API для работы с GreenSeeds"
+	// docs.SwaggerInfo.Version = "1.0"
+	// docs.SwaggerInfo.Host = "localhost:8001"
+	// docs.SwaggerInfo.BasePath = "/"
+	// docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
-	router.Handle("/swagger/*", httpSwagger.WrapHandler)
+	// router.Handle("/swagger/*", httpSwagger.WrapHandler)
 
 	router.Route("/api", func(r chi.Router) {
-		r.Use(middlewares.BearerAuthMiddleware(infra, repo))
+		r.Use(
+			core.RequestID(logger),
+			core.ContextLogger(),
+			middlewares.BearerAuthMiddleware(infra, repo),
+		)
+
+		r.HandleFunc("/ws", ws.HandleWS)
 
 		r.Route("/seeds", func(r chi.Router) {
 			r.Post("/add", transport.PostApiSeedAdd)
@@ -115,21 +124,14 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 		})
 
 		r.Route("/reports", func(r chi.Router) {
-			// r.Post("/add", transport.PostApiAssignmentsAdd)
+			r.Post("/add", transport.PostApiReportsAdd)
 			r.Get("/get", transport.GetApiReports)
 			r.Get("/get/{id}", transport.GetApiReportsById)
-			// r.Put("/update", transport.PutApiAssignmentsUpdate)
-			// r.Delete("/delete/{id}", transport.DeleteApiAssignmentsDelete)
 		})
 
-		// 	r.Get("/checkByUuid/{uuid}", transport.GetApiCheckUserByUuidUuid)
-		// 	r.Get("/checkRoles/{uuid}", transport.GetApiCheckRolesUuid)
-		// 	r.Get("/checkAll", transport.GetApiCheckAllUsers)
-		// 	r.Put("/updateRole", transport.PutApiUpdateRole)
-		// 	r.Put("/change-password", transport.PutApiChangePassword)
-		// 	r.Put("/reset-password/{uuid}", transport.PutApiResetPassword)
-		// 	r.Delete("/removeUser", transport.DeleteApiRemoveUser)
-		// })
+		r.Route("/logs", func(r chi.Router) {
+			r.Get("/get", transport.GetApiLogsGet)
+		})
 	})
 
 	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
@@ -138,13 +140,13 @@ func NewRouter(repo *repository.Repository, cfg models.Config) *chi.Mux {
 			return
 		}
 
-		path := "./build" + r.URL.Path
+		path := "./dist" + r.URL.Path
 		if info, err := os.Stat(path); err == nil && !info.IsDir() {
 			http.ServeFile(w, r, path)
 			return
 		}
 
-		http.ServeFile(w, r, "./build/index.html")
+		http.ServeFile(w, r, "./dist/index.html")
 	})
 
 	return router

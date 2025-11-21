@@ -1,14 +1,16 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
 
+	coreLog "github.com/Impisigmatus/service_core/log"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 )
 
 func BearerAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository.Repository) func(http.Handler) http.Handler {
@@ -36,7 +38,7 @@ func BearerAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository
 				return
 			}
 
-			ok, err := validateJWT(*claims, repo)
+			log, ok, err := validateJWT(*claims, repo, r)
 			if err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
@@ -47,60 +49,66 @@ func BearerAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), coreLog.CtxKey, log)
+			log = log.With().Str("username", claims.Username).Logger()
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func validateJWT(claims models.Claims, repo *repository.Repository) (bool, error) {
+func validateJWT(claims models.Claims, repo *repository.Repository, r *http.Request) (zerolog.Logger, bool, error) {
 	now := time.Now().Unix()
 
-	// Проверяем, что токен не просрочен (exp)
+	// Проверяем, что токен не просрочен
 	if claims.ExpiresAt.Unix() < now {
-		return false, ErrTokenExpired
+		return zerolog.Logger{}, false, ErrTokenExpired
 	}
 
 	// Проверяем, что токен уже активен
 	if claims.IssuedAt.Unix() > now {
-		return false, ErrTokenNotValidYet
+		return zerolog.Logger{}, false, ErrTokenNotValidYet
 	}
 
-	// Проверяем, что токен предназначен нашему сервису (aud)
+	// Проверяем, что токен предназначен нам
 	if claims.Audience[0] != "service.green_seeds.api" {
-		return false, ErrInvalidAudience
+		return zerolog.Logger{}, false, ErrInvalidAudience
 	}
 
 	user, err := repo.UsrRepo.CheckUserByUsername(claims.Username)
 	if err != nil {
-		return false, ErrInvalidSubject
+		return zerolog.Logger{}, false, ErrInvalidSubject
 	}
 
 	if user == (models.User{}) {
-		return false, ErrInvalidSubject
+		return zerolog.Logger{}, false, ErrInvalidSubject
 	}
 
-	// if claims.Resources["service.green_seeds.api"] != "service.green_seeds.api:"+*user.Role {
-	// 	return false, ErrInvalidSubject
-	// }
+	log, ok := r.Context().Value(coreLog.CtxKey).(zerolog.Logger)
+	if !ok {
+		return zerolog.Logger{}, false, ErrInvalidSubject
+	}
 
-	return true, nil
+	log = log.With().Str("username", claims.Username).Logger()
+
+	return log, true, nil
 }
 
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+		// start := time.Now()
 
-		log.Info().
-			Str("method", r.Method).
-			Str("url", r.URL.String()).
-			Str("remote", r.RemoteAddr).
-			Msg("Incoming request")
+		// log.Info().
+		// 	Str("method", r.Method).
+		// 	Str("url", r.URL.String()).
+		// 	Str("remote", r.RemoteAddr).
+		// 	Msg("Incoming request")
 
 		next.ServeHTTP(w, r)
 
-		log.Info().
-			Str("url", r.URL.String()).
-			Dur("duration", time.Since(start)).
-			Msg("Request completed")
+		// log.Info().
+		// 	Str("url", r.URL.String()).
+		// 	Dur("duration", time.Since(start)).
+		// 	Msg("Request completed")
 	})
 }
