@@ -11,6 +11,7 @@ type IPlacementRepository interface {
 	UpdatePlacement(placement models.Placement) (models.Placement, error)
 	DeletePlacement(bunker int) (bool, error)
 	GetPlacementByBunker(bunker int) (models.Placement, error)
+	DecrementSeed(bunker int) (bool, error)
 }
 
 type placementRepository struct {
@@ -27,11 +28,13 @@ func (pl *placementRepository) AddPlacement(placement models.Placement) (models.
 	const query = `
 INSERT INTO green_seeds.placement (
 	bunker,
-	seed
+	seed,
+	amount
 )
 VALUES (
 	:bunker,
-	:seed
+	:seed,
+	:amount
 )
 RETURNING bunker, seed`
 
@@ -55,7 +58,7 @@ RETURNING bunker, seed`
 
 func (pl *placementRepository) GetPlacement() ([]models.Placement, error) {
 	const query = `
-SELECT p.bunker, p.seed, se.seed_ru
+SELECT p.bunker, p.seed, se.seed_ru, p.amount
 FROM green_seeds.placement p
 LEFT JOIN green_seeds.seeds se
 	ON p.seed = se.seed
@@ -72,9 +75,10 @@ ORDER BY bunker ASC`
 func (pl *placementRepository) UpdatePlacement(placement models.Placement) (models.Placement, error) {
 	const query = `
 UPDATE green_seeds.placement
-SET	seed = :seed
+SET	seed = COALESCE(:seed, seed),
+	amount = COALESCE(:amount, amount)
 WHERE bunker = :bunker
-RETURNING bunker, seed`
+RETURNING bunker, seed, amount`
 
 	rows, err := pl.db.NamedQuery(query, placement)
 	if err != nil {
@@ -114,7 +118,7 @@ WHERE bunker = $1`
 
 func (pl *placementRepository) GetPlacementByBunker(bunker int) (models.Placement, error) {
 	const query = `
-SELECT p.bunker, p.seed, se.seed_ru
+SELECT p.bunker, p.seed, se.seed_ru, p.amount
 FROM green_seeds.placement p
 LEFT JOIN green_seeds.seeds se
 	ON p.seed = se.seed
@@ -126,4 +130,24 @@ WHERE bunker = $1`
 	}
 
 	return placement, nil
+}
+
+func (pl *placementRepository) DecrementSeed(bunker int) (bool, error) {
+	const query = `
+UPDATE green_seeds.placement
+SET amount = amount - 1
+WHERE bunker = $1 AND amount > 0;
+`
+
+	result, err := pl.db.Exec(query, bunker)
+	if err != nil {
+		return false, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+
+	return rowsAffected == 1, nil
 }

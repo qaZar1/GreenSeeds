@@ -9,4 +9,4 @@ type Receipts struct {
 	Gcode       string     `json:"gcode" db:"gcode"`
 	Updated     *time.Time `json:"updated" db:"updated"`
 	Description string     `json:"description" db:"description"`
-} // @name Receipts
+} // @name receipts

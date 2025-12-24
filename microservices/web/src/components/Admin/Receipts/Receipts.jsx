@@ -4,10 +4,12 @@ import { useMediaQuery } from "@mui/material";
 import { EmptyReceipt } from "./EmptyReceipt";
 import ReceiptListActions from "./Action";
 import ReceiptListContent from "./Controller";
+import { useNotify } from "react-admin";
 
 const ReceiptList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
     const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
+    const notify = useNotify();
 
     return (
         <List
@@ -18,6 +20,9 @@ const ReceiptList = ({ ...props }) => {
             actions={<ReceiptListActions />}
             title="Рецепты"
             pagination={false}
+            queryOptions={{
+                onError: () => notify("Ошибка загрузки рецептов", { type: "error" }),
+            }}
         >
             <ReceiptListContent isSmall={isSmall} isMedium={isMedium} />
         </List>

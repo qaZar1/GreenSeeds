@@ -11,6 +11,7 @@ type IReportsRepository interface {
 	UpdateReports(reports models.Reports) (bool, error)
 	DeleteReports(shift int, number int, receipt int) (bool, error)
 	GetReportsById(id int) (models.Reports, error)
+	GetReportsByAssignment(shift int, number int, receipt int) ([]models.Reports, error)
 }
 
 type reportsRepository struct {
@@ -163,4 +164,34 @@ WHERE id = $1;`
 	}
 
 	return report, nil
+}
+
+func (rep *reportsRepository) GetReportsByAssignment(shift int, number int, receipt int) ([]models.Reports, error) {
+	const query = `
+SELECT
+	r.id,
+	r.shift,
+	r.number,
+	r.receipt,
+	r.turn,
+	r.dt,
+	COALESCE(r.success, FALSE) as success,
+	r.error,
+	r.solution,
+	r.mark,
+	u.full_name
+FROM green_seeds.reports r
+left join green_seeds.shifts s
+on s.shift = r.shift
+left join green_seeds.users u
+on s.username = u.username
+WHERE r.shift = $1 AND r.number = $2 AND r.receipt = $3
+ORDER BY r.turn ASC;`
+
+	var reports []models.Reports
+	if err := rep.db.Select(&reports, query, shift, number, receipt); err != nil {
+		return nil, err
+	}
+
+	return reports, nil
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/sqlite"
 	"github.com/rs/zerolog/log"
 
 	"github.com/jmoiron/sqlx"
@@ -17,9 +18,13 @@ type Repository struct {
 	SeedRepo ISeedsRepository
 	BunkRepo IBunkersRepository
 	LogsRepo ILogsRepository
+	CalRepo  ICalibrationsRepository
+	DevSet   IDeviceSettingsRepository
+
+	SQLite *sqlite.SQLite
 }
 
-func NewRepository(db *sqlx.DB) *Repository {
+func NewRepository(db *sqlx.DB, sqlite *sqlite.SQLite) *Repository {
 	usersRepo := NewUsersRepository(db)
 
 	users, err := usersRepo.CheckAllUsers()
@@ -46,5 +51,9 @@ func NewRepository(db *sqlx.DB) *Repository {
 		SeedRepo: NewSeedsRepository(db),
 		BunkRepo: NewBunkersRepository(db),
 		LogsRepo: NewLogsRepository(db),
+		CalRepo:  NewCalibrationsRepository(db),
+		DevSet:   NewDeviceSettingsRepository(db),
+
+		SQLite: sqlite,
 	}
 }

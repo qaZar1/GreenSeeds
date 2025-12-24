@@ -1,9 +1,9 @@
 package device
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -66,221 +66,6 @@ func (m *SerialManager) UserCommand(msg models.WSMessage) {
 	}
 }
 
-// func (m *SerialManager) Boot(ch <-chan []byte) {
-// 	errStr := "timeout"
-// 	if err := m.Write([]byte(BOOT + delimeterStr)); err != nil {
-// 		m.Active = false
-// 		m.ResponseModelCh <- models.WSMessage{
-// 			Type:  BOOT,
-// 			Error: &errStr,
-// 		}
-// 		return
-// 	}
-// 	start := time.Now()
-// 	ticker := time.NewTicker(1 * time.Second)
-// 	defer ticker.Stop()
-
-// 	for time.Since(start) < ackTimeout {
-// 		select {
-// 		case data := <-ch:
-// 			dataStr := string(data)
-// 			if strings.Contains(dataStr, ACK_BOOT) {
-// 				m.ResponseModelCh <- models.WSMessage{
-// 					Type:   BOOT,
-// 					Status: &dataStr,
-// 				}
-// 				return
-// 			}
-// 		case <-ticker.C:
-// 		case <-m.ctx.Done():
-// 			m.ResponseModelCh <- models.WSMessage{
-// 				Type:  BOOT,
-// 				Error: &errStr,
-// 			}
-// 			return
-// 		}
-// 	}
-// }
-
-// func (m *SerialManager) Status(ch <-chan []byte) {
-// 	if err := m.Write([]byte(STATUS + delimeterStr)); err != nil {
-// 		m.Active = false
-// 		return
-// 	}
-
-// 	start := time.Now()
-// 	ticker := time.NewTicker(1 * time.Second)
-// 	defer ticker.Stop()
-
-// 	for time.Since(start) < ackTimeout {
-// 		select {
-// 		case data := <-ch:
-// 			dataStr := string(data)
-// 			if strings.Contains(dataStr, BUSY) ||
-// 				strings.Contains(dataStr, READY) ||
-// 				strings.Contains(dataStr, STAND_BY) ||
-// 				strings.Contains(dataStr, ERR) {
-// 				m.ResponseModelCh <- models.WSMessage{
-// 					Type:   BOOT,
-// 					Status: &dataStr,
-// 				}
-// 				return
-// 			}
-// 		case <-ticker.C:
-// 		case <-m.ctx.Done():
-// 			return
-// 		}
-// 	}
-// }
-
-// func (m *SerialManager) Begin(data []byte, ch <-chan []byte, msg models.WSMessage) {
-// 	if err := m.Write(data); err != nil {
-// 		m.Active = false
-// 		errStr := DEVICE_NOT_ACTIVE
-// 		m.ResponseModelCh <- models.WSMessage{
-// 			Type:  BEGIN,
-// 			Error: &errStr,
-// 		}
-// 	}
-// 	start := time.Now()
-// 	ticker := time.NewTicker(1 * time.Second)
-// 	defer ticker.Stop()
-
-// 	for time.Since(start) < ackTimeout {
-// 		select {
-// 		case data := <-ch:
-// 			dataStr := string(data)
-// 			if strings.Contains(dataStr, END) {
-// 				// Делаем фото
-// 				buf, err := m.camera.TakePhoto()
-// 				if err != nil || buf == nil {
-// 					ok := false
-// 					m.mu.Lock()
-// 					m.Control = ok
-// 					m.mu.Unlock()
-
-// 					msg.Status = &dataStr
-// 					m.ResponseModelCh <- msg
-// 				}
-
-// 				// Отправляем фото на проверку
-// 				_, err = m.api.RequestAI(msg.Params.Seed, *buf)
-// 				if err != nil {
-// 					ok := false
-// 					m.mu.Lock()
-// 					m.Control = ok
-// 					m.mu.Unlock()
-// 					msg.Status = &dataStr
-// 					m.ResponseModelCh <- msg
-// 				}
-
-// 				// Если процент совпадения меньше 0.5 - считаем ее неудачной
-// 				var ok bool
-// 				// // if response.PercentOfMatch < 0.5 {
-// 				// // 	ok = false
-// 				// // 	// (models.WSMessage{
-// 				// // 	// 	Type: "NEED_DECISION",
-// 				// // 	// 	Payload: &models.PayloadWs{
-// 				// // 	// 		Reason: fmt.Sprintf("Similarity %.2f < 0.5", response.PercentOfMatch),
-// 				// // 	// 		Photo:  buf.Bytes(),
-// 				// // 	// 	},
-// 				// // 	// })
-
-// 				// // 	// ЖДЁМ решения оператора
-// 				// // 	select {
-// 				// // 	case decision := <-m.decisionCh:
-// 				// // 		if decision.OK {
-// 				// // 			ok := true
-// 				// // 			m.mu.Lock()
-// 				// // 			m.Control = ok
-// 				// // 			m.mu.Unlock()
-// 				// // 			// продолжаем как будто все ОК
-// 				// // 		} else {
-// 				// // 			ok := false
-// 				// // 			m.mu.Lock()
-// 				// // 			m.Control = ok
-// 				// // 			m.mu.Unlock()
-// 				// // 			return models.WSMessage{
-// 				// // 				Type: BEGIN,
-// 				// // 			}
-// 				// // 		}
-
-// 				// 	case <-time.After(2 * time.Minute):
-// 				// 		return models.WSMessage{
-// 				// 			Type: BEGIN,
-// 				// 		}
-
-// 				// 	case <-m.ctx.Done():
-// 				// 		return models.WSMessage{
-// 				// 			Type: BEGIN,
-// 				// 		}
-// 				// 	}
-// 				// } else {
-// 				// 	ok = true
-// 				// }
-
-// 				// Если все в порядке - считаем ее удачной
-// 				m.mu.Lock()
-// 				m.Control = ok
-// 				m.mu.Unlock()
-
-// 				var report models.Reports
-// 				now := time.Now()
-// 				if ok {
-// 					report = models.Reports{
-// 						Shift:   int64(msg.Params.Shift),
-// 						Number:  int(msg.Params.Number),
-// 						Receipt: int64(msg.Params.Receipt),
-// 						Turn:    int(msg.Params.Amount),
-// 						Success: ok,
-// 						Dt:      &now,
-// 					}
-// 				} else {
-// 					solution := ""
-// 					err := "Error"
-// 					report = models.Reports{
-// 						Shift:    int64(msg.Params.Shift),
-// 						Number:   int(msg.Params.Number),
-// 						Receipt:  int64(msg.Params.Receipt),
-// 						Turn:     int(msg.Params.Amount),
-// 						Success:  ok,
-// 						Error:    &err,
-// 						Solution: &solution,
-// 						Dt:       &now,
-// 					}
-// 				}
-
-// 				// добавляем отчет в базу
-// 				_, err = m.repo.RepRepo.AddReports(report)
-// 				if err != nil {
-// 					log.Println("Error inserting report:", err)
-// 				}
-
-// 				// возвращаем каретку
-// 				m.Write([]byte(RETURN + delimeterStr))
-// 				start = time.Now()
-// 				ticker := time.NewTicker(1 * time.Second)
-// 				defer ticker.Stop()
-
-// 				for time.Since(start) < ackTimeout {
-// 					select {
-// 					case data := <-ch:
-// 						dataStr := string(data)
-// 						if strings.Contains(dataStr, RETURN) {
-// 						}
-// 					case <-ticker.C:
-// 					case <-m.ctx.Done():
-// 						return
-// 					}
-// 				}
-// 			}
-// 		case <-ticker.C:
-// 		case <-m.ctx.Done():
-// 			return
-// 		}
-// 	}
-// }
-
 func (m *SerialManager) SetStatusReady(ch <-chan []byte) error {
 	if err := m.Write([]byte(SETSTATUS_READY + delimeterStr)); err != nil {
 		m.Active = false
@@ -321,27 +106,112 @@ func (m *SerialManager) Request(
 		}
 		return
 	}
-	start := time.Now()
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
 
-	for time.Since(start) < timeout {
-		select {
-		case data := <-ch:
-			dataStr := string(data)
-			if fn(dataStr) {
-				return
-			}
-		case <-ticker.C:
-		case <-m.ctx.Done():
-			errStr := "timeout"
-			m.ResponseModelCh <- models.WSMessage{
-				Type:  msg.Type,
-				Error: &errStr,
-			}
-			return
+	err := m.wait(ch, timeout, fn)
+	if err != nil {
+		errStr := "timeout"
+		m.ResponseModelCh <- models.WSMessage{
+			Type:  msg.Type,
+			Error: &errStr,
 		}
 	}
+}
+
+func (m *SerialManager) wait(
+	ch <-chan []byte,
+	timeout time.Duration,
+	onData func(string) bool,
+) error {
+	ctx, cancel := context.WithTimeout(m.ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case data := <-ch:
+			if onData(string(data)) {
+				return nil
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+}
+
+func (m *SerialManager) handleDeviceError(msg models.WSMessage, status string) bool {
+	if !strings.Contains(status, ERR) {
+		return false
+	}
+
+	errStr := "Device returned ERR: " + status
+	msg.Error = &errStr
+	msg.Status = &status
+	m.ResponseModelCh <- msg
+
+	now := time.Now()
+	report := models.Reports{
+		Id:      msg.Id,
+		Shift:   int64(msg.Params.Shift),
+		Number:  int(msg.Params.Number),
+		Receipt: int64(msg.Params.Receipt),
+		Turn:    int(msg.Params.Turn),
+		Success: false,
+		Error:   &errStr,
+		Dt:      &now,
+	}
+
+	m.repo.RepRepo.UpdateReports(report)
+	return true
+}
+
+func (m *SerialManager) waitDecision(
+	reason string,
+	photo []byte,
+) (bool, models.WSMessage, error) {
+	m.ResponseModelCh <- models.WSMessage{
+		Type: "NEED_DECISION",
+		Payload: &models.PayloadWs{
+			Reason: &reason,
+			Photo:  &photo,
+		},
+	}
+
+	select {
+	case decision := <-m.DecisionCh:
+		ok := decision.Status != nil && *decision.Status == "OK"
+		decision.Error = &reason
+		return ok, decision, nil
+
+	case <-time.After(time.Minute):
+		return false, models.WSMessage{}, errors.New("decision timeout")
+
+	case <-m.ctx.Done():
+		return false, models.WSMessage{}, m.ctx.Err()
+	}
+}
+
+func (m *SerialManager) buildReport(
+	msg models.WSMessage,
+	ok bool,
+	decision models.WSMessage,
+) models.Reports {
+	now := time.Now()
+
+	report := models.Reports{
+		Id:      msg.Id,
+		Shift:   int64(msg.Params.Shift),
+		Number:  int(msg.Params.Number),
+		Receipt: int64(msg.Params.Receipt),
+		Turn:    int(msg.Params.Turn),
+		Success: ok,
+		Dt:      &now,
+	}
+
+	if !ok {
+		report.Error = decision.Error
+	}
+
+	report.Solution = decision.Solution
+	return report
 }
 
 func (m *SerialManager) Begin(msg models.WSMessage, ch <-chan []byte) {
@@ -352,215 +222,127 @@ func (m *SerialManager) Begin(msg models.WSMessage, ch <-chan []byte) {
 	if msg.Params.ExtraMode {
 		sorrel = m.buildSorrel(msg)
 	}
-
 	code := m.buildGcode(msg, sorrel)
 
-	checkError := func(status string) bool {
-		if strings.Contains(status, ERR) {
-			errStr := "Device returned ERR: " + status
-			msg.Error = &errStr
-			msg.Status = &status
-			m.ResponseModelCh <- msg
+	check := func(status string) bool {
+		return m.handleDeviceError(msg, status)
+	}
 
-			now := time.Now()
-			report := models.Reports{
-				Id:      msg.Id,
-				Shift:   int64(msg.Params.Shift),
-				Number:  int(msg.Params.Number),
-				Receipt: int64(msg.Params.Receipt),
-				Turn:    int(msg.Params.Turn),
-				Success: false,
-				Error:   &errStr,
-				Dt:      &now,
-			}
-			_, _ = m.repo.RepRepo.UpdateReports(report)
+	// ACK
+	m.Request(code, msg, ackTimeout, ch, func(s string) bool {
+		if check(s) {
+			return true
+		}
+		if strings.Contains(s, "ACK") {
+			m.ResponseModelCh <- models.WSMessage{Type: msg.Type, Status: &s}
 			return true
 		}
 		return false
-	}
-	// Wait for ACK from ESP
-	fn := func(status string) bool {
-		if checkError(status) {
+	})
+
+	// END
+	m.Request(code, msg, ackTimeout, ch, func(s string) bool {
+		if check(s) {
 			return true
 		}
-		if strings.Contains(status, "ACK") {
-			m.ResponseModelCh <- models.WSMessage{
-				Type:   msg.Type,
-				Status: &status,
-			}
+		if strings.Contains(s, END) {
+			m.ResponseModelCh <- models.WSMessage{Type: msg.Type, Status: &s}
 			return true
 		}
 		return false
-	}
-	m.Request(code, msg, ackTimeout, ch, fn)
+	})
 
-	// Wait for END from ESP
-	fn = func(status string) bool {
-		if checkError(status) {
-			return true
+	isAffected, err := m.repo.PlcRepo.DecrementSeed(msg.Params.Bunker)
+	if err != nil || !isAffected {
+		text := "Нет семян в бункере"
+		m.ResponseModelCh <- models.WSMessage{
+			Type:   "ERR",
+			Error:  &text,
+			Params: msg.Params,
 		}
-		if strings.Contains(status, END) {
-			m.ResponseModelCh <- models.WSMessage{
-				Type:   msg.Type,
-				Status: &status,
-			}
-			return true
-		}
-		return false
+		return
 	}
-	m.Request(code, msg, ackTimeout, ch, fn)
 
-	// Делаем фото
-	buf, err := m.camera.GetBytesFromPhoto()
+	bunkers, err := m.repo.SeedRepo.GetSeedsWithBunkers(msg.Params.Seed)
+	if err != nil {
+		text := "Нет семян в бункерах"
+		m.ResponseModelCh <- models.WSMessage{
+			Type:   "ERR",
+			Error:  &text,
+			Params: msg.Params,
+		}
+		return
+	}
+
+	m.ResponseModelCh <- models.WSMessage{
+		Type:    "BUNKERS_UPDATE",
+		Bunkers: &bunkers,
+	}
+
+	buf, err := m.camera.GetBytesFromPhoto("./../../test1.jpg")
 	if err != nil || buf == nil {
-		ok := false
-		m.mu.Lock()
-		m.Control = ok
-		m.mu.Unlock()
-
 		errStr := err.Error()
 		msg.Error = &errStr
 		m.ResponseModelCh <- msg
+		return
 	}
 
-	// Отправляем фото на проверку
 	response, err := m.api.RequestAI(msg.Params.Seed, *buf)
 	if err != nil {
-		ok := false
-		m.mu.Lock()
-		m.Control = ok
-		m.mu.Unlock()
-
 		errStr := err.Error()
 		msg.Error = &errStr
 		m.ResponseModelCh <- msg
+		return
 	}
 
+	ok := true
+	var decision models.WSMessage
 	bytes := buf.Bytes()
 
-	// Если процент совпадения меньше 0.5 - считаем ее неудачной
-	var ok bool
-	var decisionModel models.WSMessage
 	if response.PercentOfMatch < 1 || response.Seed != msg.Params.Seed {
 		ok = false
 		var reason string
+
 		if response.PercentOfMatch < 1 {
-			reason += fmt.Sprintf("Процент правильности посадки семян %.2f.\n", response.PercentOfMatch)
+			reason += fmt.Sprintf("Процент посадки %.2f\n", response.PercentOfMatch)
 		}
 		if response.Seed != msg.Params.Seed {
-			reason += fmt.Sprintf("Семена %s не совпадают с выбранными семенами %s.\n", response.Seed, msg.Params.Seed)
-		}
-		m.ResponseModelCh <- models.WSMessage{
-			Type: "NEED_DECISION",
-			Payload: &models.PayloadWs{
-				Reason: &reason,
-				Photo:  &bytes,
-			},
+			reason += fmt.Sprintf("Семена %s ≠ %s\n", response.Seed, msg.Params.Seed)
 		}
 
-		// ЖДЁМ решения оператора
-		timeout := time.After(1 * time.Minute)
-		start := time.Now()
-	loop:
-		for time.Since(start) < 1*time.Minute {
-			select {
-			case decision := <-m.DecisionCh:
-				if *decision.Status == "OK" {
-					ok = true
-				} else {
-					ok = false
-				}
-
-				decisionModel = decision
-				decisionModel.Error = &reason
-				break loop
-			case <-timeout:
-				break loop
-			case <-m.ctx.Done():
-			}
+		ok, decision, err = m.waitDecision(reason, bytes)
+		if err != nil {
+			return
 		}
 	}
 
-	// Если все в порядке - считаем ее удачной
-	var report models.Reports
-	now := time.Now()
-	if ok {
-		report = models.Reports{
-			Id:       msg.Id,
-			Shift:    int64(msg.Params.Shift),
-			Number:   int(msg.Params.Number),
-			Receipt:  int64(msg.Params.Receipt),
-			Turn:     int(msg.Params.Turn),
-			Success:  ok,
-			Dt:       &now,
-			Solution: decisionModel.Solution,
-		}
-	} else {
-		report = models.Reports{
-			Id:       msg.Id,
-			Shift:    int64(msg.Params.Shift),
-			Number:   int(msg.Params.Number),
-			Receipt:  int64(msg.Params.Receipt),
-			Turn:     int(msg.Params.Turn),
-			Success:  ok,
-			Dt:       &now,
-			Error:    decisionModel.Error,
-			Solution: decisionModel.Solution,
-		}
-	}
+	report := m.buildReport(msg, ok, decision)
+	m.repo.RepRepo.UpdateReports(report)
 
-	updOk, err := m.repo.RepRepo.UpdateReports(report)
-	if err != nil || !updOk {
-		log.Println("Error updating report:", err)
-	}
-
-	// возвращаем каретку
-	fn = func(status string) bool {
-		if checkError(status) {
+	// RETURN
+	m.Request(RETURN, msg, ackTimeout, ch, func(s string) bool {
+		if check(s) {
 			return true
 		}
-		if strings.Contains(status, RETURN) {
-			m.ResponseModelCh <- models.WSMessage{
-				Type:   msg.Type,
-				Status: &status,
+		return strings.Contains(s, RETURN)
+	})
+
+	// STAND_BY
+	m.wait(ch, time.Minute, func(s string) bool {
+		if check(s) {
+			return true
+		}
+		if strings.Contains(s, STAND_BY) {
+			msg.Status = &s
+			msg.Payload = &models.PayloadWs{
+				Control: &ok,
 			}
+			if !ok {
+				msg.Error = decision.Error
+			}
+			m.ResponseModelCh <- msg
 			return true
 		}
 		return false
-	}
-	m.Request(RETURN, msg, ackTimeout, ch, fn)
-
-	timeout := time.After(1 * time.Minute)
-
-	for {
-		select {
-		case data := <-ch:
-			dataStr := string(data)
-			if checkError(dataStr) {
-				return
-			}
-			if strings.Contains(dataStr, STAND_BY) {
-				msg.Status = &dataStr
-				var errVal *string
-				if !ok {
-					errVal = decisionModel.Error
-				}
-				msg.Error = errVal
-
-				if msg.Payload == nil {
-					msg.Payload = &models.PayloadWs{}
-				}
-				msg.Payload.Control = &ok
-				m.ResponseModelCh <- msg
-				return
-			}
-		case <-timeout:
-			errStr := "timeout waiting for STAND_BY"
-			msg.Error = &errStr
-			m.ResponseModelCh <- msg
-			return
-		case <-m.ctx.Done():
-			return
-		}
-	}
+	})
 }

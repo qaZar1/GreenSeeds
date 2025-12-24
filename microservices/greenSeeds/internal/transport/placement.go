@@ -184,3 +184,46 @@ func (transport *Transport) DeleteApiPlacementDelete(w http.ResponseWriter, r *h
 
 	utils.WriteNoContent(w)
 }
+
+// Set godoc
+//
+// @Router /api/placement/fill [put]
+// @Summary Обновление данных о семенах
+// @Description При обращении, обновляет данные о семенах
+//
+// @Tags Placements
+// @Produce      application/json
+// @Consume      application/json
+//
+// @Param request body fillPlacement true "Тело запроса"
+//
+// @Success 204 {object} nil "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) PutApiPlacementFill(w http.ResponseWriter, r *http.Request) {
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		return
+	}
+
+	var fillPlacement models.FillPlacement
+	if err := jsoniter.Unmarshal(data, &fillPlacement); err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		return
+	}
+
+	updated, err := transport.service.FillPlacment(fillPlacement)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %w", err))
+		return
+	}
+
+	if updated == (models.Placement{}) {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %w", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, updated)
+}

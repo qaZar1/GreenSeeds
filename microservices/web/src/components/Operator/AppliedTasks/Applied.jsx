@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { jwtDecode } from "jwt-decode";
 import EmptyTasks from "./EmptyTasks";
-import { List } from "react-admin";
+import { List, useNotify } from "react-admin";
 import { useMediaQuery } from "@mui/material";
 import TasksListContent from "./Controller";
 
 const AppliedTaskList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
     const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
+    const notify = useNotify();
 
     const [username, setUsername] = useState(null);
 
@@ -48,6 +49,11 @@ const AppliedTaskList = ({ ...props }) => {
             title="Задания на смену"
             component={Box}
             filter={{ username }}
+            queryOptions={{
+              onError: () => {
+                notify("Нет доступных заданий", { type: "info" });
+              }
+            }}
         >
             <TasksListContent isSmall={isSmall} isMedium={isMedium}/>
         </List>

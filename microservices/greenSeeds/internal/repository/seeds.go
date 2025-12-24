@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
@@ -11,6 +13,7 @@ type ISeedsRepository interface {
 	GetSeedsBySeed(seedName string) (models.Seeds, error)
 	UpdateSeeds(seeds models.Seeds) (models.Seeds, error)
 	DeleteSeeds(seedName string) (bool, error)
+	GetSeedsWithBunkers(seed string) ([]models.SeedsWithBunker, error)
 }
 
 type seedsRepository struct {
@@ -62,7 +65,8 @@ RETURNING seed, seed_ru, min_density, max_density, tank_capacity`
 func (se *seedsRepository) GetSeeds() ([]models.Seeds, error) {
 	const query = `
 SELECT seed, seed_ru, min_density, max_density, tank_capacity
-FROM green_seeds.seeds`
+FROM green_seeds.seeds
+WHERE deleted_at IS NULL;`
 
 	var seeds []models.Seeds
 	if err := se.db.Select(&seeds, query); err != nil {
@@ -76,7 +80,7 @@ func (se *seedsRepository) GetSeedsBySeed(seedName string) (models.Seeds, error)
 	const query = `
 SELECT seed, seed_ru, min_density, max_density, tank_capacity
 FROM green_seeds.seeds
-WHERE seed = $1`
+WHERE seed = $1 AND deleted_at IS NULL;`
 
 	var seed models.Seeds
 	if err := se.db.Get(&seed, query, seedName); err != nil {
@@ -93,7 +97,7 @@ SET	seed_ru = :seed_ru,
 	min_density = :min_density,
 	max_density = :max_density,
 	tank_capacity = :tank_capacity
-WHERE seed = :seed
+WHERE seed = :seed AND deleted_at IS NULL
 RETURNING seed, seed_ru, min_density, max_density, tank_capacity`
 
 	rows, err := se.db.NamedQuery(query, seeds)
@@ -116,10 +120,11 @@ RETURNING seed, seed_ru, min_density, max_density, tank_capacity`
 
 func (se *seedsRepository) DeleteSeeds(seedName string) (bool, error) {
 	const query = `
-DELETE FROM green_seeds.seeds
-WHERE seed = $1`
+UPDATE green_seeds.seeds
+SET deleted_at = $1
+WHERE seed = $2 AND deleted_at IS NULL;`
 
-	result, err := se.db.Exec(query, seedName)
+	result, err := se.db.Exec(query, time.Now(), seedName)
 	if err != nil {
 		return false, err
 	}
@@ -130,4 +135,29 @@ WHERE seed = $1`
 	}
 
 	return rowsAffected == 1, nil
+}
+
+func (se *seedsRepository) GetSeedsWithBunkers(seed string) ([]models.SeedsWithBunker, error) {
+	const query = `
+SELECT 
+	s.seed_ru,
+	s.seed,
+	s.min_density,
+	s.max_density,
+	s.tank_capacity,
+	p.amount,
+	b.bunker
+FROM green_seeds.seeds s
+LEFT JOIN green_seeds.placement p
+ON p.seed = s.seed
+LEFT JOIN green_seeds.bunkers b 
+ON p.bunker = b.bunker
+WHERE s.seed = $1 AND s.deleted_at IS NULL;`
+
+	var seeds []models.SeedsWithBunker
+	if err := se.db.Select(&seeds, query, seed); err != nil {
+		return nil, err
+	}
+
+	return seeds, nil
 }

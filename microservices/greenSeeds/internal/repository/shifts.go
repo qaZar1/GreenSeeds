@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
@@ -55,7 +57,7 @@ func (sh *shiftsRepository) GetShifts() ([]models.Shifts, error) {
 	const query = `
 SELECT shift, dt, username
 FROM green_seeds.shifts
-WHERE dt >= (CURRENT_DATE AT TIME ZONE 'UTC+5') - INTERVAL '7 days'
+WHERE dt >= (CURRENT_DATE AT TIME ZONE 'UTC+5') - INTERVAL '7 days' AND deleted_at IS NULL
 ORDER BY shift ASC;`
 
 	var shifts []models.Shifts
@@ -71,7 +73,7 @@ func (sh *shiftsRepository) UpdateShifts(shifts models.Shifts) (models.Shifts, e
 UPDATE green_seeds.shifts
 SET dt = COALESCE(:dt, dt),
 	username = COALESCE(:username, username)
-WHERE shift = :shift
+WHERE shift = :shift AND deleted_at IS NULL
 RETURNING shift, dt`
 
 	rows, err := sh.db.NamedQuery(query, shifts)
@@ -92,10 +94,11 @@ RETURNING shift, dt`
 
 func (sh *shiftsRepository) DeleteShifts(shift int) (bool, error) {
 	const query = `
-DELETE FROM green_seeds.shifts
-WHERE shift = $1`
+UPDATE green_seeds.shifts
+SET deleted_at = $1
+WHERE shift = $2 AND deleted_at IS NULL;`
 
-	result, err := sh.db.Exec(query, shift)
+	result, err := sh.db.Exec(query, time.Now(), shift)
 	if err != nil {
 		return false, err
 	}
@@ -112,7 +115,7 @@ func (sh *shiftsRepository) GetShiftsByShift(shift int) (models.Shifts, error) {
 	const query = `
 SELECT shift, dt, username
 FROM green_seeds.shifts
-WHERE shift = $1`
+WHERE shift = $1 AND deleted_at IS NULL;`
 
 	var shifts models.Shifts
 	if err := sh.db.Get(&shifts, query, shift); err != nil {
@@ -126,8 +129,8 @@ func (sh *shiftsRepository) GetShiftsWithoutUser() ([]models.Shifts, error) {
 	const query = `
 SELECT shift, dt, username
 FROM green_seeds.shifts
-WHERE DATE(dt) = CURRENT_DATE AND username IS NULL
-ORDER BY shift ASC`
+WHERE DATE(dt) = CURRENT_DATE AND username IS NULL AND deleted_at IS NULL
+ORDER BY shift ASC;`
 
 	var shifts []models.Shifts
 	if err := sh.db.Select(&shifts, query); err != nil {
@@ -141,7 +144,7 @@ func (sh *shiftsRepository) GetShiftsByUsername(username string) ([]models.Shift
 	const query = `
 SELECT shift, dt, username
 FROM green_seeds.shifts
-WHERE DATE(dt) = CURRENT_DATE AND username = $1`
+WHERE DATE(dt) = CURRENT_DATE AND username = $1 AND deleted_at IS NULL;`
 
 	var shifts []models.Shifts
 	if err := sh.db.Select(&shifts, query, username); err != nil {

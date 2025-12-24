@@ -30,6 +30,8 @@ const Task = ({ task, username }) => {
           },
         }
       );
+
+
     } catch (e) {
       console.error("Ошибка при взятии задания:", e);
     }

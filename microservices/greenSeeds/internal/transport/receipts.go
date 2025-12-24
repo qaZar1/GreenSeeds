@@ -5,10 +5,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Impisigmatus/service_core/log"
 	"github.com/go-chi/chi/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/utils"
+	"github.com/rs/zerolog"
 )
 
 // Set godoc
@@ -64,7 +66,7 @@ func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Re
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Success 200 {object} []receipt "Запрос выполнен успешно"
+// @Success 200 {object} []receipts "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
@@ -93,7 +95,7 @@ func (transport *Transport) GetApiReceiptsGet(w http.ResponseWriter, r *http.Req
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Success 200 {object} receipt "Запрос выполнен успешно"
+// @Success 200 {object} receipts "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
@@ -119,9 +121,9 @@ func (transport *Transport) GetApiReceiptsGetReceipt(w http.ResponseWriter, r *h
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param request body receipt true "Тело запроса"
+// @Param request body receipts true "Тело запроса"
 //
-// @Success 200 {object} receipt "Запрос выполнен успешно"
+// @Success 200 {object} receipts "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
@@ -169,6 +171,12 @@ func (transport *Transport) PutApiReceiptsUpdate(w http.ResponseWriter, r *http.
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) DeleteApiReceiptsDelete(w http.ResponseWriter, r *http.Request) {
+	log, ok := r.Context().Value(log.CtxKey).(zerolog.Logger)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid logger")
+		return
+	}
+
 	receiptName := chi.URLParam(r, "receipt")
 
 	ok, err := transport.service.DeleteReceipts(receiptName)
@@ -181,6 +189,8 @@ func (transport *Transport) DeleteApiReceiptsDelete(w http.ResponseWriter, r *ht
 		utils.WriteString(w, http.StatusInternalServerError, "Invalid delete receipt")
 		return
 	}
+
+	log.Warn().Ctx(r.Context()).Msg(fmt.Sprintf("Receipt removed: %s", receiptName))
 
 	utils.WriteNoContent(w)
 }

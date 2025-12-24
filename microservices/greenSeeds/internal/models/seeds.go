@@ -7,3 +7,13 @@ type Seeds struct {
 	MaxDensity   int    `json:"max_density" db:"max_density"`
 	TankCapacity int    `json:"tank_capacity" db:"tank_capacity"`
 } // @name seed
+
+type SeedsWithBunker struct {
+	Seed         string `json:"seed" db:"seed"`
+	SeedRu       string `json:"seed_ru" db:"seed_ru"`
+	MinDensity   int    `json:"min_density" db:"min_density"`
+	MaxDensity   int    `json:"max_density" db:"max_density"`
+	TankCapacity int    `json:"tank_capacity" db:"tank_capacity"`
+	Amount       uint64 `json:"amount" db:"amount"`
+	Bunker       int    `json:"bunker" db:"bunker"`
+} // @name seed_with_bunker

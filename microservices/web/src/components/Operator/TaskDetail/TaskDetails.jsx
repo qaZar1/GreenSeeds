@@ -6,10 +6,12 @@ import TopToolbarWithBackButton from "../../utils/Back";
 import TaskCard from "./Card";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useNotify } from "react-admin";
 
 const TaskDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const notify = useNotify();
 
   useEffect(() => {
     if (!id || id === "undefined" || id === "null") {
@@ -26,6 +28,11 @@ const TaskDetails = () => {
       actions={<TopToolbarWithBackButton to={`/tasks`} />}
       mutationMode="pessimistic"
       component={Box}
+      queryOptions={{
+        onError: () => {
+          notify("Ошибка загрузки задания", { type: "error" });
+        },
+      }}
     >
       <TaskCard />
     </Show>

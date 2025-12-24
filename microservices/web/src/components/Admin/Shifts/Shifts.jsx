@@ -4,10 +4,12 @@ import { useMediaQuery } from "@mui/material";
 import { EmptyShift } from "./EmptyShift";
 import ShiftListActions from "./Action";
 import ShiftListContent from "./Controller";
+import { useNotify } from "react-admin";
 
 const ShiftList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
     const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
+    const notify = useNotify();
 
     return (
         <List
@@ -18,6 +20,9 @@ const ShiftList = ({ ...props }) => {
             actions={<ShiftListActions />}
             title="План производства"
             pagination={false}
+            queryOptions={{
+                onError: () => notify("Ошибка загрузки смен", { type: "error" }),
+            }}
         >
             <ShiftListContent isSmall={isSmall} isMedium={isMedium} />
         </List>

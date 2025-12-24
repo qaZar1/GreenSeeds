@@ -121,9 +121,9 @@ func (transport *Transport) GetApiReportsById(w http.ResponseWriter, r *http.Req
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param request body report true "Тело запроса"
+// @Param request body reports true "Тело запроса"
 //
-// @Success 200 {object} report "Запрос выполнен успешно"
+// @Success 200 {object} reports "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
@@ -153,36 +153,3 @@ func (transport *Transport) PutApiReportsUpdate(w http.ResponseWriter, r *http.R
 
 	utils.WriteJSON(w, http.StatusOK, "OK")
 }
-
-// // Set godoc
-// //
-// // @Router /api/assignments/delete/{id} [delete]
-// // @Summary Удаление задания на смену
-// // @Description При обращении, удаляет задание на смену
-// //
-// // @Tags Assignments
-// // @Produce      application/json
-// // @Consume      application/json
-// //
-// // @Param id path int true "ID задания на смену"
-// //
-// // @Success 204 {object} nil "Запрос выполнен успешно"
-// // @Failure 400 {object} nil "Ошибка валидации данных"
-// // @Failure 401 {object} nil "Ошибка авторизации"
-// // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-// func (transport *Transport) DeleteApiAssignmentsDelete(w http.ResponseWriter, r *http.Request) {
-// 	idStr := chi.URLParam(r, "id")
-
-// 	ok, err := transport.service.DeleteAssignments(idStr)
-// 	if err != nil {
-// 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
-// 		return
-// 	}
-
-// 	if !ok {
-// 		utils.WriteString(w, http.StatusInternalServerError, "Invalid delete assignment")
-// 		return
-// 	}
-
-// 	utils.WriteNoContent(w)
-// }

@@ -17,6 +17,7 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/postgres"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/router"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/sqlite"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/ws"
 	zerolog "github.com/rs/zerolog"
 
@@ -24,12 +25,12 @@ import (
 )
 
 const logo = `
- _   _   ___   ____   ______   _   _   ______
-| | | | / _ \ |  _ \ |______| | | | | / ____/
-| |_| || | | || |_) |   | |   | | | | | (___
-|  _  || | | ||  _ <    | |   | | | |  \_____\
-| | | || |_| || | \ \   | |   | |_| |  ____) |
-|_| |_| \___/ |_|  \_\  |_|    \___/  /_____/
+ _   _   ___   ____   _______   _   _   ______
+| | | | / _ \ |  _ \ |_______| | | | | / ____/
+| |_| || | | || |_) |   | |    | | | | | (___
+|  _  || | | ||  _ <    | |    | | | |  \___ \
+| | | || |_| || | \ \   | |    | |_| |  ____) |
+|_| |_| \___/ |_|  \_\  |_|     \___/  /_____/
 `
 
 // @title GreenSeeds API
@@ -62,12 +63,15 @@ func main() {
 		},
 	), "pgx")
 
+	sqlite := sqlite.NewSQLiteClient(cfg)
+
 	db := writer.NewDbWriter(postgres)
 	multi := zerolog.MultiLevelWriter(os.Stdout, db)
 	log = log.Output(multi)
 
 	repo := repository.NewRepository(
 		postgres,
+		sqlite,
 	)
 
 	camera := camera.NewCamera(
@@ -90,7 +94,7 @@ func main() {
 	}
 	defer ws.Close()
 
-	router := router.NewRouter(repo, cfg, ws, log)
+	router := router.NewRouter(repo, cfg, ws, log, camera)
 	if router == nil {
 		log.Error().Msg("Invalid router")
 		return

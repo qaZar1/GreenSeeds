@@ -1,13 +1,14 @@
 package models
 
 type WSMessage struct {
-	Type     string     `json:"type"`
-	Status   *string    `json:"status,omitempty"`
-	Params   *Params    `json:"params,omitempty"`
-	Payload  *PayloadWs `json:"payload,omitempty"`
-	Error    *string    `json:"error,omitempty"`
-	Solution *string    `json:"solution,omitempty"`
-	Id       *int64     `json:"id,omitempty"`
+	Type     string             `json:"type"`
+	Status   *string            `json:"status,omitempty"`
+	Params   *Params            `json:"params,omitempty"`
+	Payload  *PayloadWs         `json:"payload,omitempty"`
+	Error    *string            `json:"error,omitempty"`
+	Solution *string            `json:"solution,omitempty"`
+	Id       *int64             `json:"id,omitempty"`
+	Bunkers  *[]SeedsWithBunker `json:"bunkers,omitempty"`
 }
 
 type Params struct {
@@ -23,7 +24,8 @@ type Params struct {
 }
 
 type PayloadWs struct {
-	Control *bool   `json:"control"`
-	Reason  *string `json:"reason"`
-	Photo   *[]byte `json:"photo"`
+	Control   *bool   `json:"control"`
+	Reason    *string `json:"reason"`
+	Photo     *[]byte `json:"photo"`
+	Remaining *int    `json:"remaining"`
 }

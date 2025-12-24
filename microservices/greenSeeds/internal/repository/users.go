@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
@@ -53,7 +55,10 @@ INSERT INTO green_seeds.users (
 }
 
 func (r *usersRepository) CheckUserByUsername(username string) (models.User, error) {
-	const query = "SELECT username, full_name, is_admin FROM green_seeds.users WHERE username = $1;"
+	const query = `
+SELECT username, full_name, is_admin
+FROM green_seeds.users
+WHERE username = $1 AND deleted_at IS NULL;`
 
 	var user models.User
 	if err := r.db.Get(&user, query, username); err != nil {
@@ -64,7 +69,10 @@ func (r *usersRepository) CheckUserByUsername(username string) (models.User, err
 }
 
 func (r *usersRepository) CheckUserByUsernameWithPwd(username string) (models.User, error) {
-	const query = "SELECT username, password, full_name, is_admin FROM green_seeds.users WHERE username = $1;"
+	const query = `
+SELECT username, password, full_name, is_admin
+FROM green_seeds.users
+WHERE username = $1 AND deleted_at IS NULL;`
 
 	var user models.User
 	if err := r.db.Get(&user, query, username); err != nil {
@@ -81,6 +89,7 @@ SELECT
 	full_name,
 	is_admin
 FROM green_seeds.users
+WHERE deleted_at IS NULL
 ORDER BY username ASC;`
 
 	var users []models.User
@@ -96,7 +105,7 @@ func (r *usersRepository) Update(user models.User) (bool, error) {
 UPDATE green_seeds.users
 SET full_name = COALESCE(:full_name, full_name),
 	is_admin = COALESCE(:is_admin, is_admin)
-WHERE username = :username;
+WHERE username = :username AND deleted_at IS NULL;
 `
 
 	result, err := r.db.NamedExec(query, user)
@@ -114,11 +123,12 @@ WHERE username = :username;
 
 func (r *usersRepository) Delete(username string) (bool, error) {
 	const query = `
-DELETE FROM green_seeds.users
-WHERE username = $1;
+UPDATE green_seeds.users
+SET deleted_at = $1
+WHERE username = $2 AND deleted_at IS NULL;
 `
 
-	result, err := r.db.Exec(query, username)
+	result, err := r.db.Exec(query, time.Now(), username)
 	if err != nil {
 		return false, err
 	}
@@ -135,7 +145,7 @@ func (r *usersRepository) UpdatePassword(user models.UpdatePassword) (bool, erro
 	const query = `
 UPDATE green_seeds.users
 SET password = COALESCE(:new_password, password)
-WHERE username = :username;
+WHERE username = :username AND deleted_at IS NULL;
 `
 
 	result, err := r.db.NamedExec(query, user)

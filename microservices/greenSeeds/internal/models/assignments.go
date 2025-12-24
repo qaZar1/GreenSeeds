@@ -11,7 +11,7 @@ type Assignments struct {
 	Receipt     int64  `json:"receipt" db:"receipt"`
 	ReceiptDesc string `json:"description" db:"description"`
 	Amount      int    `json:"amount" db:"amount"`
-}
+} // @name assignment
 
 type ActiveTask struct {
 	Id        int64     `json:"id" db:"id"`
@@ -23,7 +23,7 @@ type ActiveTask struct {
 	DoneTurns int       `json:"done_turns" db:"done_turns"`
 	Seed      string    `json:"seed" db:"seed"`
 	SeedRu    string    `json:"seed_ru" db:"seed_ru"`
-}
+} // @name active_task
 
 type Task struct {
 	Id             int64      `json:"id" db:"id"`
@@ -36,4 +36,4 @@ type Task struct {
 	Receipt        int64      `json:"receipt" db:"receipt"`
 	RequiredAmount int        `json:"required_amount" db:"required_amount"`
 	Reports        *[]Reports `json:"reports" db:"reports"`
-}
+} // @name task

@@ -3,6 +3,8 @@ import React from "react";
 import { Create, SimpleForm, TextInput, NumberInput } from "react-admin";
 import { ToolbarSave } from "../../utils/Toolbars";
 import BackButton from "../../utils/Back";
+import { useNotify } from "react-admin";
+import { useRedirect } from "react-admin";
 
 const validateSeed = (values) => {
     const errors = {};
@@ -14,8 +16,23 @@ const validateSeed = (values) => {
 };
 
 const SeedCreate = () => {
+    const notify = useNotify();
+    const redirect = useRedirect();
+
     return (
-        <Create sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Создание семян">
+        <Create
+            sx={{ padding: 2 }}
+            actions={<BackButton />}
+            mutationMode="pessimistic"
+            title="Создание семян"
+            mutationOptions={{
+                onSuccess: (response) => {
+                    notify("Семена добавлены", { type: "success" })
+                    redirect('edit', 'seeds', response.id);
+                },
+                onError: (error) => notify(error.message, { type: "error" }),
+            }}
+        >
             <SimpleForm toolbar={<ToolbarSave />} validate={validateSeed}>
                 <TextInput source="seed" label="Семена" />
                 <TextInput source="seed_ru" label="Семена (рус)" />
