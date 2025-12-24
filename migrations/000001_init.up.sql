@@ -111,5 +111,3 @@ CREATE TABLE IF NOT EXISTS calibration (
     d_per_step REAL,
     created_at TEXT DEFAULT (datetime('now'))
 );
-
-

@@ -46,7 +46,6 @@ func (s *Serial) Write(data []byte) error {
 	if s.port == nil {
 		return fmt.Errorf("port is nil")
 	}
-	fmt.Println("wrote: ", string(data))
 	_, err := s.port.Write(data)
 	if err != nil {
 		return err

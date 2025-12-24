@@ -218,7 +218,6 @@ func (m *SerialManager) Begin(msg models.WSMessage, ch <-chan []byte) {
 	m.mu.Lock()
 	m.Control = false
 	m.mu.Unlock()
-
 	var sorrel string
 	if msg.Params.ExtraMode {
 		sorrel = m.buildSorrel(msg)

@@ -56,7 +56,6 @@ export function useRobotWS(params = {}) {
       return;
     }
 
-
     switch (type) {
       case "BOOT":
         if (status === "ACK BOOT") {
