@@ -18,6 +18,8 @@ import { Collapse, ListItemButton, ListItemText, Box } from "@mui/material";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { getRole } from "../../authProvider";
 import ListAltIcon from '@mui/icons-material/ListAlt';
+import AccessibilityIcon from '@mui/icons-material/Accessibility';
+import TuneIcon from '@mui/icons-material/Tune';
 
 const CustomMenu = () => {
   const [openRefs, setOpenRefs] = useState(false);
@@ -59,8 +61,13 @@ const CustomMenu = () => {
             <MenuItemLink key="seeds" to="/seeds" primaryText="Семена" leftIcon={<GrassIcon />} />
             <MenuItemLink key="placements" to="/placements" primaryText="Расположение" leftIcon={<LinkIcon />} />
             <MenuItemLink key="receipts" to="/receipts" primaryText="Рецепты" leftIcon={<ReceiptIcon />} />
+            <MenuItemLink key="device-settings" to="/device-settings" primaryText="Настройки устройства" leftIcon={<TuneIcon />} />
         </Box>
       </Collapse>
+      ]}
+
+      {role === 'admin' && [
+        <MenuItemLink key="calibrate" to="/calibrate" primaryText="Калибровка" leftIcon={<AccessibilityIcon />} />
       ]}
     </Menu>
   );

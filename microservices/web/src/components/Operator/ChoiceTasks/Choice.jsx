@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { jwtDecode } from "jwt-decode";
 import EmptyChoice from "./EmptyChoice";
-import { List } from "react-admin";
+import { List, useNotify } from "react-admin";
 import { useMediaQuery } from "@mui/material";
 import ChoiceListContent from "./Controller";
 
 const ChoiceList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
     const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
+    const notify = useNotify();
 
     const [username, setUsername] = useState(null);
 
@@ -47,6 +48,11 @@ const ChoiceList = ({ ...props }) => {
             actions={false}
             title="Выбор задания"
             component={Box}
+            queryOptions={{
+              onError: () => {
+                notify("Нет доступных смен", { type: "info" });
+              }
+            }}
         >
             <ChoiceListContent isSmall={isSmall} isMedium={isMedium} username={username} />
         </List>

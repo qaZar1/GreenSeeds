@@ -5,10 +5,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Impisigmatus/service_core/log"
 	"github.com/go-chi/chi/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/utils"
+	"github.com/rs/zerolog"
 )
 
 // Set godoc
@@ -171,6 +173,12 @@ func (transport *Transport) PutApiAssignmentsUpdate(w http.ResponseWriter, r *ht
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) DeleteApiAssignmentsDelete(w http.ResponseWriter, r *http.Request) {
+	log, ok := r.Context().Value(log.CtxKey).(zerolog.Logger)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid logger")
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 
 	ok, err := transport.service.DeleteAssignments(idStr)
@@ -183,6 +191,8 @@ func (transport *Transport) DeleteApiAssignmentsDelete(w http.ResponseWriter, r 
 		utils.WriteString(w, http.StatusInternalServerError, "Invalid delete assignment")
 		return
 	}
+
+	log.Warn().Ctx(r.Context()).Msg(fmt.Sprintf("Assignment removed: %s", idStr))
 
 	utils.WriteNoContent(w)
 }
@@ -199,7 +209,7 @@ func (transport *Transport) DeleteApiAssignmentsDelete(w http.ResponseWriter, r 
 //
 // @Param username path string true "Имя пользователя"
 //
-// @Success 200 {object} []activeTask "Запрос выполнен успешно"
+// @Success 200 {object} []active_task "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
@@ -232,7 +242,7 @@ func (transport *Transport) GetApiActiveTasks(w http.ResponseWriter, r *http.Req
 //
 // @Param id path int true "ID задания"
 //
-// @Success 200 {object} []activeTask "Запрос выполнен успешно"
+// @Success 200 {object} []active_task "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"

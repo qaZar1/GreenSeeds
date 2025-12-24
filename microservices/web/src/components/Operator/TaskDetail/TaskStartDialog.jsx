@@ -41,12 +41,6 @@ const TaskStartDialog = ({ open, onClose, onConfirm, task }) => {
 
           <Typography variant="subtitle2" mt={2}>Семена:</Typography>
           <Typography>{task.seed_ru}</Typography>
-
-          <Typography variant="subtitle2" mt={2}>Требуется:</Typography>
-          <Typography>{task.required_amount}</Typography>
-
-          <Typography variant="subtitle2" mt={2}>Выполнено:</Typography>
-          <Typography>{task.completed_amount}</Typography>
         </Box>
 
         <Box mt={3}>

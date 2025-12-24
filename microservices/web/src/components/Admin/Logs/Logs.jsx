@@ -32,15 +32,15 @@ const LogsPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-    // simple debounce
     const [query, setQuery] = useState("");
     useEffect(() => {
         const t = setTimeout(() => setQuery(search), 300);
         return () => clearTimeout(t);
     }, [search]);
 
-    // reset when filters change
+    // reset filter
     useEffect(() => {
+        setData([])
         setOffset(0);
         setMore(true);
     }, [query, level, dateFrom, dateTo]);
@@ -62,7 +62,6 @@ const LogsPage = () => {
         try {
             const { data: newDataRaw } = await dataProvider.getList("logs", params);
 
-            // 👉 ДОБАВЛЯЕМ УНИКАЛЬНЫЙ id ДЛЯ КАЖДОЙ СТРОКИ
             const newData = newDataRaw.map((item, index) => ({
                 id: offset + index,
                 ...item,

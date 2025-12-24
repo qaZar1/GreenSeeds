@@ -3,10 +3,12 @@ import { List } from "react-admin";
 import { useMediaQuery } from "@mui/material";
 import { EmptyReports } from "./EmptyReports";
 import ReportsListContent from "./Controller";
+import { useNotify } from "react-admin";
 
 const ReportsList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
     const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
+    const notify = useNotify();
 
     return (
         <List
@@ -18,6 +20,9 @@ const ReportsList = ({ ...props }) => {
             sx={{ padding: 2 }}
             actions={false}
             title="Отчеты"
+            queryOptions={{
+                onError: () => notify("Ошибка загрузки отчетов", { type: "error" }),
+            }}
         >
             <ReportsListContent isSmall={isSmall} isMedium={isMedium} />
         </List>

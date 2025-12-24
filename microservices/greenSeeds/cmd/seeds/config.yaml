@@ -8,7 +8,7 @@ auth:
 database:
   host: "localhost"                                        # Хост базы данных
   port: 5432                                               # Порт базы данных
-  name: "dev"                                               # Название базы данных
+  name: "dev"                                              # Название базы данных
   user: "dev"                                              # Пользователь базы данных
   password: "test"                                         # Пароль базы данных
 
@@ -27,4 +27,7 @@ camera:
   video_size: "1920x1080"                                  # Размер видео
 
 api:
-  url: "http://localhost:8001"                             # URL API
+  url: "http://localhost:8001"                             # URL AI API
+
+sqlite:
+  path_to_db: "./db/calibration.db"                        # Путь к базе данных

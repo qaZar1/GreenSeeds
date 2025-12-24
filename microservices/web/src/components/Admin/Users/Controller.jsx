@@ -52,6 +52,9 @@ const UserListContent = ({ isSmall, isMedium, currentUsername }) => {
                 render={record => (
                     <DeleteButton
                         label="Удалить"
+                        confirmTitle="Удалить элемент?"
+                        confirmContent="Это действие нельзя отменить. Точно удалить?"
+                        
                         record={record}
                         mutationMode="pessimistic"
                         disabled={record.username === currentUsername}

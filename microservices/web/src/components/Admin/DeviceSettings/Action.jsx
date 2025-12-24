@@ -4,12 +4,12 @@ import { CreateButton } from "react-admin";
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 
-const SeedsListActions = () => {
+const SettingsListActions = () => {
     const theme = useTheme();
     return (
     <TopToolbar>
         <CreateButton
-            label="ДОБАВИТЬ СЕМЕНА"
+            label="ДОБАВИТЬ НАСТРОЙКИ УСТРОЙСТВА"
             sx={theme => ({
                 textTransform: 'none',
                 color: theme.palette.primary.main,
@@ -25,4 +25,4 @@ const SeedsListActions = () => {
     );
 };
 
-export default SeedsListActions;
+export default SettingsListActions;

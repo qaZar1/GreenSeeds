@@ -5,10 +5,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Impisigmatus/service_core/log"
 	"github.com/go-chi/chi/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/utils"
+	"github.com/rs/zerolog"
 )
 
 // Set godoc
@@ -169,6 +171,12 @@ func (transport *Transport) PutApiShiftsUpdate(w http.ResponseWriter, r *http.Re
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) DeleteApiShiftsDelete(w http.ResponseWriter, r *http.Request) {
+	log, ok := r.Context().Value(log.CtxKey).(zerolog.Logger)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid logger")
+		return
+	}
+
 	shiftName := chi.URLParam(r, "shift")
 
 	ok, err := transport.service.DeleteShifts(shiftName)
@@ -181,6 +189,8 @@ func (transport *Transport) DeleteApiShiftsDelete(w http.ResponseWriter, r *http
 		utils.WriteString(w, http.StatusInternalServerError, "Invalid delete shift")
 		return
 	}
+
+	log.Warn().Ctx(r.Context()).Msg(fmt.Sprintf("Shift removed: %s", shiftName))
 
 	utils.WriteNoContent(w)
 }

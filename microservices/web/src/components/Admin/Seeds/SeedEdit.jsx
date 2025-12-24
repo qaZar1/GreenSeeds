@@ -3,6 +3,7 @@ import React from "react";
 import { Edit, SimpleForm, TextInput, NumberInput } from "react-admin";
 import { ToolbarEdit } from "../../utils/Toolbars";
 import BackButton from "../../utils/Back";
+import { useNotify } from "react-admin";
 
 const validateSeed = (values) => {
     const errors = {};
@@ -14,9 +15,18 @@ const validateSeed = (values) => {
 };
 
 const SeedEdit = () => {
+    const notify = useNotify();
     return (
-        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title=
-        {`Редактирование семян`}>
+        <Edit
+            sx={{ padding: 2 }}
+            actions={<BackButton />}
+            mutationMode="pessimistic"
+            title={"Редактирование семян"}
+            mutationOptions={{
+                onSuccess: () => notify("Семена изменены", { type: "success" }),
+                onError: (error) => notify(error.message, { type: "error" }),
+            }}
+        >
             <SimpleForm toolbar={<ToolbarEdit />} validate={validateSeed}>
                 <TextInput source="seed" label="Семена" disabled/>
                 <TextInput source="seed_ru" label="Семена (рус)"/>

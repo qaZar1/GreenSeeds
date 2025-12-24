@@ -23,7 +23,7 @@ import (
 //
 // @Param 	request	body	bunker	true	"Тело запроса"
 //
-// @Success 204 {object} nil "Запрос выполнен успешно"
+// @Success 200 {object} bunker "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
@@ -148,7 +148,7 @@ func (transport *Transport) GetApiBunkerGetId(w http.ResponseWriter, r *http.Req
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Success 204 {object} nil "Запрос выполнен успешно"
+// @Success 200 {object} bunker "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"

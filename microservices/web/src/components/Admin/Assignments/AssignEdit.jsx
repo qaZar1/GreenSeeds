@@ -6,10 +6,12 @@ import { Edit, SimpleForm, NumberInput } from "react-admin";
 import { ToolbarEdit } from "../../utils/Toolbars";
 import BackButton from "../../utils/Back";
 import { ReferenceInput } from "react-admin";
+import { useNotify } from "react-admin";
 
 const AssignmentsEdit = () => {
     const dataProvider = useDataProvider();
     const [shifts, setShifts] = useState([]);
+    const notify = useNotify();
 
     useEffect(() => {
         dataProvider
@@ -24,7 +26,20 @@ const AssignmentsEdit = () => {
     }, [dataProvider]);
 
     return (
-        <Edit sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Редактирование сменного задания">
+        <Edit
+            sx={{ padding: 2 }}
+            actions={<BackButton />}
+            mutationMode="pessimistic"
+            title="Редактирование сменного задания"
+            mutationOptions={{
+                onSuccess: () => {
+                    notify("Сменное задание изменено", { type: 'success' })
+                },
+                onError: (error) => {
+                    notify(error.message, { type: 'error' });
+                }
+            }}
+        >
             <SimpleForm toolbar={<ToolbarEdit />}>
                 <AutocompleteInput
                     source="shift"

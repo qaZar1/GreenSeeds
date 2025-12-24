@@ -33,12 +33,17 @@ import TaskDetails from "./components/Operator/TaskDetail/TaskDetails";
 import AppliedTaskList from "./components/Operator/AppliedTasks/Applied";
 import LogsPage from "./components/Admin/Logs/Logs";
 import { getRole } from "./authProvider";
+import CalibrationPage from "./components/Admin/Calibrate/Calibrate";
+import SettingsList from "./components/Admin/DeviceSettings/Settings";
+import SettingsCreate from "./components/Admin/DeviceSettings/SettingsCreate";
+import SettingsEdit from "./components/Admin/DeviceSettings/SettingsEdit";
 
 function App() {
   const role = getRole();
+
   return (
     <>
-      <Admin dataProvider={dataProvider} authProvider={authProvider} layout={CustomLayout}>
+      <Admin dataProvider={dataProvider} authProvider={authProvider} layout={CustomLayout} disableDefaultMutations>
         {role === 'admin' && (
           <>
             <Resource
@@ -87,6 +92,12 @@ function App() {
               list={ReportsList}
               show={ReportsShow}
             />
+            <Resource
+              name="device-settings"
+              list={SettingsList}
+              create={SettingsCreate}
+              edit={SettingsEdit}
+            />
           </>
         )}
 
@@ -110,6 +121,7 @@ function App() {
             <Route path="/tasks/:id" element={<TaskDetails />} />
           )}
           <Route path="/logs" element={<LogsPage />} />
+          <Route path="/calibrate" element={<CalibrationPage />} />
         </CustomRoutes>
       </Admin>
     </>

@@ -24,7 +24,7 @@ import (
 //
 // @Param username path string true "User username"
 //
-// @Success 200 {object} models.User "Запрос выполнен успешно"
+// @Success 200 {object} user "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
@@ -48,7 +48,7 @@ func (transport *Transport) GetApiUserGetUsername(w http.ResponseWriter, r *http
 // @Tags Users
 // @Produce      application/json
 //
-// @Success 200 {array} models.User "Запрос выполнен успешно"
+// @Success 200 {array} user "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
@@ -128,7 +128,7 @@ func (transport *Transport) PutApiChangePassword(w http.ResponseWriter, r *http.
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param removeUser body models.RemoveUser true "Remove user object"
+// @Param removeUser path string true "User username"
 //
 // @Success 204 {object} nil "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
@@ -169,7 +169,7 @@ func (transport *Transport) DeleteApiRemoveUser(w http.ResponseWriter, r *http.R
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param 	request	body	User	true	"Тело запроса"
+// @Param 	request	body	user	true	"Тело запроса"
 //
 // @Success 204 {object} nil "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"

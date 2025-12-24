@@ -38,4 +38,8 @@ type Config struct {
 	API struct {
 		URL string `yaml:"url"`
 	}
+
+	SQLite struct {
+		PathToDB string `yaml:"path_to_db"`
+	}
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
@@ -15,9 +16,9 @@ type IAssignmentsRepository interface {
 	GetAssignmentsByNumber(number int) (models.Assignments, error)
 	CheckActiveTasks(username string) ([]models.ActiveTask, error)
 	GetTaskById(id int) (models.Task, error)
-	insReports(tx *sqlx.Tx, oldAssignments, assignments models.Assignments) (bool, error)
-	delReports(tx *sqlx.Tx, oldAssignments, assignments models.Assignments) (bool, error)
-	Transaction(oldAssignments, assignments models.Assignments) models.Assignments
+	insReports(tx *sqlx.Tx, reports []models.Reports) (bool, error)
+	delReports(tx *sqlx.Tx, assignments models.Assignments) (int64, error)
+	SyncReports(oldAssignments, assignments models.Assignments, reports []models.Reports) (models.Assignments, error)
 }
 
 type assignmentsRepository struct {
@@ -108,7 +109,7 @@ FROM green_seeds.assignments a
 JOIN green_seeds.shifts ON a.shift = green_seeds.shifts.shift
 LEFT JOIN green_seeds.receipts r
 ON r.receipt = a.receipt
-WHERE green_seeds.shifts.dt >= (CURRENT_DATE AT TIME ZONE 'UTC+5')
+WHERE green_seeds.shifts.dt >= (CURRENT_DATE AT TIME ZONE 'UTC+5') AND a.deleted_at IS NULL
 ORDER BY a.shift, a.number;`
 
 	var assignments []models.Assignments
@@ -119,44 +120,62 @@ ORDER BY a.shift, a.number;`
 	return assignments, nil
 }
 
-func (assign *assignmentsRepository) Transaction(
+func (assign *assignmentsRepository) SyncReports(
 	assignments models.Assignments,
 	oldAssignments models.Assignments,
-) models.Assignments {
+	reports []models.Reports,
+) (models.Assignments, error) {
+	var finished, pending []models.Reports
+
+	for _, report := range reports {
+		if report.Success || report.Error != nil {
+			finished = append(finished, report)
+		} else {
+			pending = append(pending, report)
+		}
+	}
+
 	tx, err := assign.db.Beginx()
 	if err != nil {
-		return models.Assignments{}
+		return models.Assignments{}, err
 	}
 	defer tx.Rollback()
 
-	updated, err := assign.UpdateAssignments(tx, assignments)
-	if err != nil {
-		return models.Assignments{}
+	if assignments.Amount > oldAssignments.Amount {
+		res := assignments.Amount - oldAssignments.Amount
+		startTurn := oldAssignments.Amount + 1
+		var reports []models.Reports
+		for i := range res {
+			reports = append(reports, models.Reports{
+				Shift:   assignments.Shift,
+				Number:  assignments.Number,
+				Receipt: assignments.Receipt,
+				Turn:    startTurn + i,
+			})
+		}
+
+		if _, err := assign.insReports(tx, reports); err != nil {
+			return models.Assignments{}, err
+		}
+	} else if assignments.Amount < oldAssignments.Amount {
+		amount, err := assign.delReports(tx, assignments)
+		if err != nil {
+			return models.Assignments{}, err
+		}
+
+		assignments.Amount = oldAssignments.Amount - int(amount)
 	}
 
-	if oldAssignments.Amount > assignments.Amount {
-		ok, err := assign.delReports(tx, oldAssignments, assignments)
-		if err != nil {
-			return models.Assignments{}
-		}
-		if !ok {
-			return models.Assignments{}
-		}
-	} else if oldAssignments.Amount < assignments.Amount {
-		ok, err := assign.insReports(tx, oldAssignments, assignments)
-		if err != nil {
-			return models.Assignments{}
-		}
-		if !ok {
-			return models.Assignments{}
-		}
+	updated, err := assign.UpdateAssignments(tx, assignments)
+	if err != nil {
+		return models.Assignments{}, err
 	}
 
 	if err := tx.Commit(); err != nil {
-		return models.Assignments{}
+		return models.Assignments{}, err
 	}
 
-	return updated
+	return updated, nil
 }
 
 func (assign *assignmentsRepository) UpdateAssignments(tx *sqlx.Tx, assignments models.Assignments) (models.Assignments, error) {
@@ -166,7 +185,7 @@ SET shift = :shift,
 	number = :number,
 	receipt = :receipt,
 	amount = :amount
-WHERE id = :id
+WHERE id = :id AND deleted_at IS NULL
 RETURNING id, shift, number, receipt, amount;
 `
 
@@ -188,10 +207,12 @@ RETURNING id, shift, number, receipt, amount;
 
 func (assign *assignmentsRepository) DeleteAssignments(id int) (bool, error) {
 	const query = `
-DELETE FROM green_seeds.assignments
-WHERE id = $1`
+UPDATE green_seeds.assignments
+SET deleted_at = $1
+WHERE id = $2 AND deleted_at IS NULL;
+`
 
-	result, err := assign.db.Exec(query, id)
+	result, err := assign.db.Exec(query, time.Now(), id)
 	if err != nil {
 		return false, err
 	}
@@ -208,7 +229,7 @@ func (assign *assignmentsRepository) GetAssignmentsByNumber(id int) (models.Assi
 	const query = `
 SELECT id, shift, number, receipt, amount
 FROM green_seeds.assignments
-WHERE id = $1;`
+WHERE id = $1 AND deleted_at IS NULL;`
 
 	var assignments models.Assignments
 	if err := assign.db.Get(&assignments, query, id); err != nil {
@@ -240,7 +261,7 @@ left join green_seeds.receipts r2
   on r2.receipt = a.receipt
 left join green_seeds.seeds se
   on se.seed = r2.seed 
-WHERE s.username = $1 and DATE(s.dt) = CURRENT_DATE
+WHERE s.username = $1 and DATE(s.dt) = CURRENT_DATE AND a.deleted_at IS NULL
 GROUP BY a.id, a.shift, a.number, a.receipt, s.dt, a.amount, se.seed, se.seed_ru 
 HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
 `
@@ -256,27 +277,28 @@ HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
 func (assign *assignmentsRepository) GetTaskById(id int) (models.Task, error) {
 	const query = `
 SELECT
-	a.id,
+    a.id,
     a.shift,
     a.number,
     r.seed,
     se.seed_ru,
-	p.bunker,
-	r.gcode,
-	r.receipt,
+    (
+        SELECT p.bunker
+        FROM green_seeds.placement p
+        WHERE p.seed = r.seed
+          AND p.bunker IS NOT NULL
+        ORDER BY p.bunker
+        LIMIT 1
+    ) AS bunker,
+    r.gcode,
+    r.receipt,
     a.amount AS required_amount
 FROM green_seeds.assignments a
 JOIN green_seeds.receipts r
-ON r.receipt = a.receipt
-LEFT JOIN green_seeds.reports rp
-    ON rp.shift = a.shift
-    AND rp.number = a.number
-LEFT JOIN green_seeds.placement p
-	ON p.seed = r.seed
+    ON r.receipt = a.receipt
 LEFT JOIN green_seeds.seeds se
-	ON r.seed = se.seed 
-WHERE a.id = $1
-GROUP BY a.id, a.shift, a.number, r.seed, se.seed_ru, p.bunker, r.gcode, r.receipt, a.amount;`
+    ON r.seed = se.seed
+WHERE a.id = $1 AND a.deleted_at IS NULL;`
 
 	var task models.Task
 	if err := assign.db.Get(&task, query, id); err != nil {
@@ -306,7 +328,7 @@ ORDER BY r.turn ASC`
 	return task, nil
 }
 
-func (assign *assignmentsRepository) insReports(tx *sqlx.Tx, oldAssignments, assignments models.Assignments) (bool, error) {
+func (assign *assignmentsRepository) insReports(tx *sqlx.Tx, reports []models.Reports) (bool, error) {
 	const insertReportsQuery = `
 INSERT INTO green_seeds.reports (
 	shift,
@@ -315,16 +337,6 @@ INSERT INTO green_seeds.reports (
 	turn
 )
 VALUES (:shift, :number, :receipt, :turn)`
-
-	var reports []models.Reports
-	for i := oldAssignments.Amount; i < assignments.Amount; i++ {
-		reports = append(reports, models.Reports{
-			Shift:   assignments.Shift,
-			Number:  assignments.Number,
-			Receipt: assignments.Receipt,
-			Turn:    i + 1,
-		})
-	}
 
 	result, err := tx.NamedExec(insertReportsQuery, reports)
 	if err != nil {
@@ -336,26 +348,31 @@ VALUES (:shift, :number, :receipt, :turn)`
 		return false, err
 	}
 
-	return rowsAffected == int64(assignments.Amount-oldAssignments.Amount), nil
+	return rowsAffected == int64(len(reports)), nil
 }
 
-func (assign *assignmentsRepository) delReports(tx *sqlx.Tx, oldAssignments, assignments models.Assignments) (bool, error) {
+func (assign *assignmentsRepository) delReports(tx *sqlx.Tx, assignments models.Assignments) (int64, error) {
 	const deleteReportsQuery = `
 DELETE FROM green_seeds.reports
-WHERE shift = :shift AND number = :number AND receipt = :receipt AND turn > :amount`
+WHERE shift = :shift AND 
+	number = :number AND
+	receipt = :receipt AND
+	turn > :amount AND
+	success IS NULL AND
+	error IS NULL`
 
 	result, err := tx.NamedExec(
 		deleteReportsQuery,
 		assignments,
 	)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
-	return rowsAffected == int64(oldAssignments.Amount-assignments.Amount), nil
+	return rowsAffected, nil
 }

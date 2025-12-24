@@ -18,7 +18,11 @@ const ToolbarEdit = (props) => (
             }}
         >
             <SaveButton label="Сохранить" />
-            <DeleteButton label="Удалить" />
+            <DeleteButton
+                label="Удалить"
+                confirmTitle="Удалить элемент?"
+                confirmContent="Это действие нельзя отменить. Точно удалить?"
+            />
         </Box>
     </Toolbar>
 );

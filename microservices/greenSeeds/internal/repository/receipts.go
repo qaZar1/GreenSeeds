@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
@@ -67,6 +69,7 @@ SELECT
 FROM green_seeds.receipts
 LEFT JOIN green_seeds.seeds 
     ON seeds.seed = receipts.seed
+WHERE receipts.deleted_at IS NULL
 ORDER BY receipts.seed ASC;
 `
 
@@ -86,7 +89,7 @@ SET
     gcode = :gcode,
     description = :description,
     updated = CURRENT_TIMESTAMP
-WHERE receipt = :receipt
+WHERE receipt = :receipt AND deleted_at IS NULL
 RETURNING receipt, seed, gcode, description, updated`
 
 	rows, err := rec.db.NamedQuery(query, receipts)
@@ -109,10 +112,11 @@ RETURNING receipt, seed, gcode, description, updated`
 
 func (rec *receiptsRepository) DeleteReceipts(receipt string) (bool, error) {
 	const query = `
-DELETE FROM green_seeds.receipts
-WHERE receipt = $1`
+UPDATE green_seeds.receipts
+SET deleted_at = $1
+WHERE receipt = $2 AND deleted_at IS NULL;`
 
-	result, err := rec.db.Exec(query, receipt)
+	result, err := rec.db.Exec(query, time.Now(), receipt)
 	if err != nil {
 		return false, err
 	}
@@ -137,7 +141,7 @@ SELECT
 FROM green_seeds.receipts
 LEFT JOIN green_seeds.seeds 
     ON seeds.seed = receipts.seed
-WHERE receipt = $1;`
+WHERE receipt = $1 AND receipts.deleted_at IS NULL;`
 
 	var receipt models.Receipts
 	if err := rec.db.Get(&receipt, query, receiptName); err != nil {

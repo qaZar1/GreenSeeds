@@ -22,7 +22,7 @@ import (
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param 	request	body	User	true	"Тело запроса"
+// @Param 	request	body	user	true	"Тело запроса"
 //
 // @Success 204 {object} nil "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
@@ -67,7 +67,7 @@ func (transport *Transport) PostApiRegisterUser(w http.ResponseWriter, r *http.R
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param 	request	body	User	true	"Тело запроса"
+// @Param 	request	body	user	true	"Тело запроса"
 //
 // @Success 200 {object} token_response "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"

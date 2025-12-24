@@ -5,7 +5,7 @@ type User struct {
 	Password *string `json:"password" db:"password"`
 	FullName *string `json:"full_name" db:"full_name"`
 	IsAdmin  *bool   `json:"is_admin" db:"is_admin"`
-} // @name User
+} // @name user
 
 type UpdatePassword struct {
 	Username    string  `json:"username" db:"username"`

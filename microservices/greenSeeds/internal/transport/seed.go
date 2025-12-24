@@ -5,10 +5,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Impisigmatus/service_core/log"
 	"github.com/go-chi/chi/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/utils"
+	"github.com/rs/zerolog"
 )
 
 // Set godoc
@@ -97,16 +99,42 @@ func (transport *Transport) GetApiSeedGet(w http.ResponseWriter, r *http.Request
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) GetApiSeedGetId(w http.ResponseWriter, r *http.Request) {
+func (transport *Transport) GetApiSeedGetSeed(w http.ResponseWriter, r *http.Request) {
 	seedId := chi.URLParam(r, "seed")
 
-	seed, err := transport.service.GetSeedById(seedId)
+	seeds, err := transport.service.GetSeedBySeed(seedId)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seed by id: %w", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, seed)
+	utils.WriteJSON(w, http.StatusOK, seeds)
+}
+
+// Set godoc
+//
+// @Router /api/seeds/getWithBunkers/{seed} [get]
+// @Summary Получение семян с бункерами по ID
+// @Description При обращении, возвращает семена с бункерами по ID
+//
+// @Tags Seeds
+// @Produce      application/json
+// @Consume      application/json
+//
+// @Success 200 {object} seed "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiSeedWithBunkers(w http.ResponseWriter, r *http.Request) {
+	seed := chi.URLParam(r, "seed")
+
+	result, err := transport.service.GetSeedWithBunkers(seed)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seed by id: %w", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, result)
 }
 
 // Set godoc
@@ -167,6 +195,12 @@ func (transport *Transport) PutApiSeedUpdate(w http.ResponseWriter, r *http.Requ
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) DeleteApiSeedDelete(w http.ResponseWriter, r *http.Request) {
+	log, ok := r.Context().Value(log.CtxKey).(zerolog.Logger)
+	if !ok {
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid logger")
+		return
+	}
+
 	seedId := chi.URLParam(r, "seed")
 
 	ok, err := transport.service.DeleteSeed(seedId)
@@ -179,6 +213,8 @@ func (transport *Transport) DeleteApiSeedDelete(w http.ResponseWriter, r *http.R
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid delete seed: %w", err))
 		return
 	}
+
+	log.Warn().Ctx(r.Context()).Msg(fmt.Sprintf("Seed removed: %s", seedId))
 
 	utils.WriteNoContent(w)
 }

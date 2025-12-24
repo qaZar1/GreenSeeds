@@ -2,24 +2,43 @@ package service
 
 import (
 	validator "github.com/go-playground/validator/v10"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/opencv"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/ws"
 )
 
 type Service struct {
-	repo     *repository.Repository
-	infra    *infrastructure.Infrastructure
-	validate *validator.Validate
-	cfg      models.Config
+	repo        *repository.Repository
+	infra       *infrastructure.Infrastructure
+	validate    *validator.Validate
+	cfg         models.Config
+	ws          *ws.Server
+	camera      *camera.Camera
+	calibration map[string]models.Calibration
+	calib       *opencv.Calibration
 }
 
-func NewService(repo *repository.Repository, cfg models.Config, infra *infrastructure.Infrastructure) *Service {
+func NewService(
+	repo *repository.Repository,
+	cfg models.Config,
+	infra *infrastructure.Infrastructure,
+	ws *ws.Server,
+	camera *camera.Camera,
+) *Service {
 	validate := validator.New()
+
+	calibration := opencv.NewCalibration()
 	return &Service{
-		repo:     repo,
-		infra:    infra,
-		validate: validate,
-		cfg:      cfg,
+		repo:        repo,
+		infra:       infra,
+		validate:    validate,
+		cfg:         cfg,
+		ws:          ws,
+		camera:      camera,
+		calibration: make(map[string]models.Calibration),
+		calib:       calibration,
 	}
 }

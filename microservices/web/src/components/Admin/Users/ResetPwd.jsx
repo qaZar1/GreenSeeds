@@ -1,9 +1,11 @@
 import React from "react";
 import { getToken } from "../../../dataProvider";
 import { Button } from "@mui/material";
+import { useNotify } from "react-admin";
 
 const ResetPasswordButton = ({ record, fullWidth = false }) => {
     const token = getToken();
+    const notify = useNotify();
     
     const resetPwd = async () => {
         const response = await fetch(`/api/users/change-password`, {
@@ -18,6 +20,7 @@ const ResetPasswordButton = ({ record, fullWidth = false }) => {
         if (response.status !== 204) {
             throw new Error(`Ошибка сброса пароля для ${record.username}`);
         }
+        notify(`Пароль для ${record.username} успешно сброшен`, { type: 'success' });
     }    
 
     return (

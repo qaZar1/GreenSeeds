@@ -7,16 +7,16 @@ const robotStateTranslate = {
   "STAND BY": "Ожидает нажатия кнопки",
   READY: "Готов",
   BUSY: "В процессе выполнения",
-  ERR: "Ошибка",
   END: "Задание выполнено. Ожидание контроля качества.",
   RETURN: "Возврат каретки",
   UNKNOWN: "Неизвестно",
   MANUAL_MODE: "Ручной режим",
-  WAIT: "Выполняется возврат каретки"
+  WAIT: "Выполняется возврат каретки",
+  ERR: "Ошибка выполнения. Ожидает нажатия кнопки.",
 };
 
 export function useRobotWS(params = {}) {
-  const { record, onSuccessStep, onErrorStep } = params;
+  const { record, onSuccessStep, onErrorStep, onBunkersUpdate } = params;
 
   const wsRef = useRef(null);
   const reconnectTimeout = useRef(null);
@@ -38,16 +38,24 @@ export function useRobotWS(params = {}) {
   const handleWSMessage = (msg) => {
     const { type, status, payload, error } = msg;
 
-    if (type === "ERR"){
-      notify(error, {type:"error"});
+    if (type === "ERR") {
+      notify(error, { type: "error" });
+
+      if (
+        error?.toLowerCase().includes("нет семян") &&
+        msg.params?.bunker !== undefined
+      ) {
+        params.onNoSeeds?.(msg.params.bunker);
+      }
+
       if (onErrorStep && msg.params?.turn) {
         onErrorStep(msg.params.turn, error);
       }
-    
-      setIsBoot(false);
+
       setState("ERR");
       return;
     }
+
 
     switch (type) {
       case "BOOT":
@@ -65,7 +73,6 @@ export function useRobotWS(params = {}) {
           status === "BUSY" ||
           status === "WAIT" ||
           status === "RETURN" ||
-          status === "ERR" ||
           status === "MANUAL_MODE") {
           setState(status);
           break;
@@ -122,6 +129,15 @@ export function useRobotWS(params = {}) {
         }
         setState("UNKNOWN");
         break;
+      
+      case "BUNKERS_UPDATE": {
+        console.log("BUNKERS_UPDATE", msg)
+        if (msg.bunkers) {
+          onBunkersUpdate?.(msg.bunkers);
+        }
+        break;
+      }
+
 
       default:
         console.warn("Unknown WS message type:", type);

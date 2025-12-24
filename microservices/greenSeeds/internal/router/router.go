@@ -8,9 +8,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 
-	// "github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/docs"
 	core "github.com/Impisigmatus/service_core/middlewares"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/docs"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
@@ -20,9 +22,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server, logger zerolog.Logger) *chi.Mux {
+func NewRouter(
+	repo *repository.Repository,
+	cfg models.Config,
+	ws *ws.Server,
+	logger zerolog.Logger,
+	camera *camera.Camera,
+) *chi.Mux {
 	infra := infrastructure.New(cfg.JWT.ExpiresIn, cfg)
-	transport := transport.NewTransport(repo, cfg, infra)
+	transport := transport.NewTransport(repo, cfg, infra, ws, camera)
 
 	router := chi.NewRouter()
 
@@ -35,8 +43,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server, lo
 		MaxAge:           300,
 	}))
 
-	router.Post("/api/login", transport.PostApiLoginUser)
-	router.Post("/api/register", transport.PostApiRegisterUser)
+	router.Post("/auth/login", transport.PostApiLoginUser)
 
 	router.HandleFunc("/debug/pprof/", pprof.Index)
 	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -45,14 +52,15 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server, lo
 	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	// swagger
-	// docs.SwaggerInfo.Title = "GreenSeeds API"
-	// docs.SwaggerInfo.Description = "API для работы с GreenSeeds"
-	// docs.SwaggerInfo.Version = "1.0"
-	// docs.SwaggerInfo.Host = "localhost:8001"
-	// docs.SwaggerInfo.BasePath = "/"
-	// docs.SwaggerInfo.Schemes = []string{"http", "https"}
+	docs.SwaggerInfo.Title = "GreenSeeds API"
+	docs.SwaggerInfo.Description = "API для работы с GreenSeeds"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = "localhost:8001"
+	docs.SwaggerInfo.BasePath = "/"
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
-	// router.Handle("/swagger/*", httpSwagger.WrapHandler)
+	router.Handle("/swagger/*", httpSwagger.WrapHandler)
+	router.HandleFunc("/ws", ws.HandleWS)
 
 	router.Route("/api", func(r chi.Router) {
 		r.Use(
@@ -61,14 +69,15 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server, lo
 			middlewares.BearerAuthMiddleware(infra, repo),
 		)
 
-		r.HandleFunc("/ws", ws.HandleWS)
+		r.Post("/register", transport.PostApiRegisterUser)
 
 		r.Route("/seeds", func(r chi.Router) {
 			r.Post("/add", transport.PostApiSeedAdd)
 			r.Get("/get", transport.GetApiSeedGet)
-			r.Get("/get/{seed}", transport.GetApiSeedGetId)
+			r.Get("/get/{seed}", transport.GetApiSeedGetSeed)
 			r.Put("/update", transport.PutApiSeedUpdate)
 			r.Delete("/delete/{seed}", transport.DeleteApiSeedDelete)
+			r.Get("/getWithBunkers/{seed}", transport.GetApiSeedWithBunkers)
 		})
 
 		r.Route("/bunkers", func(r chi.Router) {
@@ -94,6 +103,7 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server, lo
 			r.Get("/get/{bunker}", transport.GetApiPlacementGetBunker)
 			r.Put("/update", transport.PutApiPlacementUpdate)
 			r.Delete("/delete/{bunker}", transport.DeleteApiPlacementDelete)
+			r.Put("/fill", transport.PutApiPlacementFill)
 		})
 
 		r.Route("/receipts", func(r chi.Router) {
@@ -131,6 +141,22 @@ func NewRouter(repo *repository.Repository, cfg models.Config, ws *ws.Server, lo
 
 		r.Route("/logs", func(r chi.Router) {
 			r.Get("/get", transport.GetApiLogsGet)
+		})
+
+		r.Route("/calibration", func(r chi.Router) {
+			r.Post("/handshake", transport.PostApiCalibrationHandshake)
+			r.Post("/photo", transport.PostApiCalibrationPhoto)
+			r.Post("/clear", transport.PostApiCalibrationClear)
+			r.Post("/found", transport.PostApiCalibrationFound)
+			r.Post("/save", transport.PostApiCalibrationSave)
+		})
+
+		r.Route("/device-settings", func(r chi.Router) {
+			r.Post("/add", transport.PostApiDeviceSettingsAdd)
+			r.Get("/get", transport.GetApiDeviceSettingsGet)
+			r.Get("/get/{key}", transport.GetApiDeviceSettingsGetKey)
+			r.Put("/update", transport.PutApiDeviceSettingsUpdate)
+			r.Delete("/delete/{key}", transport.DeleteApiDeviceSettingsDelete)
 		})
 	})
 

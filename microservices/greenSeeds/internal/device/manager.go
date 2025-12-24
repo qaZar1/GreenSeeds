@@ -148,11 +148,11 @@ func (m *SerialManager) reconnect() {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	if m.Serial != nil {
-		m.initialHandshake()
+		m.InitialHandshake()
 	}
 }
 
-func (m *SerialManager) initialHandshake() bool {
+func (m *SerialManager) InitialHandshake() bool {
 	ch := m.Subscribe()
 	defer m.Unsubscribe(ch)
 
@@ -187,6 +187,30 @@ func (m *SerialManager) initialHandshake() bool {
 
 	m.Active = false
 	return false
+}
+
+func (m *SerialManager) RunGcode(gcode string) models.WSMessage {
+	ch := m.Subscribe()
+	defer m.Unsubscribe(ch)
+
+	msg := models.WSMessage{
+		Type: "calibrate",
+	}
+	errTimeout := "timeout"
+
+	boot := []byte(gcode + delimeterStr)
+	if err := m.Write(boot); err != nil {
+		log.Println("ESP not connected — cannot send data")
+		m.Active = false
+
+		msg.Error = &errTimeout
+		return msg
+	}
+
+	ok := "OK"
+	msg.Status = &ok
+
+	return msg
 }
 
 func (m *SerialManager) Write(data []byte) error {

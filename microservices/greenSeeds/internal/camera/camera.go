@@ -2,6 +2,7 @@ package camera
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -70,12 +71,26 @@ func (cam *Camera) TakePhoto() (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func (cam *Camera) GetBytesFromPhoto() (*bytes.Buffer, error) {
-	data, err := os.ReadFile("photo.jpg")
+func (cam *Camera) SavePhoto(path, id string, buf *bytes.Buffer) error {
+	if err := os.MkdirAll(fmt.Sprintf("./tmp/%s/", id), 0755); err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, buf.Bytes(), 0644)
+}
+
+func (cam *Camera) GetBytesFromPhoto(path string) (*bytes.Buffer, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
 	buf := bytes.NewBuffer(data)
 	return buf, nil
+}
+
+func (cam *Camera) DeletePhoto(id, name string) error {
+	path := fmt.Sprintf("./tmp/%s/%s.jpg", id, name)
+
+	return os.Remove(path)
 }

@@ -4,10 +4,12 @@ import { useMediaQuery } from "@mui/material";
 import { EmptyPlacement } from "./EmptyPlacement";
 import PlacementListActions from "./Action";
 import PlacementListContent from "./Controller";
+import { useNotify } from "react-admin";
 
 const PlacementList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
     const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
+    const notify = useNotify();
 
     return (
         <List
@@ -18,6 +20,9 @@ const PlacementList = ({ ...props }) => {
             sx={{ padding: 2 }}
             actions={<PlacementListActions />}
             title="Расположение семян"
+            queryOptions={{
+                onError: () => notify("Ошибка загрузки семян", { type: "error" }),
+            }}
         >
             <PlacementListContent isSmall={isSmall} isMedium={isMedium} />
         </List>

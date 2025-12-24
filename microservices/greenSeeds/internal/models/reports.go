@@ -14,4 +14,4 @@ type Reports struct {
 	Solution    *string    `json:"solution" db:"solution"`
 	Mark        *string    `json:"mark" db:"mark"`
 	Responsible *string    `json:"responsible" db:"full_name"`
-}
+} // @name reports

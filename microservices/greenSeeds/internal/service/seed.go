@@ -16,8 +16,12 @@ func (s *Service) GetSeeds() ([]models.Seeds, error) {
 	return s.repo.SeedRepo.GetSeeds()
 }
 
-func (s *Service) GetSeedById(seed string) (models.Seeds, error) {
+func (s *Service) GetSeedBySeed(seed string) (models.Seeds, error) {
 	return s.repo.SeedRepo.GetSeedsBySeed(seed)
+}
+
+func (s *Service) GetSeedWithBunkers(seed string) ([]models.SeedsWithBunker, error) {
+	return s.repo.SeedRepo.GetSeedsWithBunkers(seed)
 }
 
 func (s *Service) UpdateSeed(seed models.Seeds) (models.Seeds, error) {

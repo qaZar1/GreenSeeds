@@ -4,10 +4,14 @@ import { ToolbarSave } from "../../utils/Toolbars";
 import BackButton from "../../utils/Back";
 import { useDataProvider, ReferenceInput, AutocompleteInput } from "react-admin";
 import { useEffect, useState } from "react";
+import { useNotify } from "react-admin";
+import { useRedirect } from "react-admin";
 
 const AssignmentsCreate = () => {
-     const dataProvider = useDataProvider();
+    const dataProvider = useDataProvider();
     const [shifts, setShifts] = useState([]);
+    const notify = useNotify();
+    const redirect = useRedirect();
 
     useEffect(() => {
         dataProvider
@@ -22,7 +26,21 @@ const AssignmentsCreate = () => {
     }, [dataProvider]);
 
     return (
-        <Create sx={{ padding: 2 }} actions={<BackButton />} mutationMode="pessimistic" title="Создание сменного задания">
+        <Create
+            sx={{ padding: 2 }}
+            actions={<BackButton />}
+            mutationMode="pessimistic"
+            title="Создание сменного задания"
+            mutationOptions={{
+                onSuccess: (response) => {
+                    notify("Сменное задание создано", { type: 'success' })
+                    redirect('edit', 'assignments', response.id);
+                },
+                onError: (error) => {
+                    notify(error.message, { type: 'error' });
+                }
+            }}
+        >
             <SimpleForm toolbar={<ToolbarSave />}>
                 <ReferenceInput source="shift" reference="shifts">
                     <AutocompleteInput
@@ -41,7 +59,7 @@ const AssignmentsCreate = () => {
                         label="Смена"
                     />
                 </ReferenceInput>
-                <NumberInput source="number" label="Номер сменного задания"/>
+                <NumberInput source="number" label="Номер сменного задания" min={1}/>
                 <ReferenceInput source="receipt" reference="receipts">
                     <AutocompleteInput
                         optionText="description"

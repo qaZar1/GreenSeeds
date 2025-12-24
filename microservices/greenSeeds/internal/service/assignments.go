@@ -38,8 +38,16 @@ func (s *Service) UpdateAssignment(assignment models.Assignments) (models.Assign
 		return models.Assignments{}, err
 	}
 
-	updated := s.repo.AsnRepo.Transaction(assignment, oldAssignment)
-	if updated == (models.Assignments{}) {
+	reports, err := s.repo.RepRepo.GetReportsByAssignment(
+		int(assignment.Shift),
+		assignment.Number,
+		int(assignment.Receipt))
+	if err != nil {
+		return models.Assignments{}, err
+	}
+
+	updated, err := s.repo.AsnRepo.SyncReports(assignment, oldAssignment, reports)
+	if updated == (models.Assignments{}) || err != nil {
 		return models.Assignments{}, errors.New("transaction failed")
 	}
 
