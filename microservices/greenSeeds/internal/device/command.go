@@ -265,7 +265,7 @@ func (m *SerialManager) Begin(msg models.WSMessage, ch <-chan []byte) {
 
 	bunkers, err := m.repo.SeedRepo.GetSeedsWithBunkers(msg.Params.Seed)
 	if err != nil {
-		text := "Нет семян в бункерах"
+		text := "Нет семян в бункерe"
 		m.ResponseModelCh <- models.WSMessage{
 			Type:   "ERR",
 			Error:  &text,
@@ -286,6 +286,8 @@ func (m *SerialManager) Begin(msg models.WSMessage, ch <-chan []byte) {
 		m.ResponseModelCh <- msg
 		return
 	}
+
+	// TODO: добавить подсчет семян
 
 	response, err := m.api.RequestAI(msg.Params.Seed, *buf)
 	if err != nil {
