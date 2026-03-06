@@ -33,3 +33,8 @@ dist-ssr
 main
 
 **/db/**
+
+microservices/greenSeeds/cmd/seeds/out/
+microservices/greenSeeds/cmd/seeds/Proj_img/
+microservices/greenSeeds/cmd/seeds/tmp/
+test.html

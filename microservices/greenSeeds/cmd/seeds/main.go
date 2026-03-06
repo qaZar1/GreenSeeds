@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/jmoiron/sqlx"
@@ -14,6 +17,7 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/logger"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/logger/writer"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/opencv"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/postgres"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/router"
@@ -74,6 +78,9 @@ func main() {
 		sqlite,
 	)
 
+	// TODO: debug
+	ProcessDataset("Proj_img")
+
 	camera := camera.NewCamera(
 		cfg.Camera.Name,
 		cfg.Camera.InputDevice,
@@ -127,4 +134,38 @@ func main() {
 	if err := server.Shutdown(context.Background()); err != nil {
 		log.Error().Err(err).Msg("Service shutdown\n\n")
 	}
+}
+
+// TODO: debug
+func ProcessDataset(root string) error {
+	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// пропускаем папки
+		if d.IsDir() {
+			return nil
+		}
+
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext != ".png" && ext != ".jpg" && ext != ".jpeg" {
+			return nil
+		}
+
+		// относительный путь
+		rel, _ := filepath.Rel(root, path)
+
+		base := strings.TrimSuffix(filepath.Base(rel), filepath.Ext(rel))
+
+		// папка вывода
+		outDir := filepath.Join("out", filepath.Dir(rel), base)
+		_ = os.MkdirAll(outDir, 0755)
+
+		opencv := opencv.NewCounting()
+		total := opencv.Counter(path, outDir)
+
+		fmt.Printf("/%s - total seeds %d\n", rel, total)
+		return nil
+	})
 }
