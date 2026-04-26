@@ -1,179 +1,166 @@
 import React from "react";
-import { useTaskController } from "./useTaskContoller";
 import type { TaskRecord } from "../../../types/task";
 import { useWSConnection } from "../../hooks/useRobotWS";
 import { useAuth } from "../../../context/AuthContext";
-import { useState } from "react";
 
 type Props = {
   record: TaskRecord;
 };
 
+const STATE_LABELS: Record<string, string> = {
+  WAIT_READY: "Ожидание готовности",
+  BEGIN_ACK: "Запуск",
+  BEGIN_END: "Завершение операции",
+  PHOTO_DONE: "Фото сделано",
+  AI_OK: "Анализ завершён",
+  DONE: "Готово",
+  RETURN_DONE: "Возврат завершён",
+  "STAND BY": "Ожидание",
+};
+
+const STEPS = [
+  "WAIT_READY",
+  "BEGIN_ACK",
+  "PHOTO_DONE",
+  "AI_OK",
+  "DONE",
+];
+
+const getStatusColor = (status: string) => {
+  if (status === "DONE") return "text-green-600";
+  if (status === "ERROR") return "text-red-600";
+  if (status === "WAIT_ACTION") return "text-yellow-600";
+  return "text-blue-600";
+};
+
+const Stepper = ({ current }: { current: string }) => {
+  const currentIndex = STEPS.indexOf(current);
+
+  return (
+    <div className="flex items-center justify-between">
+      {STEPS.map((step, i) => {
+        const isActive = current === step;
+        const isPassed = currentIndex > i;
+
+        return (
+          <div key={step} className="flex-1 flex flex-col items-center">
+            <div
+              className={`w-6 h-6 rounded-full border-2
+                ${
+                  isPassed
+                    ? "bg-green-500 border-green-500"
+                    : isActive
+                    ? "bg-blue-500 border-blue-500"
+                    : "border-gray-300"
+                }`}
+            />
+            <div className="text-[10px] mt-1 text-gray-500 text-center">
+              {STATE_LABELS[step]}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const TaskCard: React.FC<Props> = ({ record }) => {
   if (!record) return null;
 
-  const {token} = useAuth();
+  const { token } = useAuth();
 
-  // ✅ сначала WS
   const {
     sendMessage,
-    connectionStatus,
     rawStatus,
     isConnected,
     beginState,
     startBegin,
     sendOperatorAction,
-    availableActions} = useWSConnection({
-    token,
-    onMessage: () => {},
-    onOpen: () => {},
-    onClose: () => {},
-    onFatal: () => {
-      alert("Failed to connect to WS");
-    },
-  });
-
-  // ✅ потом контроллер
-  // const ctrl = useTaskController(record, ws);
-
-  // const canStart =
-  //   ws.rawState === "READY" &&
-  //   !ctrl.isRunning &&
-  //   ctrl.completedAmount < ctrl.requiredAmount;
+    availableActions,
+  } = useWSConnection(token);
 
   return (
-    <div className="max-w-[700px] mx-auto bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[16px] p-[20px] space-y-[16px]">
+    <div className="max-w-[720px] mx-auto bg-white shadow-lg rounded-2xl p-5 space-y-5 border">
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
-        <div className="text-[20px] font-semibold">
-          Задание №{record.number}
+        <div>
+          <div className="text-lg font-semibold">
+            Задание №{record.number}
+          </div>
+          <div className="text-xs text-gray-500">
+            Смена {record.shift}
+          </div>
         </div>
 
-        <div
-          className={`w-[10px] h-[10px] rounded-full ${
-            isConnected ? "bg-green-500" : "bg-red-500"
-          }`}
-        />
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-2.5 h-2.5 rounded-full ${
+              isConnected ? "bg-green-500" : "bg-red-500"
+            }`}
+          />
+          <span className="text-xs text-gray-500">
+            {isConnected ? "Подключено" : "Нет связи"}
+          </span>
+        </div>
       </div>
 
       {/* SEED */}
-      <div className="p-[12px] border rounded-[10px] text-center">
-        <div className="text-[12px]">СЕМЕНА</div>
-        <div className="text-[14px] uppercase">{record.seed_ru}</div>
-      </div>
-
-      {/* INFO */}
-      <div className="grid grid-cols-2 gap-[12px]">
-        <div>
-          <div className="text-[12px]">СМЕНА</div>
-          <div>{record.shift}</div>
-        </div>
-
-        <div className="text-right">
-          <div className="text-[12px]">КОНТРОЛЬ</div>
-          {/* <div>
-            {ws.control === null
-              ? "Ожидание"
-              : ws.control
-              ? "Пройден"
-              : "Не пройден"}
-          </div> */}
+      <div className="bg-gray-50 rounded-xl p-3 text-center">
+        <div className="text-xs text-gray-500">СЕМЕНА</div>
+        <div className="font-medium uppercase">
+          {record.seed_ru}
         </div>
       </div>
 
-      {/* PROGRESS */}
-      <div>
-        {/* <div className="text-[12px] text-center">
-          {ctrl.completedAmount} / {ctrl.requiredAmount}
-        </div>
-
-        <div className="h-[8px] bg-gray-200 rounded-full">
-          <div
-            className="h-full bg-blue-500"
-            style={{ width: `${ctrl.progress}%` }}
-          />
-        </div> */}
-      </div>
+      {/* STEPPER */}
+      <Stepper current={rawStatus} />
 
       {/* STATUS */}
-      <div className="p-[12px] border rounded-[10px] text-center">
-        <div className="font-semibold">{rawStatus}</div>
+      <div className="text-center">
+        <div className="text-xs text-gray-500">Текущий статус</div>
+        <div className={`text-lg font-semibold ${getStatusColor(rawStatus)}`}>
+          {STATE_LABELS[rawStatus] || rawStatus}
+        </div>
 
-        {/* {ctrl.isRunning && (
-          <div className="text-[12px]">
-            Лоток {ws.turn} / {ctrl.requiredAmount}
+        {beginState === "error" && (
+          <div className="text-red-500 text-sm mt-1">
+            Требуется действие оператора
           </div>
         )}
-
-        {ctrl.isRetrying && (
-          <div className="text-red-500 text-[12px]">
-            ⚠️ Повтор
-          </div>
-        )} */}
       </div>
 
       {/* ACTIONS */}
-      <div className="flex gap-[8px]">
+      <div className="flex gap-2">
         <button
-          disabled={!isConnected}
-          onClick={() => {
-            // ctrl.setIsRunning(true);
-            console.log(record);
-            startBegin(record, record.reports ?? []);
-          }}
-          className="flex-1 py-[10px] rounded bg-blue-500 text-white disabled:opacity-50"
+          disabled={!isConnected || beginState === "running"}
+          onClick={() => startBegin(record)}
+          className="flex-1 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-40"
         >
           Начать
         </button>
 
         <button
           disabled={!isConnected}
-          onClick={() => {
-            // ctrl.setIsRunning(false);
-            sendMessage({ type: "STOP" });
-          }}
-          className="flex-1 py-[10px] rounded bg-red-500 text-white disabled:opacity-50"
+          onClick={() => sendMessage({ type: "STOP" })}
+          className="flex-1 py-2 rounded-lg bg-red-500 text-white disabled:opacity-40"
         >
           Стоп
         </button>
-
-        <button
-          disabled={!isConnected}
-          onClick={() => sendMessage({ type: "SET STATUS READY" })}
-          className="flex-1 py-[10px] rounded bg-gray-500 text-white"
-        >
-          DEV: READY
-        </button>
       </div>
+
+      {/* OPERATOR ACTIONS */}
       {availableActions && (
-        <div style={{ marginTop: 20 }}>
-          {availableActions.includes("RETRY") && (
+        <div className="flex gap-2">
+          {availableActions.map((a) => (
             <button
-            className="flex-1 py-[10px] rounded bg-gray-500 text-white"
-            onClick={() => sendOperatorAction("RETRY")}
+              key={a}
+              onClick={() => sendOperatorAction(a as any)}
+              className="flex-1 py-2 rounded-lg bg-yellow-500 text-white"
             >
-              Retry
+              {a}
             </button>
-          )}
-
-          {availableActions.includes("SKIP") && (
-            <button
-            onClick={() => sendOperatorAction("SKIP")}
-            className="flex-1 py-[10px] rounded bg-gray-500 text-white"
-            >
-              Skip
-            </button>
-          )}
-
-          {availableActions.includes("ABORT") && (
-            <button
-            onClick={() => sendOperatorAction("ABORT")}
-            className="flex-1 py-[10px] rounded bg-gray-500 text-white"
-            >
-              Abort
-            </button>
-          )}
+          ))}
         </div>
       )}
     </div>

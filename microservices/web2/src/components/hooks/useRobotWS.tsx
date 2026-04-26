@@ -1,87 +1,44 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import type { TaskRecord } from "../../types/task";
-import type { Report } from "../../types/reports";
-
-type ConnectionStatus = "connecting" | "connected" | "disconnected";
-type BeginState = "idle" | "running" | "error" | "done";
-
-type UseWSConnectionParams = {
-  token: string | null;
-  onMessage: (msg: any) => void;
-  onOpen?: () => void;
-  onClose?: () => void;
-  onFatal?: () => void;
-};
+import { Reducer } from "./machineState";
 
 const WS_URL = "/ws";
 const MAX_RECONNECTS = 5;
 
-export function useWSConnection({
-  token,
-  onMessage,
-  onOpen,
-  onClose,
-  onFatal,
-}: UseWSConnectionParams) {
+export function useWSConnection(token: string | null) {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttempts = useRef(0);
-  const isMountedRef = useRef(false);
-
-  // 🔥 очередь сообщений
   const queueRef = useRef<any[]>([]);
 
-  const [rawStatus, setRawStatus] = useState<string>("STAND BY");
-  const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [availableActions, setAvailableActions] = useState<string[] | null>(null);
-  const [connectionStatus, setConnectionStatus] =
-    useState<ConnectionStatus>("connecting");
-
-  const [beginState, setBeginState] = useState<BeginState>("idle");
+  const [state, dispatch] = useReducer(Reducer, {
+    connection: "connecting",
+    deviceReady: false,
+    status: "STAND BY",
+    beginState: "idle",
+    iteration: null,
+    availableActions: null,
+  });
 
   // ================= SEND =================
-  const sendMessage = (obj: unknown) => {
-    console.log("WS STATE:", wsRef.current?.readyState);
+  const sendMessage = (msg: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(obj));
+      wsRef.current.send(JSON.stringify(msg));
     } else {
-      queueRef.current.push(obj);
+      queueRef.current.push(msg);
     }
   };
 
   // ================= BEGIN =================
-  const startBegin = (record: TaskRecord, reports: Report[] = []) => {
-    console.log("START BEGIN, status:", rawStatus, isConnected, beginState);
-
-    // 🔒 защита от неправильных состояний
-    if (!isConnected) {
-      console.warn("Device not connected");
-      return;
-    }
-
-    if (rawStatus !== "READY" && rawStatus !== "WAIT") {
-      console.warn("Device not ready:", rawStatus);
-      return;
-    }
-
-    if (beginState !== "idle" && beginState !== "done") {
-      console.warn("Begin already in progress or error state");
-      return;
-    }
-
-    const nextTurn =
-      reports.length > 0
-        ? Math.max(...reports.map((r) => r.turn)) + 1
-        : 1;
+  const startBegin = (record: TaskRecord) => {
+    if (!state.deviceReady) return;
+    if (state.beginState !== "idle" && state.beginState !== "done") return;
 
     sendMessage({
-      type: "BEGIN",
-      id: record.id,
+      type: "START",
       params: {
         shift: record.shift,
         number: record.number,
         receipt: record.receipt,
-        turn: nextTurn,
         required_amount: record.required_amount,
         bunker: record.bunker,
         gcode: record.gcode,
@@ -89,155 +46,98 @@ export function useWSConnection({
         seed: record.seed,
       },
     });
-
-    setBeginState("running");
   };
 
-  // ================= OPERATOR =================
-  const sendOperatorAction = (action: "RETRY" | "SKIP" | "ABORT") => {
-    console.log("SEND ACTION:", action);
-
+  // ================= ACTION =================
+  const sendOperatorAction = (choice: "RETRY" | "SKIP" | "ABORT") => {
     sendMessage({
-      type: "BEGIN", // 🔥 ВАЖНО: оставляем BEGIN
-      choice: action,
+      type: "START",
+      choice,
     });
   };
 
   // ================= CONNECT =================
-  const connectWS = () => {
+  const connect = () => {
     if (wsRef.current) return;
-    if (!isMountedRef.current) return;
-
-    if (reconnectAttempts.current >= MAX_RECONNECTS) {
-      onFatal?.();
-      return;
-    }
-
-    setConnectionStatus("connecting");
+    if (reconnectAttempts.current >= MAX_RECONNECTS) return;
 
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
 
     ws.onopen = () => {
-      setConnectionStatus("connected");
+      dispatch({ type: "WS_OPEN" });
       reconnectAttempts.current = 0;
 
       sendMessage({ type: "AUTH", token: "Bearer " + token });
 
-      // 🔥 отправка очереди
-      queueRef.current.forEach((msg) =>
-        ws.send(JSON.stringify(msg))
-      );
+      queueRef.current.forEach((m) => ws.send(JSON.stringify(m)));
       queueRef.current = [];
-
-      onOpen?.();
     };
 
-    ws.onmessage = (event: MessageEvent) => {
-      try {
-        const msg = JSON.parse(event.data);
-        console.log("WS:", msg);
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      console.log("WS:", msg);
 
-        if (msg.type === "AUTH" && msg.status === "OK") {
-          sendMessage({ type: "STATUS" });
-          sendMessage({ type: "BOOT" });
-        }
+      if (msg.type === "AUTH" && msg.status === "OK") {
+        dispatch({ type: "AUTH_OK" });
+        sendMessage({ type: "STATUS" });
+        sendMessage({ type: "BOOT" });
+        return;
+      }
 
-        switch (msg.type) {
-          case "STATUS":
-            setRawStatus(msg.status);
-            break;
+      if (msg.type === "STATE") {
+        dispatch({
+          type: "STATE",
+          status: msg.status,
+          iteration: msg.Iteration,
+        });
+        return;
+      }
 
-          case "SET STATUS READY":
-            sendMessage({ type: "STATUS" });
-            break;
+      if (msg.type === "DEVICE" && msg.status?.includes("ACK")) {
+        dispatch({ type: "DEVICE_ACK" });
+        return;
+      }
 
-          case "DEVICE":
-            if (msg.status?.includes("ACK")) {
-              setIsConnected(true);
-            }
-            break;
+      if (msg.type === "BOOT" && msg.status === "OK") {
+        dispatch({ type: "BOOT_OK" });
+        return;
+      }
 
-          case "BOOT":
-            if (msg.status === "OK") {
-              setIsConnected(true);
-            }
-            break;
-
-          case "BEGIN":
-            setRawStatus(msg.status);
-
-            if (msg.actions) {
-              setAvailableActions(msg.actions);
-            } else {
-              setAvailableActions(null);
-            }
-
-            if (msg.status === "START") {
-              setBeginState("running");
-            } else if (msg.status === "END") {
-              setBeginState("done");
-            } else if (
-              msg.status === "ERROR" ||
-              msg.status === "WAIT_ACTION"
-            ) {
-              setBeginState("error");
-            }
-
-            break;
-        }
-
-        onMessage(msg);
-      } catch (err) {
-        console.error("WS parse error:", err);
+      if (msg.actions) {
+        dispatch({ type: "ACTIONS", actions: msg.actions });
       }
     };
 
-    ws.onclose = (e) => {
-      console.log("WS CLOSED", e);
-
+    ws.onclose = () => {
+      dispatch({ type: "WS_CLOSE" });
       wsRef.current = null;
-      if (!isMountedRef.current) return;
 
-      setConnectionStatus("disconnected");
       reconnectAttempts.current += 1;
-
-      const delay = Math.min(2000 * reconnectAttempts.current, 10000);
-      reconnectTimeout.current = setTimeout(connectWS, delay);
-
-      onClose?.();
+      setTimeout(connect, 2000);
     };
 
     ws.onerror = () => {
-      setConnectionStatus("disconnected");
       ws.close();
     };
   };
 
   useEffect(() => {
-    isMountedRef.current = true;
-    connectWS();
-
-    return () => {
-      isMountedRef.current = false;
-
-      if (reconnectTimeout.current) {
-        clearTimeout(reconnectTimeout.current);
-      }
-
-      wsRef.current?.close();
-    };
+    connect();
+    return () => wsRef.current?.close();
   }, []);
 
   return {
+    // 🔥 UI-friendly API
     sendMessage,
-    connectionStatus,
-    rawStatus,
-    isConnected,
-
-    beginState,
     startBegin,
     sendOperatorAction,
-    availableActions,
+
+    rawStatus: state.status,
+    beginState: state.beginState,
+    availableActions: state.availableActions,
+
+    connectionStatus: state.connection,
+    isConnected: state.connection === "connected" && state.deviceReady,
   };
 }
