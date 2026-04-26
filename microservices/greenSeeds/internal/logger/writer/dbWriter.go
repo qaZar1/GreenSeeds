@@ -44,11 +44,13 @@ func (w *DbWriter) WriteLevel(level zerolog.Level, p []byte) (n int, err error) 
 		log.Username = &nilStr
 	}
 
+	w.DB.Get(&log.UserId, "SELECT id FROM green_seeds.users WHERE username = :username", log.Username)
+
 	log.Lvl = strings.ToUpper(log.Lvl)
 
 	const query = `
-INSERT INTO green_seeds.logs (dt, lvl, request_id, msg, caller, username)
-VALUES (:dt, :lvl, :request_id, :msg, :caller, :username);`
+INSERT INTO green_seeds.logs (dt, lvl, request_id, msg, caller, user_id)
+VALUES (:dt, :lvl, :request_id, :msg, :caller, :user_id);`
 
 	result, err := w.DB.NamedExec(query, log)
 	if err != nil {

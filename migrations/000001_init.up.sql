@@ -50,20 +50,25 @@ CREATE TABLE IF NOT EXISTS green_seeds.assignments (
 CREATE TABLE IF NOT EXISTS green_seeds.shifts (
     shift SERIAL,
     dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    username VARCHAR(20),
+    user_id INT,
     deleted_at TIMESTAMP WITH TIME ZONE,
-    FOREIGN KEY (username) REFERENCES green_seeds.users(username),
+    FOREIGN KEY (user_id) REFERENCES green_seeds.users(id),
     PRIMARY KEY (shift)
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.users (
-    username VARCHAR(20) NOT NULL UNIQUE,
+    id SERIAL,
+    username VARCHAR(20) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    full_name DVARCHAR(50) NOT NULL,
+    full_name VARCHAR(50) NOT NULL,
     is_admin BOOLEAN DEFAULT FALSE,
     deleted_at TIMESTAMP WITH TIME ZONE,
-    PRIMARY KEY (username)
+    PRIMARY KEY (id)
 );
+
+CREATE UNIQUE INDEX users_username_unique_active
+ON green_seeds.users (username)
+WHERE deleted_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS green_seeds.reports (
     id SERIAL,
@@ -88,7 +93,7 @@ CREATE TABLE IF NOT EXISTS green_seeds.logs (
     request_id VARCHAR(255),
     msg TEXT,
     caller VARCHAR(512),
-    username VARCHAR(20),
+    user_id INT,
     PRIMARY KEY (id)
 );
 
@@ -107,7 +112,7 @@ CREATE TABLE IF NOT EXISTS calibration (
     second_photo_path TEXT,
     dx REAL,
     dy REAL,
-    cir REAL,
+    steps REAL,
     d_per_step REAL,
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at DATETIME DEFAULT (datetime('now'))
 );

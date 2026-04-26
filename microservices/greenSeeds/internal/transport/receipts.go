@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/Impisigmatus/service_core/log"
 	"github.com/go-chi/chi/v5"
@@ -42,7 +43,7 @@ func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	addedReceipt, err := transport.service.AddReceipts(receipt)
+	addedReceipt, err := transport.app.AddReceipts(receipt)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add receipts: %w", err))
 		return
@@ -71,7 +72,7 @@ func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Re
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiReceiptsGet(w http.ResponseWriter, r *http.Request) {
-	receipts, err := transport.service.GetReceipts()
+	receipts, err := transport.app.GetReceipts()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipts: %w", err))
 		return
@@ -102,9 +103,15 @@ func (transport *Transport) GetApiReceiptsGet(w http.ResponseWriter, r *http.Req
 func (transport *Transport) GetApiReceiptsGetReceipt(w http.ResponseWriter, r *http.Request) {
 	receiptName := chi.URLParam(r, "receipt")
 
-	receipt, err := transport.service.GetReceiptsByReceipt(receiptName)
+	receiptNum, err := strconv.Atoi(receiptName)
+	if err != nil{
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %w", err))
+		return
+	}
+
+	receipt, err := transport.app.GetReceiptsByReceipt(receiptNum)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt by receipt: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %w", err))
 		return
 	}
 
@@ -140,7 +147,7 @@ func (transport *Transport) PutApiReceiptsUpdate(w http.ResponseWriter, r *http.
 		return
 	}
 
-	updatedReceipt, err := transport.service.UpdateReceipts(receipt)
+	updatedReceipt, err := transport.app.UpdateReceipts(receipt)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %w", err))
 		return
@@ -179,7 +186,13 @@ func (transport *Transport) DeleteApiReceiptsDelete(w http.ResponseWriter, r *ht
 
 	receiptName := chi.URLParam(r, "receipt")
 
-	ok, err := transport.service.DeleteReceipts(receiptName)
+	receiptNum, err := strconv.Atoi(receiptName)
+	if err != nil{
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %w", err))
+		return
+	}
+
+	ok, err = transport.app.DeleteReceipts(receiptNum)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return

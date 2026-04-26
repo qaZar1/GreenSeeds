@@ -11,6 +11,8 @@ type Claims struct {
 
 	Username  string    `json:"username"`
 	Role      string    `json:"role"`
+	UserId    *int64    `json:"user_id"`
+	FullName  string    `json:"full_name"`
 	IssuedAt  time.Time `json:"issued_at"`
 	ExpiresAt time.Time `json:"expires_at"`
 	ExpiresIn int       `json:"expires_in"`

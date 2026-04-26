@@ -3,17 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
-	"strings"
 	"syscall"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/config"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/device"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/logger"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/logger/writer"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
@@ -78,8 +77,10 @@ func main() {
 		sqlite,
 	)
 
-	// TODO: debug
-	ProcessDataset("Proj_img")
+	opencv := opencv.NewCounting()
+	ctx := context.Background()
+
+	client := device.NewClient(ctx, cfg.Serial.Port, cfg.Serial.Baud, log)
 
 	camera := camera.NewCamera(
 		cfg.Camera.Name,
@@ -88,20 +89,22 @@ func main() {
 		cfg.Camera.VideoSize,
 	)
 
+	infra := infrastructure.New(cfg.JWT.ExpiresIn, cfg)
 	ws, err := ws.NewServer(
-		cfg.Serial.Port,
-		cfg.Serial.Baud,
-		camera,
+		client,
 		repo,
 		cfg.API.URL,
 		log,
+		infra,
+		camera,
+		&opencv,
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot create ws server")
 	}
 	defer ws.Close()
 
-	router := router.NewRouter(repo, cfg, ws, log, camera)
+	router := router.NewRouter(repo, cfg, ws, log, camera, infra)
 	if router == nil {
 		log.Error().Msg("Invalid router")
 		return
@@ -136,36 +139,36 @@ func main() {
 	}
 }
 
-// TODO: debug
-func ProcessDataset(root string) error {
-	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
+// // TODO: debug
+// func ProcessDataset(root string) error {
+// 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+// 		if err != nil {
+// 			return err
+// 		}
 
-		// пропускаем папки
-		if d.IsDir() {
-			return nil
-		}
+// 		// пропускаем папки
+// 		if d.IsDir() {
+// 			return nil
+// 		}
 
-		ext := strings.ToLower(filepath.Ext(path))
-		if ext != ".png" && ext != ".jpg" && ext != ".jpeg" {
-			return nil
-		}
+// 		ext := strings.ToLower(filepath.Ext(path))
+// 		if ext != ".png" && ext != ".jpg" && ext != ".jpeg" {
+// 			return nil
+// 		}
 
-		// относительный путь
-		rel, _ := filepath.Rel(root, path)
+// 		// относительный путь
+// 		rel, _ := filepath.Rel(root, path)
 
-		base := strings.TrimSuffix(filepath.Base(rel), filepath.Ext(rel))
+// 		base := strings.TrimSuffix(filepath.Base(rel), filepath.Ext(rel))
 
-		// папка вывода
-		outDir := filepath.Join("out", filepath.Dir(rel), base)
-		_ = os.MkdirAll(outDir, 0755)
+// 		// папка вывода
+// 		outDir := filepath.Join("out", filepath.Dir(rel), base)
+// 		_ = os.MkdirAll(outDir, 0755)
 
-		opencv := opencv.NewCounting()
-		total := opencv.Counter(path, outDir)
+// 		opencv := opencv.NewCounting()
+// 		total := opencv.Counter(path, outDir)
 
-		fmt.Printf("/%s - total seeds %d\n", rel, total)
-		return nil
-	})
-}
+// 		fmt.Printf("/%s - total seeds %d\n", rel, total)
+// 		return nil
+// 	})
+// }

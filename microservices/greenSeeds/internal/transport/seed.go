@@ -42,7 +42,7 @@ func (transport *Transport) PostApiSeedAdd(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	inserted, err := transport.service.AddSeed(seed)
+	inserted, err := transport.app.AddSeed(seed)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add seed: %w", err))
 		return
@@ -71,7 +71,7 @@ func (transport *Transport) PostApiSeedAdd(w http.ResponseWriter, r *http.Reques
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiSeedGet(w http.ResponseWriter, r *http.Request) {
-	seeds, err := transport.service.GetSeeds()
+	seeds, err := transport.app.GetSeeds()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seeds: %w", err))
 		return
@@ -102,7 +102,7 @@ func (transport *Transport) GetApiSeedGet(w http.ResponseWriter, r *http.Request
 func (transport *Transport) GetApiSeedGetSeed(w http.ResponseWriter, r *http.Request) {
 	seedId := chi.URLParam(r, "seed")
 
-	seeds, err := transport.service.GetSeedBySeed(seedId)
+	seeds, err := transport.app.GetSeedBySeed(seedId)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seed by id: %w", err))
 		return
@@ -128,7 +128,7 @@ func (transport *Transport) GetApiSeedGetSeed(w http.ResponseWriter, r *http.Req
 func (transport *Transport) GetApiSeedWithBunkers(w http.ResponseWriter, r *http.Request) {
 	seed := chi.URLParam(r, "seed")
 
-	result, err := transport.service.GetSeedWithBunkers(seed)
+	result, err := transport.app.GetSeedWithBunkers(seed)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seed by id: %w", err))
 		return
@@ -164,7 +164,7 @@ func (transport *Transport) PutApiSeedUpdate(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	updated, err := transport.service.UpdateSeed(seed)
+	updated, err := transport.app.UpdateSeed(seed)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update seed: %w", err))
 		return
@@ -203,7 +203,7 @@ func (transport *Transport) DeleteApiSeedDelete(w http.ResponseWriter, r *http.R
 
 	seedId := chi.URLParam(r, "seed")
 
-	ok, err := transport.service.DeleteSeed(seedId)
+	ok, err := transport.app.DeleteSeed(seedId)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return

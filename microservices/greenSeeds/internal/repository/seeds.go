@@ -14,6 +14,7 @@ type ISeedsRepository interface {
 	UpdateSeeds(seeds models.Seeds) (models.Seeds, error)
 	DeleteSeeds(seedName string) (bool, error)
 	GetSeedsWithBunkers(seed string) ([]models.SeedsWithBunker, error)
+	GetBestBunker(seed string) (models.SeedsWithBunker, error)
 }
 
 type seedsRepository struct {
@@ -64,9 +65,8 @@ RETURNING seed, seed_ru, min_density, max_density, tank_capacity`
 
 func (se *seedsRepository) GetSeeds() ([]models.Seeds, error) {
 	const query = `
-SELECT seed, seed_ru, min_density, max_density, tank_capacity
-FROM green_seeds.seeds
-WHERE deleted_at IS NULL;`
+SELECT seed, seed_ru, min_density, max_density, tank_capacity, deleted_at
+FROM green_seeds.seeds;`
 
 	var seeds []models.Seeds
 	if err := se.db.Select(&seeds, query); err != nil {
@@ -96,9 +96,10 @@ UPDATE green_seeds.seeds
 SET	seed_ru = :seed_ru,
 	min_density = :min_density,
 	max_density = :max_density,
-	tank_capacity = :tank_capacity
-WHERE seed = :seed AND deleted_at IS NULL
-RETURNING seed, seed_ru, min_density, max_density, tank_capacity`
+	tank_capacity = :tank_capacity,
+	deleted_at = :deleted_at
+WHERE seed = :seed
+RETURNING seed, seed_ru, min_density, max_density, tank_capacity, deleted_at`
 
 	rows, err := se.db.NamedQuery(query, seeds)
 	if err != nil {
@@ -161,3 +162,33 @@ WHERE s.seed = $1 AND s.deleted_at IS NULL;`
 
 	return seeds, nil
 }
+
+func (se *seedsRepository) GetBestBunker(seed string) (models.SeedsWithBunker, error) {
+	const query = `
+SELECT 
+	s.seed_ru,
+	s.seed,
+	s.min_density,
+	s.max_density,
+	s.tank_capacity,
+	p.amount,
+	b.bunker
+FROM green_seeds.seeds s
+LEFT JOIN green_seeds.placement p
+	ON p.seed = s.seed
+LEFT JOIN green_seeds.bunkers b 
+	ON p.bunker = b.bunker
+WHERE s.seed = $1 
+	AND s.deleted_at IS NULL
+	AND p.amount > 0
+ORDER BY p.amount DESC
+LIMIT 1;`
+
+	var seeds models.SeedsWithBunker
+	if err := se.db.Get(&seeds, query, seed); err != nil {
+		return models.SeedsWithBunker{}, err
+	}
+
+	return seeds, nil
+}
+

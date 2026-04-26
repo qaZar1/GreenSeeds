@@ -12,6 +12,7 @@ type IReportsRepository interface {
 	DeleteReports(shift int, number int, receipt int) (bool, error)
 	GetReportsById(id int) (models.Reports, error)
 	GetReportsByAssignment(shift int, number int, receipt int) ([]models.Reports, error)
+	GetNotSuccessfulAssignments(shift int, number int, receipt int) ([]models.Reports, error)
 }
 
 type reportsRepository struct {
@@ -152,11 +153,11 @@ SELECT
 	r.mark,
 	u.full_name
 FROM green_seeds.reports r
-left join green_seeds.shifts s
-on s.shift = r.shift
-left join green_seeds.users u
-on s.username = u.username
-WHERE id = $1;`
+LEFT JOIN green_seeds.shifts s
+ON s.shift = r.shift
+LEFT JOIN green_seeds.users u
+ON s.user_id = u.id
+WHERE r.id = $1;`
 
 	var report models.Reports
 	if err := rep.db.Get(&report, query, id); err != nil {
@@ -181,11 +182,45 @@ SELECT
 	r.mark,
 	u.full_name
 FROM green_seeds.reports r
-left join green_seeds.shifts s
-on s.shift = r.shift
-left join green_seeds.users u
-on s.username = u.username
+LEFT JOIN green_seeds.shifts s
+ON s.shift = r.shift
+LEFT JOIN green_seeds.users u
+ON s.user_id = u.id
 WHERE r.shift = $1 AND r.number = $2 AND r.receipt = $3
+ORDER BY r.turn ASC;`
+
+	var reports []models.Reports
+	if err := rep.db.Select(&reports, query, shift, number, receipt); err != nil {
+		return nil, err
+	}
+
+	return reports, nil
+}
+
+func (rep *reportsRepository) GetNotSuccessfulAssignments(
+	shift int,
+	number int,
+	receipt int,
+) ([]models.Reports, error) {
+	const query = `
+SELECT
+	r.id,
+	r.shift,
+	r.number,
+	r.receipt,
+	r.turn,
+	r.dt,
+	COALESCE(r.success, FALSE) as success,
+	r.error,
+	r.solution,
+	r.mark,
+	u.full_name
+FROM green_seeds.reports r
+LEFT JOIN green_seeds.shifts s
+ON s.shift = r.shift
+LEFT JOIN green_seeds.users u
+ON s.user_id = u.id
+WHERE r.shift = $1 AND r.number = $2 AND r.receipt = $3 AND success IS NOT TRUE
 ORDER BY r.turn ASC;`
 
 	var reports []models.Reports

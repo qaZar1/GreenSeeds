@@ -15,24 +15,24 @@ import (
 
 // Set godoc
 //
-// @Router /api/users/get/{username} [get]
+// @Router /api/users/get/{id} [get]
 // @Summary Получение пользователя
 // @Description При обращении, возвращает пользователя по его username
 //
 // @Tags Users
 // @Produce      application/json
 //
-// @Param username path string true "User username"
+// @Param id path int true "User id"
 //
 // @Success 200 {object} user "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiUserGetUsername(w http.ResponseWriter, r *http.Request) {
-	username := chi.URLParam(r, "username")
-	user, err := transport.service.GetUserByUsername(username)
+	userId := chi.URLParam(r, "user_id")
+	user, err := transport.app.GetUserById(userId)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not get user by username: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not get user by id: %w", err))
 		return
 	}
 
@@ -41,7 +41,7 @@ func (transport *Transport) GetApiUserGetUsername(w http.ResponseWriter, r *http
 
 // Set godoc
 //
-// @Router /api/users/checkAll [get]
+// @Router /api/users/get [get]
 // @Summary Получение всех пользователей
 // @Description При обращении, возвращает всех пользователей
 //
@@ -53,7 +53,7 @@ func (transport *Transport) GetApiUserGetUsername(w http.ResponseWriter, r *http
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiCheckAllUsers(w http.ResponseWriter, r *http.Request) {
-	allUsers, err := transport.service.CheckAllUsers()
+	allUsers, err := transport.app.CheckAllUsers()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not get all users: %w", err))
 		return
@@ -97,7 +97,7 @@ func (transport *Transport) PutApiChangePassword(w http.ResponseWriter, r *http.
 		return
 	}
 
-	ok, err = transport.service.ChangePassword(updatePassword)
+	ok, err = transport.app.ChangePassword(updatePassword)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not change password: %w", err))
 		return
@@ -110,8 +110,8 @@ func (transport *Transport) PutApiChangePassword(w http.ResponseWriter, r *http.
 
 	log.Warn().Ctx(r.Context()).Msg(
 		fmt.Sprintf(
-			"The password has been reset for: %s",
-			updatePassword.Username,
+			"The password has been reset for: %d",
+			updatePassword.Id,
 		),
 	)
 
@@ -143,7 +143,7 @@ func (transport *Transport) DeleteApiRemoveUser(w http.ResponseWriter, r *http.R
 
 	username := chi.URLParam(r, "username")
 
-	ok, err := transport.service.RemoveUser(username)
+	ok, err := transport.app.RemoveUser(username)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return
@@ -188,7 +188,7 @@ func (transport *Transport) PutApiUpdateUser(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	ok, err := transport.service.Update(user)
+	ok, err := transport.app.Update(user)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not update user: %w", err))
 		return

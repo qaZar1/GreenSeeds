@@ -1,11 +1,11 @@
 package repository
 
 import (
+	"github.com/jmoiron/sqlx"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/sqlite"
 	"github.com/rs/zerolog/log"
-
-	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Repository struct {
@@ -32,13 +32,28 @@ func NewRepository(db *sqlx.DB, sqlite *sqlite.SQLite) *Repository {
 		log.Panic().Err(err).Msg("Can not check users in DB")
 	}
 	if users == nil {
-		uspass := "admin"
+		pass := "admin"
+
+		newPass, err := bcrypt.GenerateFromPassword([]byte(pass), 10)
+		if err != nil {
+			log.Panic().Err(err).Msg("Can not generate password hash")
+		}
+
+		tmp := string(newPass)
 		admin := true
-		usersRepo.AddUser(models.User{
-			Username: uspass,
-			Password: &uspass,
+
+		newUser := models.User{
+			Username: pass,
+			Password: &tmp,
+			FullName: &pass,
 			IsAdmin:  &admin,
-		})
+		}
+		// todo сделать проверку на ошибку
+		// todo пароль должен быть хэширован
+
+		if _, err := usersRepo.AddUser(newUser); err != nil {
+			log.Panic().Err(err).Msg("Can not add user to DB")
+		}
 	}
 
 	return &Repository{

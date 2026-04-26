@@ -59,7 +59,7 @@ func (transport *Transport) GetApiLogsGet(w http.ResponseWriter, r *http.Request
 		params.DateTo = &timeTo
 	}
 
-	logs, err := transport.service.GetLogs(params)
+	logs, err := transport.app.GetLogs(params)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get logs: %w", err))
 		return

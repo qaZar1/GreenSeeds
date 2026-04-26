@@ -34,9 +34,9 @@ func (cam *Camera) TakePhoto() (*bytes.Buffer, error) {
 		"-framerate", cam.framerate,
 		"-video_size", cam.videoSize,
 		"-i", cam.cameraName,
-		"-frames:v", "1",
 		"-f", "image2",
-		"-update", "1",
+		"-frames:v", "1",
+		"-q:v", "2",
 		"pipe:1",
 	)
 
@@ -94,3 +94,133 @@ func (cam *Camera) DeletePhoto(id, name string) error {
 
 	return os.Remove(path)
 }
+
+func (cam *Camera) Run() error {
+	log.Info().Msg("Starting FFmpeg stream via ffmpeg-go")
+
+	stderr := &bytes.Buffer{}
+	cmd := exec.Command(
+		"ffmpeg",
+		"-f", cam.inputDevice,
+		"-framerate", cam.framerate,
+		"-video_size", cam.videoSize,
+		"-i", cam.cameraName,
+		"-vcodec", "libx264",
+		"-preset", "ultrafast",
+		"-tune", "zerolatency",
+		"-f", "mpegts",
+		"pipe:1",
+	)
+
+	reader, err := cmd.StdoutPipe()
+
+	log.Info().Msgf("FFmpeg stream info: %s", reader)
+
+	// Закрываем writer по завершении контекста
+	// go func() {
+	// 	<-ctx.Done()
+	// 	log.Info().Msg("Context canceled, closing ffmpeg writer")
+	// 	app.writer.Close()
+	// }()
+
+	// Подключаем stderr для логов ffmpeg
+
+	log.Info().Msgf("FFmpeg command: %s", cmd.String())
+	log.Info().Msgf("FFmpeg stderr: %s", stderr.String())
+
+	err = cmd.Run()
+
+	// Логируем stderr
+	if stderr.Len() > 0 {
+		log.Error().Msgf("FFmpeg stderr: %s", stderr.String())
+	}
+
+	if err != nil {
+		log.Error().Msgf("Failed to run ffmpeg-go: %v", err)
+		return err
+	}
+	log.Info().Msg("FFmpeg finished")
+
+	return nil
+}
+
+// // Рассылает видеопоток всем подписчикам
+// func DistributeStream(log zerolog.Logger, ctx context.Context) error {
+// 	buf := make([]byte, 1024)
+
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			log.Error().Msg("DistributeStream stopped")
+// 			return ctx.Err()
+// 		default:
+// 			n, err := app.reader.Read(buf)
+// 			if err != nil {
+// 				log.Error().Msgf("Pipe read error: %s", err)
+// 				return err
+// 			}
+// 			chunk := make([]byte, n)
+// 			copy(chunk, buf[:n])
+
+// 			app.mu.RLock()
+// 			for _, ch := range app.subscribers {
+// 				select {
+// 				case ch <- chunk:
+// 				default:
+// 					log.Info().Msg("Dropping frame for slow client")
+// 				}
+// 			}
+// 			app.mu.RUnlock()
+// 		}
+// 	}
+// }
+
+// // Отдаёт поток подключённому клиенту
+// func StreamHandler(log zerolog.Logger, w http.ResponseWriter, r *http.Request) {
+// 	log.Info().Msg("New client connected")
+// 	w.Header().Set("Content-Type", "video/mp2t")
+
+// 	clientChan := make(chan []byte, 200)
+
+// 	app.mu.Lock()
+// 	app.subscribers = append(app.subscribers, clientChan)
+// 	log.Info().Msgf("New subscriber added: %d", len(app.subscribers))
+
+// 	app.mu.Unlock()
+
+// 	defer func() {
+// 		app.mu.Lock()
+// 		for i, ch := range app.subscribers {
+// 			log.Info().Msgf("Removing client %d", i)
+// 			if ch == clientChan {
+// 				app.subscribers = append(app.subscribers[:i], app.subscribers[i+1:]...)
+// 				break
+// 			}
+// 		}
+// 		app.mu.Unlock()
+// 		close(clientChan)
+// 		log.Info().Msg("Client disconnected")
+// 	}()
+
+// 	// Отслеживание отключения клиента
+// 	ctx := r.Context()
+
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			return
+// 		case chunk, ok := <-clientChan:
+// 			if !ok {
+// 				return
+// 			}
+// 			_, err := w.Write(chunk)
+// 			if err != nil {
+// 				log.Error().Msgf("Write error: %s", err)
+// 				return
+// 			}
+
+// 			flusher := w.(http.Flusher)
+// 			flusher.Flush()
+// 		}
+// 	}
+// }

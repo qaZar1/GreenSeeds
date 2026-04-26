@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import '@fortawesome/fontawesome-free/css/all.css';
+
+:root {
+  /* Шрифт как в оригинале */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* --- Бренд --- */
+  --color-primary: #2ecc71;
+  --color-primary-hover: #27ae60;
+  --color-secondary: #34495e;
+  
+  /* --- Фон --- */
+  --bg-page: #f4f7f6;
+  --bg-card: #ffffff;
+  --bg-sidebar: #34495e;
+  --bg-hover: rgba(255, 255, 255, 0.1);
+  
+  /* --- Текст --- */
+  --text-primary: #333333;
+  --text-secondary: #7f8c8d;
+  --text-inverse: #ffffff;
+  
+  /* --- Границы --- */
+  --border-color: #e0e0e0;
+  --border-light: #eeeeee;
+  
+  /* --- Статусы --- */
+  --status-success-bg: #e8f8f5;
+  --status-success-text: #2ecc71;
+  --status-warning-bg: #fef5e7;
+  --status-warning-text: #e67e22;
+  --status-info-bg: #ebf5fb;
+  --status-info-text: #3498db;
+  --status-danger-bg: #fdedec;
+  --status-danger-text: #e74c3c;
+
+  /* --- Дата --- */
+  --datetime-icon-filter: invert(0); /* светлая тема */
+}
+
+/* === ТЁМНАЯ ТЕМА === */
+.dark {
+  /* --- Бренд --- */
+  --color-primary: #27ae60;
+  --color-primary-hover: #2ecc71;
+  --color-secondary: #2c3e50;
+  
+  /* --- Фон --- */
+  --bg-page: #111827;
+  --bg-card: #2d2d2d;
+  --bg-sidebar: #1f2937;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  
+  /* --- Текст --- */
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-inverse: #ffffff;
+  
+  /* --- Границы --- */
+  --border-color: #404040;
+  --border-light: #333333;
+  
+  /* --- Статусы (более приглушенные) --- */
+  --status-success-bg: #064e3b;
+  --status-success-text: #34d399;
+  --status-warning-bg: #78350f;
+  --status-warning-text: #fbbf24;
+  --status-info-bg: #0c4a6e;
+  --status-info-text: #60a5fa;
+  --status-danger-bg: #7f1d1d;
+  --status-danger-text: #f87171;
+
+  --datetime-icon-filter: invert(1); /* темная тема */
+}
+
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.datetime-input::-webkit-calendar-picker-indicator, .date::-webkit-calendar-picker-indicator{
+  filter: var(--datetime-icon-filter);
+}
+
+.modal-blur {
+  filter: blur(4px) brightness(0.7);
+}

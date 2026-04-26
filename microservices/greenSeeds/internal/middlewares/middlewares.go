@@ -13,6 +13,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type ctxKey string
+
+const UserCtxKey ctxKey = "user"
+
 func BearerAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository.Repository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +42,7 @@ func BearerAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository
 				return
 			}
 
-			log, ok, err := validateJWT(*claims, repo, r)
+			user, log, ok, err := validateJWT(*claims, repo, r)
 			if err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
@@ -50,6 +54,7 @@ func BearerAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository
 			}
 
 			ctx := context.WithValue(r.Context(), coreLog.CtxKey, log)
+			ctx = context.WithValue(ctx, UserCtxKey, user)
 			log = log.With().Str("username", claims.Username).Logger()
 
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -57,41 +62,60 @@ func BearerAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository
 	}
 }
 
-func validateJWT(claims models.Claims, repo *repository.Repository, r *http.Request) (zerolog.Logger, bool, error) {
+func RoleRequired(role string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			user, ok := r.Context().Value(UserCtxKey).(models.User)
+			if !ok {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			if user.IsAdmin != nil && !*user.IsAdmin {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func validateJWT(claims models.Claims, repo *repository.Repository, r *http.Request) (models.User, zerolog.Logger, bool, error) {
 	now := time.Now().Unix()
 
 	// Проверяем, что токен не просрочен
 	if claims.ExpiresAt.Unix() < now {
-		return zerolog.Logger{}, false, ErrTokenExpired
+		return models.User{}, zerolog.Logger{}, false, ErrTokenExpired
 	}
 
 	// Проверяем, что токен уже активен
 	if claims.IssuedAt.Unix() > now {
-		return zerolog.Logger{}, false, ErrTokenNotValidYet
+		return models.User{}, zerolog.Logger{}, false, ErrTokenNotValidYet
 	}
 
 	// Проверяем, что токен предназначен нам
 	if claims.Audience[0] != "service.green_seeds.api" {
-		return zerolog.Logger{}, false, ErrInvalidAudience
+		return models.User{}, zerolog.Logger{}, false, ErrInvalidAudience
 	}
 
-	user, err := repo.UsrRepo.CheckUserByUsername(claims.Username)
+	user, err := repo.UsrRepo.CheckUserById(*claims.UserId)
 	if err != nil {
-		return zerolog.Logger{}, false, ErrInvalidSubject
+		return models.User{}, zerolog.Logger{}, false, ErrInvalidSubject
 	}
 
 	if user == (models.User{}) {
-		return zerolog.Logger{}, false, ErrInvalidSubject
+		return models.User{}, zerolog.Logger{}, false, ErrInvalidSubject
 	}
 
 	log, ok := r.Context().Value(coreLog.CtxKey).(zerolog.Logger)
 	if !ok {
-		return zerolog.Logger{}, false, ErrInvalidSubject
+		return models.User{}, zerolog.Logger{}, false, ErrInvalidSubject
 	}
 
 	log = log.With().Str("username", claims.Username).Logger()
 
-	return log, true, nil
+	return user, log, true, nil
 }
 
 func LoggingMiddleware(next http.Handler) http.Handler {
@@ -111,4 +135,11 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		// 	Dur("duration", time.Since(start)).
 		// 	Msg("Request completed")
 	})
+}
+
+func WsAuthMiddleware(infra *infrastructure.Infrastructure, repo *repository.Repository) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		})
+	}
 }
