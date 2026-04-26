@@ -42,7 +42,7 @@ func (transport *Transport) PostApiShiftAdd(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	addedShift, err := transport.service.AddShift(shift)
+	addedShift, err := transport.app.AddShift(shift)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add shift: %w", err))
 		return
@@ -71,7 +71,7 @@ func (transport *Transport) PostApiShiftAdd(w http.ResponseWriter, r *http.Reque
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiShiftsGet(w http.ResponseWriter, r *http.Request) {
-	shifts, err := transport.service.GetShifts()
+	shifts, err := transport.app.GetShifts()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get shifts: %w", err))
 		return
@@ -102,7 +102,7 @@ func (transport *Transport) GetApiShiftsGet(w http.ResponseWriter, r *http.Reque
 func (transport *Transport) GetApiShiftsGetShift(w http.ResponseWriter, r *http.Request) {
 	shiftName := chi.URLParam(r, "shift")
 
-	shift, err := transport.service.GetShiftsByShift(shiftName)
+	shift, err := transport.app.GetShiftsByShift(shiftName)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get shift by shift: %w", err))
 		return
@@ -140,7 +140,7 @@ func (transport *Transport) PutApiShiftsUpdate(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	updatedShift, err := transport.service.UpdateShifts(shift)
+	updatedShift, err := transport.app.UpdateShifts(shift)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update shift: %w", err))
 		return
@@ -179,7 +179,7 @@ func (transport *Transport) DeleteApiShiftsDelete(w http.ResponseWriter, r *http
 
 	shiftName := chi.URLParam(r, "shift")
 
-	ok, err := transport.service.DeleteShifts(shiftName)
+	ok, err := transport.app.DeleteShifts(shiftName)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return
@@ -210,7 +210,7 @@ func (transport *Transport) DeleteApiShiftsDelete(w http.ResponseWriter, r *http
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiShiftsGetWithoutUser(w http.ResponseWriter, r *http.Request) {
-	shifts, err := transport.service.GetShiftsWithoutUser()
+	shifts, err := transport.app.GetShiftsWithoutUser()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get shifts: %w", err))
 		return

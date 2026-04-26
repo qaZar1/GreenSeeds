@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -10,7 +11,7 @@ type ICalibrationsRepository interface {
 	Save(tx *sqlx.Tx, step string) (bool, error)
 	GetMax() (float64, error)
 	Delete(tx *sqlx.Tx) (bool, error)
-	TxUpsert(step string) error
+	TxUpsert(step float64) error
 }
 
 type calibrationsRepository struct {
@@ -79,7 +80,7 @@ WHERE key = 'step';`
 	return rowsAffected == 1, nil
 }
 
-func (cal *calibrationsRepository) TxUpsert(step string) error {
+func (cal *calibrationsRepository) TxUpsert(step float64) error {
 	tx, err := cal.db.Beginx()
 	if err != nil {
 		return err
@@ -91,7 +92,9 @@ func (cal *calibrationsRepository) TxUpsert(step string) error {
 		return err
 	}
 
-	ok, err = cal.Save(tx, step)
+	stepStr := fmt.Sprintf("%v", step)
+
+	ok, err = cal.Save(tx, stepStr)
 	if err != nil {
 		return err
 	}

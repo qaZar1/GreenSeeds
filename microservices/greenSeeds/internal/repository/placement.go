@@ -11,7 +11,7 @@ type IPlacementRepository interface {
 	UpdatePlacement(placement models.Placement) (models.Placement, error)
 	DeletePlacement(bunker int) (bool, error)
 	GetPlacementByBunker(bunker int) (models.Placement, error)
-	DecrementSeed(bunker int) (bool, error)
+	DecrementSeed(bunker int) error
 }
 
 type placementRepository struct {
@@ -36,7 +36,7 @@ VALUES (
 	:seed,
 	:amount
 )
-RETURNING bunker, seed`
+RETURNING bunker, seed, amount`
 
 	rows, err := pl.db.NamedQuery(query, placement)
 	if err != nil {
@@ -132,22 +132,17 @@ WHERE bunker = $1`
 	return placement, nil
 }
 
-func (pl *placementRepository) DecrementSeed(bunker int) (bool, error) {
+func (pl *placementRepository) DecrementSeed(bunker int) error {
 	const query = `
 UPDATE green_seeds.placement
 SET amount = amount - 1
 WHERE bunker = $1 AND amount > 0;
 `
 
-	result, err := pl.db.Exec(query, bunker)
+	_, err := pl.db.Exec(query, bunker)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
-	}
-
-	return rowsAffected == 1, nil
+	return nil
 }

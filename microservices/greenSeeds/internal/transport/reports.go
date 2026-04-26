@@ -40,7 +40,7 @@ func (transport *Transport) PostApiReportsAdd(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	addedReport, err := transport.service.AddReport(report)
+	addedReport, err := transport.app.AddReport(report)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add report: %w", err))
 		return
@@ -69,7 +69,7 @@ func (transport *Transport) PostApiReportsAdd(w http.ResponseWriter, r *http.Req
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiReports(w http.ResponseWriter, r *http.Request) {
-	reports, err := transport.service.GetReports()
+	reports, err := transport.app.GetReports()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get reports: %w", err))
 		return
@@ -102,7 +102,7 @@ func (transport *Transport) GetApiReports(w http.ResponseWriter, r *http.Request
 func (transport *Transport) GetApiReportsById(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 
-	reports, err := transport.service.GetReportsByReport(idStr)
+	reports, err := transport.app.GetReportsByReport(idStr)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get reports by id: %w", err))
 		return
@@ -140,7 +140,7 @@ func (transport *Transport) PutApiReportsUpdate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	ok, err := transport.service.UpdateReport(report)
+	ok, err := transport.app.UpdateReport(report)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update report: %w", err))
 		return

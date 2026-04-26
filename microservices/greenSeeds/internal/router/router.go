@@ -27,8 +27,8 @@ func NewRouter(
 	ws *ws.Server,
 	logger zerolog.Logger,
 	camera *camera.Camera,
+	infra *infrastructure.Infrastructure,
 ) *chi.Mux {
-	infra := infrastructure.New(cfg.JWT.ExpiresIn, cfg)
 	transport := transport.NewTransport(repo, cfg, infra, ws, camera)
 
 	router := chi.NewRouter()
@@ -50,6 +50,12 @@ func NewRouter(
 	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
+	router.HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP)
+	router.HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
+	router.HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
+	router.HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP)
+	router.HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+
 	// swagger
 	// docs.SwaggerInfo.Title = "GreenSeeds API"
 	// docs.SwaggerInfo.Description = "API для работы с GreenSeeds"
@@ -59,6 +65,7 @@ func NewRouter(
 	// docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	router.Handle("/swagger/*", httpSwagger.WrapHandler)
+
 	router.HandleFunc("/ws", ws.HandleWS)
 
 	router.Route("/api", func(r chi.Router) {
@@ -68,94 +75,102 @@ func NewRouter(
 			middlewares.BearerAuthMiddleware(infra, repo),
 		)
 
-		r.Post("/register", transport.PostApiRegisterUser)
+		r.Get("/shifts/getWithoutUser", transport.GetApiShiftsGetWithoutUser)
+		r.Put("/shifts/update", transport.PutApiShiftsUpdate)
 
-		r.Route("/seeds", func(r chi.Router) {
-			r.Post("/add", transport.PostApiSeedAdd)
-			r.Get("/get", transport.GetApiSeedGet)
-			r.Get("/get/{seed}", transport.GetApiSeedGetSeed)
-			r.Put("/update", transport.PutApiSeedUpdate)
-			r.Delete("/delete/{seed}", transport.DeleteApiSeedDelete)
-			r.Get("/getWithBunkers/{seed}", transport.GetApiSeedWithBunkers)
-		})
+		r.Get("/assignments/active-tasks/{user_id}", transport.GetApiActiveTasks)
+		r.Get("/assignments/task/{id}", transport.GetApiTask)
 
-		r.Route("/bunkers", func(r chi.Router) {
-			r.Post("/add", transport.PostApiBunkerAdd)
-			r.Get("/get", transport.GetApiBunkerGet)
-			r.Get("/get/{bunker}", transport.GetApiBunkerGetId)
-			r.Put("/update", transport.PutApiBunkerUpdate)
-			r.Delete("/delete/{bunker}", transport.DeleteApiBunkerDelete)
-			r.Get("/getForPlacement", transport.GetApiBunkerGetForPlacement)
-		})
+		r.Get("/users/get/{user_id}", transport.GetApiUserGetUsername)
+		r.Put("/users/update", transport.PutApiUpdateUser)
+		r.Put("/users/change-password", transport.PutApiChangePassword)
 
-		r.Route("/users", func(r chi.Router) {
-			r.Get("/get", transport.GetApiCheckAllUsers)
-			r.Get("/get/{username}", transport.GetApiUserGetUsername)
-			r.Put("/update", transport.PutApiUpdateUser)
-			r.Put("/change-password", transport.PutApiChangePassword)
-			r.Delete("/delete/{username}", transport.DeleteApiRemoveUser)
-		})
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(middlewares.RoleRequired("admin"))
+			r.Post("/register", transport.PostApiRegisterUser)
 
-		r.Route("/placement", func(r chi.Router) {
-			r.Post("/add", transport.PostApiPlacementAdd)
-			r.Get("/get", transport.GetApiPlacementGet)
-			r.Get("/get/{bunker}", transport.GetApiPlacementGetBunker)
-			r.Put("/update", transport.PutApiPlacementUpdate)
-			r.Delete("/delete/{bunker}", transport.DeleteApiPlacementDelete)
-			r.Put("/fill", transport.PutApiPlacementFill)
-		})
+			r.Route("/seeds", func(r chi.Router) {
+				r.Post("/add", transport.PostApiSeedAdd)
+				r.Get("/get", transport.GetApiSeedGet)
+				r.Get("/get/{seed}", transport.GetApiSeedGetSeed)
+				r.Put("/update", transport.PutApiSeedUpdate)
+				r.Delete("/delete/{seed}", transport.DeleteApiSeedDelete)
+				r.Get("/getWithBunkers/{seed}", transport.GetApiSeedWithBunkers)
+			})
 
-		r.Route("/receipts", func(r chi.Router) {
-			r.Post("/add", transport.PostApiReceiptsAdd)
-			r.Get("/get", transport.GetApiReceiptsGet)
-			r.Get("/get/{receipt}", transport.GetApiReceiptsGetReceipt)
-			r.Put("/update", transport.PutApiReceiptsUpdate)
-			r.Delete("/delete/{receipt}", transport.DeleteApiReceiptsDelete)
-		})
+			r.Route("/bunkers", func(r chi.Router) {
+				r.Post("/add", transport.PostApiBunkerAdd)
+				r.Get("/get", transport.GetApiBunkerGet)
+				r.Get("/get/{bunker}", transport.GetApiBunkerGetId)
+				r.Put("/update", transport.PutApiBunkerUpdate)
+				r.Delete("/delete/{bunker}", transport.DeleteApiBunkerDelete)
+				r.Get("/getForPlacement", transport.GetApiBunkerGetForPlacement)
+			})
 
-		r.Route("/shifts", func(r chi.Router) {
-			r.Post("/add", transport.PostApiShiftAdd)
-			r.Get("/get", transport.GetApiShiftsGet)
-			r.Get("/get/{shift}", transport.GetApiShiftsGetShift)
-			r.Put("/update", transport.PutApiShiftsUpdate)
-			r.Delete("/delete/{shift}", transport.DeleteApiShiftsDelete)
-			r.Get("/getWithoutUser", transport.GetApiShiftsGetWithoutUser)
-		})
+			r.Route("/users", func(r chi.Router) {
+				r.Get("/get", transport.GetApiCheckAllUsers)
+				r.Delete("/delete/{username}", transport.DeleteApiRemoveUser)
+			})
 
-		r.Route("/assignments", func(r chi.Router) {
-			r.Post("/add", transport.PostApiAssignmentsAdd)
-			r.Get("/get", transport.GetApiAssignmentsGet)
-			r.Get("/get/{id}", transport.GetApiAssignmentsGetAssignment)
-			r.Put("/update", transport.PutApiAssignmentsUpdate)
-			r.Delete("/delete/{id}", transport.DeleteApiAssignmentsDelete)
-			r.Get("/active-tasks/{username}", transport.GetApiActiveTasks)
-			r.Get("/task/{id}", transport.GetApiTask)
-		})
+			r.Route("/placement", func(r chi.Router) {
+				r.Post("/add", transport.PostApiPlacementAdd)
+				r.Get("/get", transport.GetApiPlacementGet)
+				r.Get("/get/{bunker}", transport.GetApiPlacementGetBunker)
+				r.Put("/update", transport.PutApiPlacementUpdate)
+				r.Delete("/delete/{bunker}", transport.DeleteApiPlacementDelete)
+				r.Put("/fill", transport.PutApiPlacementFill)
+			})
 
-		r.Route("/reports", func(r chi.Router) {
-			r.Post("/add", transport.PostApiReportsAdd)
-			r.Get("/get", transport.GetApiReports)
-			r.Get("/get/{id}", transport.GetApiReportsById)
-		})
+			r.Route("/receipts", func(r chi.Router) {
+				r.Post("/add", transport.PostApiReceiptsAdd)
+				r.Get("/get", transport.GetApiReceiptsGet)
+				r.Get("/get/{receipt}", transport.GetApiReceiptsGetReceipt)
+				r.Put("/update", transport.PutApiReceiptsUpdate)
+				r.Delete("/delete/{receipt}", transport.DeleteApiReceiptsDelete)
+			})
 
-		r.Route("/logs", func(r chi.Router) {
-			r.Get("/get", transport.GetApiLogsGet)
+			r.Route("/shifts", func(r chi.Router) {
+				r.Post("/add", transport.PostApiShiftAdd)
+				r.Get("/get", transport.GetApiShiftsGet)
+				r.Get("/get/{shift}", transport.GetApiShiftsGetShift)
+
+				r.Delete("/delete/{shift}", transport.DeleteApiShiftsDelete)
+			})
+
+			r.Route("/assignments", func(r chi.Router) {
+				r.Post("/add", transport.PostApiAssignmentsAdd)
+				r.Get("/get", transport.GetApiAssignmentsGet)
+				r.Get("/get/{id}", transport.GetApiAssignmentsGetAssignment)
+				r.Put("/update", transport.PutApiAssignmentsUpdate)
+				r.Delete("/delete/{id}", transport.DeleteApiAssignmentsDelete)
+			})
+
+			r.Route("/reports", func(r chi.Router) {
+				r.Post("/add", transport.PostApiReportsAdd)
+				r.Get("/get", transport.GetApiReports)
+				r.Get("/get/{id}", transport.GetApiReportsById)
+			})
+
+			r.Route("/logs", func(r chi.Router) {
+				r.Get("/get", transport.GetApiLogsGet)
+			})
+
+			r.Route("/device-settings", func(r chi.Router) {
+				r.Post("/add", transport.PostApiDeviceSettingsAdd)
+				r.Get("/get", transport.GetApiDeviceSettingsGet)
+				r.Get("/get/{key}", transport.GetApiDeviceSettingsGetKey)
+				r.Put("/update", transport.PutApiDeviceSettingsUpdate)
+				r.Delete("/delete/{key}", transport.DeleteApiDeviceSettingsDelete)
+			})
 		})
 
 		r.Route("/calibration", func(r chi.Router) {
 			r.Post("/handshake", transport.PostApiCalibrationHandshake)
-			r.Post("/photo", transport.PostApiCalibrationPhoto)
+			r.Post("/photo/{number-of-photo}", transport.PostApiCalibrationPhoto)
 			r.Post("/clear", transport.PostApiCalibrationClear)
-			r.Post("/found", transport.PostApiCalibrationFound)
+			r.Post("/calculate", transport.PostApiCalibrationCalc)
 			r.Post("/save", transport.PostApiCalibrationSave)
-		})
-
-		r.Route("/device-settings", func(r chi.Router) {
-			r.Post("/add", transport.PostApiDeviceSettingsAdd)
-			r.Get("/get", transport.GetApiDeviceSettingsGet)
-			r.Get("/get/{key}", transport.GetApiDeviceSettingsGetKey)
-			r.Put("/update", transport.PutApiDeviceSettingsUpdate)
-			r.Delete("/delete/{key}", transport.DeleteApiDeviceSettingsDelete)
+			// r.Get("/stream", transport.GetApiCalibrationStream)
 		})
 	})
 

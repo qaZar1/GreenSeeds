@@ -10,6 +10,7 @@ type Log struct {
 	Msg       string    `db:"msg" json:"msg"`
 	Call      *string   `db:"caller" json:"caller"`
 	Username  *string   `db:"username" json:"username"`
+	UserId    *int64    `db:"user_id" json:"user_id"`
 } // @name log
 
 type LogsParams struct {

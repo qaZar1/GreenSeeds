@@ -9,7 +9,7 @@ import (
 
 type IUsersRepository interface {
 	AddUser(user models.User) (bool, error)
-	CheckUserByUsername(username string) (models.User, error)
+	CheckUserById(id int64) (models.User, error)
 	CheckAllUsers() ([]models.User, error)
 	Update(user models.User) (bool, error)
 	Delete(username string) (bool, error)
@@ -54,14 +54,14 @@ INSERT INTO green_seeds.users (
 	return rowsAffected == 1, nil
 }
 
-func (r *usersRepository) CheckUserByUsername(username string) (models.User, error) {
+func (r *usersRepository) CheckUserById(id int64) (models.User, error) {
 	const query = `
-SELECT username, full_name, is_admin
+SELECT id, username, full_name, is_admin
 FROM green_seeds.users
-WHERE username = $1 AND deleted_at IS NULL;`
+WHERE id = $1 AND deleted_at IS NULL;`
 
 	var user models.User
-	if err := r.db.Get(&user, query, username); err != nil {
+	if err := r.db.Get(&user, query, id); err != nil {
 		return models.User{}, err
 	}
 
@@ -70,7 +70,7 @@ WHERE username = $1 AND deleted_at IS NULL;`
 
 func (r *usersRepository) CheckUserByUsernameWithPwd(username string) (models.User, error) {
 	const query = `
-SELECT username, password, full_name, is_admin
+SELECT id, username, password, full_name, is_admin
 FROM green_seeds.users
 WHERE username = $1 AND deleted_at IS NULL;`
 
@@ -85,6 +85,7 @@ WHERE username = $1 AND deleted_at IS NULL;`
 func (r *usersRepository) CheckAllUsers() ([]models.User, error) {
 	const query = `
 SELECT
+	id,
     username,
 	full_name,
 	is_admin
@@ -145,7 +146,7 @@ func (r *usersRepository) UpdatePassword(user models.UpdatePassword) (bool, erro
 	const query = `
 UPDATE green_seeds.users
 SET password = COALESCE(:new_password, password)
-WHERE username = :username AND deleted_at IS NULL;
+WHERE id = :id AND deleted_at IS NULL;
 `
 
 	result, err := r.db.NamedExec(query, user)

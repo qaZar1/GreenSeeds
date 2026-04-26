@@ -48,7 +48,7 @@ func (transport *Transport) PostApiDeviceSettingsAdd(w http.ResponseWriter, r *h
 		return
 	}
 
-	inserted, err := transport.service.AddSetting(deviceSettings)
+	inserted, err := transport.app.AddSetting(deviceSettings)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add device settings: %w", err))
 		return
@@ -79,7 +79,7 @@ func (transport *Transport) PostApiDeviceSettingsAdd(w http.ResponseWriter, r *h
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiDeviceSettingsGet(w http.ResponseWriter, r *http.Request) {
-	deviceSettings, err := transport.service.GetSettings()
+	deviceSettings, err := transport.app.GetSettings()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get device settings: %w", err))
 		return
@@ -110,7 +110,7 @@ func (transport *Transport) GetApiDeviceSettingsGet(w http.ResponseWriter, r *ht
 func (transport *Transport) GetApiDeviceSettingsGetKey(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 
-	deviceSettings, err := transport.service.GetSettingsByKey(key)
+	deviceSettings, err := transport.app.GetSettingsByKey(key)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get device settings by key: %w", err))
 		return
@@ -152,7 +152,7 @@ func (transport *Transport) PutApiDeviceSettingsUpdate(w http.ResponseWriter, r 
 		return
 	}
 
-	updated, err := transport.service.UpdateSetting(deviceSettings)
+	updated, err := transport.app.UpdateSetting(deviceSettings)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update settings: %w", err))
 		return
@@ -193,7 +193,7 @@ func (transport *Transport) DeleteApiDeviceSettingsDelete(w http.ResponseWriter,
 
 	key := chi.URLParam(r, "key")
 
-	ok, err := transport.service.DeleteSetting(key)
+	ok, err := transport.app.DeleteSetting(key)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return

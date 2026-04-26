@@ -55,10 +55,11 @@ RETURNING shift, dt`
 
 func (sh *shiftsRepository) GetShifts() ([]models.Shifts, error) {
 	const query = `
-SELECT shift, dt, username
-FROM green_seeds.shifts
-WHERE dt >= (CURRENT_DATE AT TIME ZONE 'UTC+5') - INTERVAL '7 days' AND deleted_at IS NULL
-ORDER BY shift ASC;`
+SELECT s.shift, s.dt, s.user_id, u.username
+FROM green_seeds.shifts s
+LEFT JOIN green_seeds.users u ON s.user_id = u.id
+WHERE s.dt >= (CURRENT_DATE AT TIME ZONE 'UTC+5') - INTERVAL '7 days' AND s.deleted_at IS NULL
+ORDER BY s.shift ASC;`
 
 	var shifts []models.Shifts
 	if err := sh.db.Select(&shifts, query); err != nil {
@@ -72,7 +73,7 @@ func (sh *shiftsRepository) UpdateShifts(shifts models.Shifts) (models.Shifts, e
 	const query = `
 UPDATE green_seeds.shifts
 SET dt = COALESCE(:dt, dt),
-	username = COALESCE(:username, username)
+	user_id = COALESCE(:user_id, user_id)
 WHERE shift = :shift AND deleted_at IS NULL
 RETURNING shift, dt`
 
@@ -113,9 +114,10 @@ WHERE shift = $2 AND deleted_at IS NULL;`
 
 func (sh *shiftsRepository) GetShiftsByShift(shift int) (models.Shifts, error) {
 	const query = `
-SELECT shift, dt, username
-FROM green_seeds.shifts
-WHERE shift = $1 AND deleted_at IS NULL;`
+SELECT s.shift, s.dt, s.user_id, u.username
+FROM green_seeds.shifts s
+LEFT JOIN green_seeds.users u ON s.user_id = u.id
+WHERE s.shift = $1 AND s.deleted_at IS NULL;`
 
 	var shifts models.Shifts
 	if err := sh.db.Get(&shifts, query, shift); err != nil {
@@ -127,9 +129,9 @@ WHERE shift = $1 AND deleted_at IS NULL;`
 
 func (sh *shiftsRepository) GetShiftsWithoutUser() ([]models.Shifts, error) {
 	const query = `
-SELECT shift, dt, username
+SELECT shift, dt, user_id
 FROM green_seeds.shifts
-WHERE DATE(dt) = CURRENT_DATE AND username IS NULL AND deleted_at IS NULL
+WHERE DATE(dt) = CURRENT_DATE AND user_id IS NULL AND deleted_at IS NULL
 ORDER BY shift ASC;`
 
 	var shifts []models.Shifts
@@ -142,9 +144,10 @@ ORDER BY shift ASC;`
 
 func (sh *shiftsRepository) GetShiftsByUsername(username string) ([]models.Shifts, error) {
 	const query = `
-SELECT shift, dt, username
-FROM green_seeds.shifts
-WHERE DATE(dt) = CURRENT_DATE AND username = $1 AND deleted_at IS NULL;`
+SELECT s.shift, s.dt, s.user_id, u.username
+FROM green_seeds.shifts s
+LEFT JOIN green_seeds.users u ON s.user_id = u.id
+WHERE DATE(s.dt) = CURRENT_DATE AND u.username = $1 AND s.deleted_at IS NULL;`
 
 	var shifts []models.Shifts
 	if err := sh.db.Select(&shifts, query, username); err != nil {

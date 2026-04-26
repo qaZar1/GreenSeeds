@@ -24,38 +24,40 @@ func NewLogsRepository(db *sqlx.DB) *logsRepository {
 func (lg *logsRepository) GetLogs(params models.LogsParams) ([]models.Log, error) {
 	query := `
     SELECT 
-        id,
-		dt,
-		lvl,
-		request_id,
-		msg,
-		caller,
-		username
-    FROM green_seeds.logs
+        l.id,
+		l.dt,
+		l.lvl,
+		l.request_id,
+		l.msg,
+		l.caller,
+		l.user_id,
+		u.username
+    FROM green_seeds.logs l
+	LEFT JOIN green_seeds.users u ON l.user_id = u.id
     WHERE 1=1`
 
 	if params.Level != "" && params.Level != "ALL" {
-		query += fmt.Sprintf(" AND lvl = :level")
+		query += fmt.Sprintf(" AND l.lvl = :level")
 	}
 
 	if params.Search != "" {
 		query += fmt.Sprintf(` AND (
-            msg ILIKE :search OR 
-            request_id ILIKE :search OR 
-            caller ILIKE :search OR 
-            username ILIKE :search
+            l.msg ILIKE :search OR 
+            l.request_id ILIKE :search OR 
+            l.caller ILIKE :search OR 
+            u.username ILIKE :search
         )`)
 	}
 
 	if params.DateFrom != nil {
-		query += fmt.Sprintf(" AND dt >= :date_from")
+		query += fmt.Sprintf(" AND l.dt >= :date_from")
 	}
 
 	if params.DateTo != nil {
-		query += fmt.Sprintf(" AND dt <= :date_to")
+		query += fmt.Sprintf(" AND l.dt <= :date_to")
 	}
 
-	query += " ORDER BY dt DESC"
+	query += " ORDER BY l.dt DESC"
 
 	query += fmt.Sprintf(" LIMIT :limit OFFSET :offset")
 

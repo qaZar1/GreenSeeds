@@ -4,22 +4,37 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
 type Client struct {
-	Conn *websocket.Conn
-	Send chan models.WSMessage
-	done chan struct{}
+	Conn    *websocket.Conn
+	Send    chan models.WSResponse
+	done    chan struct{}
+	Actions chan models.WSRequest
+	Control chan models.WSRequest
+
+	IsAuth    bool
+	UserId    string
+	SessionId string
+	planting  models.Planting
 }
 
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
-		Conn: conn,
-		Send: make(chan models.WSMessage),
-		done: make(chan struct{}),
+		Conn:      conn,
+		Send:      make(chan models.WSResponse, 10),
+		done:      make(chan struct{}),
+		Actions:   make(chan models.WSRequest, 10),
+		Control:   make(chan models.WSRequest, 10),
+		SessionId: uuid.New().String(),
+
+		planting: models.Planting{
+			Active: false,
+		},
 	}
 }
 

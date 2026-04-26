@@ -9,7 +9,7 @@ import (
 
 const resource = "service.green_seeds.api"
 
-func (infra *Infrastructure) GetClaims(username string, role string) models.Claims {
+func (infra *Infrastructure) GetClaims(id int64, username string, role string, fullName string) models.Claims {
 	issuedAt := time.Now()
 	expiresAt := issuedAt.Add(time.Duration(infra.ExpiresIn) * time.Second)
 
@@ -24,6 +24,8 @@ func (infra *Infrastructure) GetClaims(username string, role string) models.Clai
 
 		Username:  username,
 		Role:      role,
+		UserId:    &id,
+		FullName:  fullName,
 		IssuedAt:  issuedAt,
 		ExpiresAt: expiresAt,
 		ExpiresIn: infra.ExpiresIn,

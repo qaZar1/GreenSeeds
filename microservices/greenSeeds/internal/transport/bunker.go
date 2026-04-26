@@ -40,7 +40,7 @@ func (transport *Transport) PostApiBunkerAdd(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	inserted, err := transport.service.AddBunker(bunker)
+	inserted, err := transport.app.AddBunker(bunker)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %w", err))
 		return
@@ -69,7 +69,7 @@ func (transport *Transport) PostApiBunkerAdd(w http.ResponseWriter, r *http.Requ
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiBunkerGet(w http.ResponseWriter, r *http.Request) {
-	bunkers, err := transport.service.GetBunkers()
+	bunkers, err := transport.app.GetBunkers()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunkers: %w", err))
 		return
@@ -98,7 +98,7 @@ func (transport *Transport) GetApiBunkerGet(w http.ResponseWriter, r *http.Reque
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiBunkerGetForPlacement(w http.ResponseWriter, r *http.Request) {
-	bunkers, err := transport.service.GetBunkersForPlacement()
+	bunkers, err := transport.app.GetBunkersForPlacement()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunkers for placement: %w", err))
 		return
@@ -129,7 +129,7 @@ func (transport *Transport) GetApiBunkerGetForPlacement(w http.ResponseWriter, r
 func (transport *Transport) GetApiBunkerGetId(w http.ResponseWriter, r *http.Request) {
 	bunkerId := chi.URLParam(r, "bunker")
 
-	bunker, err := transport.service.GetBunkersById(bunkerId)
+	bunker, err := transport.app.GetBunkersById(bunkerId)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunker by id: %w", err))
 		return
@@ -165,7 +165,7 @@ func (transport *Transport) PutApiBunkerUpdate(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	updated, err := transport.service.UpdateBunker(bunker)
+	updated, err := transport.app.UpdateBunker(bunker)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %w", err))
 		return
@@ -198,7 +198,7 @@ func (transport *Transport) PutApiBunkerUpdate(w http.ResponseWriter, r *http.Re
 func (transport *Transport) DeleteApiBunkerDelete(w http.ResponseWriter, r *http.Request) {
 	bunker := chi.URLParam(r, "bunker")
 
-	ok, err := transport.service.DeleteBunker(bunker)
+	ok, err := transport.app.DeleteBunker(bunker)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return

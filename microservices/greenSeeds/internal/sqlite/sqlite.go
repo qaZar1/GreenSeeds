@@ -57,7 +57,12 @@ func (s *SQLite) Cleaner() {
 			continue
 		}
 
-		dir := (*calibration.FirstPhotoPath)[:strings.LastIndex(*calibration.FirstPhotoPath, "/")]
+		idx := strings.LastIndex(*calibration.FirstPhotoPath, "/")
+		if idx == -1 {
+			continue
+		}
+
+		dir := (*calibration.FirstPhotoPath)[:idx]
 		os.RemoveAll(dir)
 	}
 
@@ -68,7 +73,7 @@ func (s *SQLite) Cleaner() {
 	return
 }
 
-func (s *SQLite) AddCalibration(calibration models.Calibration) (bool, error) {
+func (s *SQLite) AddCalibration(sessionId string, createdAt time.Time) (bool, error) {
 	const query = `
 INSERT INTO calibration (
 	session_id,
@@ -79,7 +84,7 @@ VALUES (
 	$2
 );`
 
-	res, err := s.db.Exec(query, calibration.SessionId, calibration.CreatedAt)
+	res, err := s.db.Exec(query, sessionId, createdAt)
 	if err != nil {
 		return false, err
 	}
@@ -92,14 +97,14 @@ VALUES (
 	return rowsAffected == 1, nil
 }
 
-func (s *SQLite) UpdateCalibration(calibration models.Calibration) (bool, error) {
+func (s *SQLite) UpdateCalibration(calibration models.Calibration, sessionId string) (bool, error) {
 	const query = `
 UPDATE calibration
 SET first_photo_path = COALESCE($1, first_photo_path),
 	second_photo_path = COALESCE($2, second_photo_path),
 	dx = COALESCE($3, dx),
 	dy = COALESCE($4, dy),
-	cir = COALESCE($5, cir),
+	steps = COALESCE($5, steps),
 	d_per_step = COALESCE($6, d_per_step)
 WHERE session_id = $7;`
 
@@ -108,9 +113,9 @@ WHERE session_id = $7;`
 		calibration.FirstPhotoPath,
 		calibration.SecondPhotoPath,
 		calibration.Dx, calibration.Dy,
-		calibration.Cir,
+		calibration.Steps,
 		calibration.DPerStep,
-		calibration.SessionId,
+		sessionId,
 	)
 	if err != nil {
 		return false, err
@@ -127,12 +132,11 @@ WHERE session_id = $7;`
 func (s *SQLite) GetCalibration(sessionId string) (models.Calibration, error) {
 	const query = `
 SELECT
-	session_id,
 	first_photo_path,
 	second_photo_path,
 	dx,
 	dy,
-	cir,
+	steps,
 	d_per_step,
 	created_at
 FROM calibration
@@ -143,12 +147,11 @@ WHERE session_id = $1;`
 		query,
 		sessionId,
 	).Scan(
-		&calibration.SessionId,
 		&calibration.FirstPhotoPath,
 		&calibration.SecondPhotoPath,
 		&calibration.Dx,
 		&calibration.Dy,
-		&calibration.Cir,
+		&calibration.Steps,
 		&calibration.DPerStep,
 		&calibration.CreatedAt,
 	); err != nil {
@@ -166,11 +169,11 @@ SELECT
 	second_photo_path,
 	dx,
 	dy,
-	cir,
+	steps,
 	d_per_step,
 	created_at
 FROM calibration
-WHERE created_at < $1;
+WHERE created_at < datetime('now','-1 day');
 `
 	rows, err := s.db.Query(query, time.Now().AddDate(0, 0, -1))
 	if err != nil {
@@ -183,12 +186,11 @@ WHERE created_at < $1;
 	for rows.Next() {
 		var c models.Calibration
 		if err := rows.Scan(
-			&c.SessionId,
 			&c.FirstPhotoPath,
 			&c.SecondPhotoPath,
 			&c.Dx,
 			&c.Dy,
-			&c.Cir,
+			&c.Steps,
 			&c.DPerStep,
 			&c.CreatedAt,
 		); err != nil {

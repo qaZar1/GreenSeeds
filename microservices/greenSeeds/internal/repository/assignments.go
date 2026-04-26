@@ -239,7 +239,7 @@ WHERE id = $1 AND deleted_at IS NULL;`
 	return assignments, nil
 }
 
-func (assign *assignmentsRepository) CheckActiveTasks(username string) ([]models.ActiveTask, error) {
+func (assign *assignmentsRepository) CheckActiveTasks(userId string) ([]models.ActiveTask, error) {
 	const query = `
 SELECT
 	a.id,
@@ -261,13 +261,13 @@ left join green_seeds.receipts r2
   on r2.receipt = a.receipt
 left join green_seeds.seeds se
   on se.seed = r2.seed 
-WHERE s.username = $1 and DATE(s.dt) = CURRENT_DATE AND a.deleted_at IS NULL
+WHERE s.user_id = $1 and DATE(s.dt) = CURRENT_DATE AND a.deleted_at IS NULL
 GROUP BY a.id, a.shift, a.number, a.receipt, s.dt, a.amount, se.seed, se.seed_ru 
 HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
 `
 
 	var activeTasks []models.ActiveTask
-	if err := assign.db.Select(&activeTasks, query, username); err != nil {
+	if err := assign.db.Select(&activeTasks, query, userId); err != nil {
 		return nil, err
 	}
 

@@ -33,3 +33,15 @@ func GetUuid(r *http.Request, infra *infrastructure.Infrastructure) string {
 	}
 	return claims.Subject
 }
+
+func WriteImage(w http.ResponseWriter, status int, image []byte) {
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.WriteHeader(status)
+	w.Write(image)
+}
+
+func WriteStream(w http.ResponseWriter, status int, video []byte) {
+	w.Header().Set("Content-Type", "multipart/x-mixed-replace; boundary=frame")
+	w.WriteHeader(status)
+	w.Write(video)
+}

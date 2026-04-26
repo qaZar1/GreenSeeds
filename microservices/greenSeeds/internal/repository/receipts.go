@@ -11,8 +11,8 @@ type IReceiptsRepository interface {
 	AddReceipts(receipts models.Receipts) (models.Receipts, error)
 	GetReceipts() ([]models.Receipts, error)
 	UpdateReceipts(receipts models.Receipts) (models.Receipts, error)
-	DeleteReceipts(receipt string) (bool, error)
-	GetReceiptsByReceipt(receipt string) (models.Receipts, error)
+	DeleteReceipts(receipt int) (bool, error)
+	GetReceiptsByReceipt(receipt int) (models.Receipts, error)
 }
 
 type receiptsRepository struct {
@@ -110,7 +110,7 @@ RETURNING receipt, seed, gcode, description, updated`
 	return updated, nil
 }
 
-func (rec *receiptsRepository) DeleteReceipts(receipt string) (bool, error) {
+func (rec *receiptsRepository) DeleteReceipts(receipt int) (bool, error) {
 	const query = `
 UPDATE green_seeds.receipts
 SET deleted_at = $1
@@ -129,7 +129,7 @@ WHERE receipt = $2 AND deleted_at IS NULL;`
 	return rowsAffected == 1, nil
 }
 
-func (rec *receiptsRepository) GetReceiptsByReceipt(receiptName string) (models.Receipts, error) {
+func (rec *receiptsRepository) GetReceiptsByReceipt(receiptNum int) (models.Receipts, error) {
 	const query = `
 SELECT 
     receipts.receipt, 
@@ -144,7 +144,7 @@ LEFT JOIN green_seeds.seeds
 WHERE receipt = $1 AND receipts.deleted_at IS NULL;`
 
 	var receipt models.Receipts
-	if err := rec.db.Get(&receipt, query, receiptName); err != nil {
+	if err := rec.db.Get(&receipt, query, receiptNum); err != nil {
 		return models.Receipts{}, err
 	}
 
