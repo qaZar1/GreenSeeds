@@ -42,6 +42,7 @@ func NewManager(ctx context.Context, port string, baud int, log zerolog.Logger) 
 		log:  log,
 
 		reconnecting: false,
+		state: StateStandby,
 
 		StatusChangeCh: make(chan ManagerState, 10),
 	}
@@ -135,9 +136,12 @@ func (m *Manager) handleSerial(serial ISerial) {
 				continue
 			}
 
+			m.parseStatus(string(data))
+
 			m.dispatcher.Handle(data)
 		case event := <-connCh:
 			if event.Type == ConnEventDisconnected {
+				m.SetState(StateUnknown)
 				m.serial.Stop()
 				m.helperHandle(serial)
 				continue
@@ -258,19 +262,19 @@ func (m *Manager) WriteStatusCh(status ManagerState) {
 
 func (m *Manager) parseStatus(msg string) {
 	switch {
-	case strings.HasPrefix(msg, MANUAL_MODE):
+	case strings.Contains(msg, MANUAL_MODE):
 		m.SetState(StateManual)
-	case strings.HasPrefix(msg, STAND_BY):
+	case strings.Contains(msg, STAND_BY):
 		m.SetState(StateStandby)
-	case strings.HasPrefix(msg, READY):
+	case strings.Contains(msg, READY):
 		m.SetState(StateReady)
-	case strings.HasPrefix(msg, BUSY):
+	case strings.Contains(msg, BUSY):
 		m.SetState(StateBusy)
-	case strings.HasPrefix(msg, WAIT):
+	case strings.Contains(msg, WAIT):
 		m.SetState(StateWait)
-	case strings.HasPrefix(msg, RETURN):
+	case strings.Contains(msg, RETURN):
 		m.SetState(StateReturn)
-	case strings.HasPrefix(msg, ERR):
+	case strings.Contains(msg, ERR):
 		m.SetState(StateError)
 	}
 }

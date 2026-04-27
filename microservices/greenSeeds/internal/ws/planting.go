@@ -11,7 +11,7 @@ import (
 )
 
 // В том же файле или в helpers
-func waitForDeviceReady(manager *device.Manager, c *Client, timeout time.Duration) error {
+func waitForDeviceReady(manager *device.Manager, c *Client, timeout time.Duration, iter *models.Iteration) error {
 	ticker := time.NewTicker(500 * time.Millisecond) // опрос раз в 0.5с
 	defer ticker.Stop()
 
@@ -26,17 +26,29 @@ func waitForDeviceReady(manager *device.Manager, c *Client, timeout time.Duratio
 		case <-c.done:
 			return errors.New("client disconnected")
 
-		case _, ok := <-c.Control:
+		case msg, ok := <-c.Control:
 			if !ok {
 				return errors.New("receive channel closed")
 			}
+
+			if msg.Type == "STOP" {
+                if iter != nil {
+                    iter.Finished = true
+                }
+                if c != nil {
+                    c.planting.Stop = true
+                    c.Send <- okResponse("STOP", "Stopped by user")
+                }
+                return errors.New("Stopped")
+            }
+		
 
 		case <-ticker.C:
 			if manager.GetStatus() != device.ManagerStateConnected {
 				return errors.New("device disconnected")
 			}
 
-			if manager.GetStatus() == device.READY {
+			if manager.GetState() == device.StateReady {
 				return nil // Успех
 			}
 		}
@@ -70,8 +82,8 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 		case StateWaitingReady:
 			state(s, "WAIT_READY", iter.Turn)
 
-			if err := waitForDeviceReady(s.dClient.Manager, c, 30*time.Second); err != nil {
-				continue
+			if err := waitForDeviceReady(s.dClient.Manager, c, 30*time.Second, iter); err != nil {
+				return
 			}
 
 			iter.CurrentState = StateBegin
@@ -289,7 +301,13 @@ func waitAction(c *Client) (models.Action, string, bool) {
 func Begin(s *Server, c *Client, iter *models.Iteration) {
 	bunkers, err := s.repo.SeedRepo.GetBestBunker(iter.Seed)
 	if err != nil{
-		c.Send <- errResponse(models.TypeBegin, errors.New("bunker not validate"))
+		err := errors.New(fmt.Sprintf("Бункеры с семенами %s пусты", iter.Seed))
+		c.Send <- errResponse(models.TypeBegin, err)
+
+		iter.Err = append(iter.Err, err)
+		iter.Success = false
+		iter.Finished = true
+		c.planting.Stop = true
 		return
 	}
 

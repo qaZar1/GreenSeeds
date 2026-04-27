@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -74,14 +73,26 @@ func NewServer(
 }
 
 func (s *Server) ListenDeviceResponse() {
-	for data := range s.dClient.RespCh {
-		s.broadcast(data)
+	for {
+		select {
+		case data, ok := <-s.dClient.RespCh:
+			if !ok {
+				return
+			}
+			s.broadcast(data)
+		}
 	}
 }
 
 func (s *Server) ListenSend() {
-	for msg := range s.Send {
-		s.broadcast(msg)
+	for {
+		select {
+		case msg, ok := <-s.Send:
+			if !ok {
+				return
+			}
+			s.broadcast(msg)
+		}
 	}
 }
 
@@ -110,7 +121,6 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 
 	// Чтение сообщений от клиента
 	go client.ListenRead(func(msg []byte) {
-		fmt.Println("WS INCOMING RAW")
 		var wsMsg models.WSRequest
 		if err := jsoniter.Unmarshal(msg, &wsMsg); err != nil {
 			log.Println("WS to COM error:", err)
@@ -121,9 +131,8 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 		case "STOP":
 			client.Control <- wsMsg
 		case "RETRY", "SKIP", "ABORT":
-			client.Control <- wsMsg
+			client.Actions <- wsMsg
 		default:
-			fmt.Println("CHANNEL FULL")
 		}
 
 		handler, err := s.router.WsRouter(wsMsg)
@@ -143,8 +152,10 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 		<-client.done
 		conn.Close()
 		s.mu.Lock()
+		
 		s.dClient.Stop(client.SessionId)
 		delete(s.Clients, client)
+		
 		s.mu.Unlock()
 		log.Println("Client disconnected, total clients:", len(s.Clients))
 	}()
@@ -153,7 +164,6 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Close() {
 	s.mu.Lock()
 	for client := range s.Clients {
-		close(client.Send)
 		delete(s.Clients, client)
 		client.Conn.Close()
 	}
