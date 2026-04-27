@@ -1,63 +1,97 @@
-type MachineState = {
+export type MachineState = {
   connection: "connecting" | "connected" | "disconnected";
+
+  deviceAlive: boolean;
   deviceReady: boolean;
 
-  status: string;        // сырой STATE (WAIT_READY, DONE и т.д.)
+  status: string;
   beginState: "idle" | "running" | "error" | "done";
 
   iteration: number | null;
-
   availableActions: string[] | null;
+
+  error: string | null;
 };
 
-type Event =
+type Action =
   | { type: "WS_OPEN" }
   | { type: "WS_CLOSE" }
-  | { type: "AUTH_OK" }
-  | { type: "STATE"; status: string; iteration?: number }
-  | { type: "BOOT_OK" }
-  | { type: "DEVICE_ACK" }
-  | { type: "ACTIONS"; actions: string[] | null };
+  | { type: "ACK BOOT" }
+  | { type: "STATUS"; status: string; }
+  | {
+      type: "STATE";
+      status: string;
+      iteration?: number | null;
+      error?: string | null; // 🔥 добавили
+      actions?: ("RETRY" | "SKIP" | "ABORT")[] | null; // 🔥 добавили
+    }
+  | {
+      type: "ACTIONS";
+      actions: ("RETRY" | "SKIP" | "ABORT")[];
+    };
 
-export function Reducer(state: MachineState, event: Event): MachineState {
-  switch (event.type) {
+const mapStateToBegin = (
+  status: string
+): MachineState["beginState"] => {
+  if (["WAIT_READY", "STAND BY"].includes(status)) return "idle";
+  if (["BEGIN_ACK"].includes(status)) return "running";
+  if (["DONE", "RETURN_DONE"].includes(status)) return "done";
+  if (["WAIT_ACTION", "ERROR"].includes(status)) return "error";
+  return "running";
+};
+
+export const Reducer = (
+  state: MachineState,
+  action: Action
+): MachineState => {
+  switch (action.type) {
     case "WS_OPEN":
       return { ...state, connection: "connected" };
 
     case "WS_CLOSE":
-      return { ...state, connection: "disconnected" };
-
-    case "AUTH_OK":
-      return state;
-
-    case "BOOT_OK":
-    case "DEVICE_ACK":
-      return { ...state, deviceReady: true };
-
-    case "ACTIONS":
-      return { ...state, availableActions: event.actions };
-
-    case "STATE": {
-      const status = event.status;
-
       return {
         ...state,
-        status,
-        iteration: event.iteration ?? state.iteration,
-        beginState: mapStateToBegin(status),
+        connection: "disconnected",
+        deviceAlive: false,
+        deviceReady: false,
+        beginState: "idle", // 🔥 Сбрасываем, чтобы старт стал доступен после реконнекта
+      };
+
+    case "ACK BOOT":
+      return { ...state, deviceAlive: true };
+
+    case "STATUS":
+      return {
+        ...state,
+        deviceReady: action.status === "READY",
+      };
+
+    case "STATE": {
+      const isErrorMessage = action.status === "ERROR" || action.error != null;
+      
+      return {
+        ...state,
+        status: action.status,
+        iteration: action.iteration ?? state.iteration,
+        availableActions: action.actions ?? state.availableActions,
+        
+        // 🔥 Явно ставим error-режим, если пришла ошибка
+        beginState: isErrorMessage 
+          ? "error" 
+          : mapStateToBegin(action.status),
+        
+        // 🔥 Сохраняем текст ошибки (приоритет: action.error > msg.message)
+        error: isErrorMessage ? (action.error ?? "Неизвестная ошибка") : null,
       };
     }
+
+    case "ACTIONS":
+      return {
+        ...state,
+        availableActions: action.actions,
+      };
 
     default:
       return state;
   }
-}
-
-function mapStateToBegin(status: string): MachineState["beginState"] {
-  if (["WAIT_READY", "STAND BY"].includes(status)) return "idle";
-  if (["BEGIN_ACK"].includes(status)) return "running";
-  if (["DONE"].includes(status)) return "done";
-  if (["WAIT_ACTION", "ERROR"].includes(status)) return "error";
-
-  return "running";
-}
+};

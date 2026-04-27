@@ -13,8 +13,22 @@ func handleBoot(s *Server, client *Client, req models.WSRequest) {
 	}
 }
 
-func handleStatus(s *Server, client *Client, req models.WSRequest) {
-	s.dClient.GetStatus()
+func handleStatus(s *Server, c *Client, req models.WSRequest) {
+	if !s.dClient.Manager.TryAcquireSession(c.SessionId) {
+		c.Send <- errResponse("START", errors.New("device busy"))
+		s.dClient.GetStatus()
+
+		return
+	}
+
+	defer s.dClient.Manager.ReleaseSession(c.SessionId)
+
+	// 3. Останавливаем фоновый пинг на время сессии
+	s.dClient.PausePolling()
+	defer s.dClient.RefreshPolling()
+
+
+	s.dClient.Status(c.SessionId)
 }
 
 func handleSetStatusReady(s *Server, client *Client, req models.WSRequest) {
@@ -88,7 +102,10 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 	}
 
 	// Всё закончили
-	c.Send <- okResponse("END", "Stopped")
+	select{
+	case c.Send <- okResponse("END", "Stopped"):
+	default:
+	}
 }
 
 func handleAuth(s *Server, client *Client, req models.WSRequest) {

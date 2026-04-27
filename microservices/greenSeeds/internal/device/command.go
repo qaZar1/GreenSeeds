@@ -187,11 +187,50 @@ func (c *DeviceClient) SetStatusReady(sessionId string) {
 	}
 
 	for resp := range ch {
-		c.Manager.SetState(READY)
+		c.Manager.SetState(StateReady)
 		respStr := string(resp)
 		response := models.WSResponse{
 			Type:   SETSTATUS_READY,
 			Status: respStr,
+		}
+
+		select {
+		case c.RespCh <- response:
+		default:
+		}
+	}
+}
+
+func (c *DeviceClient) Status(sessionId string) {
+	defer c.RefreshPolling()
+
+	matchResults := func(data []byte) MatchResult {
+		str := strings.TrimSpace(string(data))
+		c.Manager.parseStatus(str)
+		
+		return MatchResult{Matched: true, Done: true}
+	}
+
+	ch, err := c.Manager.Do(c.ctx, []byte(STATUS+delimeterStr), matchResults, 10, sessionId)
+	if err != nil {
+		response := models.WSResponse{
+			Type:  STATUS,
+			Status: "ERROR",
+			Message: err.Error(),
+		}
+
+		select {
+		case c.RespCh <- response:
+		default:
+		}
+	}
+
+	for resp := range ch {
+		respStr := string(resp)
+		response := models.WSResponse{
+			Type:   STATUS,
+			Status: "OK",
+			Message: respStr,
 		}
 
 		select {

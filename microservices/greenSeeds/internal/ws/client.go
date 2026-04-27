@@ -17,6 +17,7 @@ type Client struct {
 	Actions chan models.WSRequest
 	Control chan models.WSRequest
 
+	Closed 	  bool
 	IsAuth    bool
 	UserId    string
 	SessionId string
@@ -40,6 +41,7 @@ func NewClient(conn *websocket.Conn) *Client {
 
 func (c *Client) ListenRead(handler func([]byte)) {
 	defer close(c.done)
+	
 	for {
 		_, msg, err := c.Conn.ReadMessage()
 		if err != nil {
