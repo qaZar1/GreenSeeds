@@ -61,7 +61,7 @@ func (transport *Transport) GetApiLogsGet(w http.ResponseWriter, r *http.Request
 
 	logs, err := transport.app.GetLogs(params)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get logs: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get logs: %v", err))
 		return
 	}
 

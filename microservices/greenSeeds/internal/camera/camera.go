@@ -9,6 +9,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type ICamera interface{
+	TakePhoto() (*bytes.Buffer, error)
+	SavePhoto(path, id string, buf *bytes.Buffer) error
+	GetBytesFromPhoto(path string) (*bytes.Buffer, error)
+	DeletePhoto(id, name string) error
+	Run() error
+}
+
 type Camera struct {
 	cameraName  string
 	inputDevice string
@@ -16,7 +24,7 @@ type Camera struct {
 	videoSize   string
 }
 
-func NewCamera(cameraName string, inputDevice string, framerate string, videoSize string) *Camera {
+func NewCamera(cameraName string, inputDevice string, framerate string, videoSize string) ICamera {
 	return &Camera{
 		cameraName:  cameraName,
 		inputDevice: inputDevice,

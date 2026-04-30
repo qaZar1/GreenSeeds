@@ -26,7 +26,7 @@ func NewRouter(
 	cfg models.Config,
 	ws *ws.Server,
 	logger zerolog.Logger,
-	camera *camera.Camera,
+	camera camera.ICamera,
 	infra *infrastructure.Infrastructure,
 ) *chi.Mux {
 	transport := transport.NewTransport(repo, cfg, infra, ws, camera)

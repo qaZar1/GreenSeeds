@@ -27,7 +27,7 @@ type Server struct {
 
 	repo   *repository.Repository
 	infra  *infrastructure.Infrastructure
-	camera *camera.Camera
+	camera camera.ICamera
 	opencv *opencv.Classification
 	api    *api.API
 
@@ -44,7 +44,7 @@ func NewServer(
 	url string,
 	log zerolog.Logger,
 	infra *infrastructure.Infrastructure,
-	camera *camera.Camera,
+	camera camera.ICamera,
 	opencv *opencv.Classification,
 ) (*Server, error) {
 	api := api.NewAPI(url)

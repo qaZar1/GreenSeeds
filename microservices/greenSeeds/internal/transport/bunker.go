@@ -30,24 +30,24 @@ import (
 func (transport *Transport) PostApiBunkerAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var bunker models.Bunkers
 	if err := jsoniter.Unmarshal(body, &bunker); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
 	inserted, err := transport.app.AddBunker(bunker)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %w", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %v", err))
 		return
 	}
 
 	if inserted == (models.Bunkers{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add bunker: %v", err))
 		return
 	}
 
@@ -71,7 +71,7 @@ func (transport *Transport) PostApiBunkerAdd(w http.ResponseWriter, r *http.Requ
 func (transport *Transport) GetApiBunkerGet(w http.ResponseWriter, r *http.Request) {
 	bunkers, err := transport.app.GetBunkers()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunkers: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunkers: %v", err))
 		return
 	}
 
@@ -100,7 +100,7 @@ func (transport *Transport) GetApiBunkerGet(w http.ResponseWriter, r *http.Reque
 func (transport *Transport) GetApiBunkerGetForPlacement(w http.ResponseWriter, r *http.Request) {
 	bunkers, err := transport.app.GetBunkersForPlacement()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunkers for placement: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunkers for placement: %v", err))
 		return
 	}
 
@@ -131,7 +131,7 @@ func (transport *Transport) GetApiBunkerGetId(w http.ResponseWriter, r *http.Req
 
 	bunker, err := transport.app.GetBunkersById(bunkerId)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunker by id: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get bunker by id: %v", err))
 		return
 	}
 
@@ -155,24 +155,24 @@ func (transport *Transport) GetApiBunkerGetId(w http.ResponseWriter, r *http.Req
 func (transport *Transport) PutApiBunkerUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
 	var bunker models.Bunkers
 	if err := jsoniter.Unmarshal(data, &bunker); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
 	updated, err := transport.app.UpdateBunker(bunker)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %v", err))
 		return
 	}
 
 	if updated == (models.Bunkers{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update bunker: %v", err))
 		return
 	}
 
@@ -205,7 +205,7 @@ func (transport *Transport) DeleteApiBunkerDelete(w http.ResponseWriter, r *http
 	}
 
 	if !ok {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid delete bunker: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid delete bunker: %v", err))
 		return
 	}
 

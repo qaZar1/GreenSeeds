@@ -16,8 +16,7 @@ type App struct {
 	validate    *validator.Validate
 	cfg         models.Config
 	ws          *ws.Server
-	camera      *camera.Camera
-	calibration map[string]models.Calibration
+	camera      camera.ICamera
 	calib       *opencv.Calibration
 }
 
@@ -26,7 +25,7 @@ func NewApp(
 	cfg models.Config,
 	infra *infrastructure.Infrastructure,
 	ws *ws.Server,
-	camera *camera.Camera,
+	camera camera.ICamera,
 ) *App {
 	validate := validator.New()
 
@@ -38,7 +37,6 @@ func NewApp(
 		cfg:         cfg,
 		ws:          ws,
 		camera:      camera,
-		calibration: make(map[string]models.Calibration),
 		calib:       calibration,
 	}
 }

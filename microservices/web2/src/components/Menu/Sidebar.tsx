@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const menuItems = [
-  { path: '/dashboard', label: 'Дашборд', icon: 'fa-solid fa-chart-line', roles: ['admin', 'operator'] },
+  // { path: '/dashboard', label: 'Дашборд', icon: 'fa-solid fa-chart-line', roles: ['admin', 'operator'] },
   { path: '/users', label: 'Пользователи', icon: 'fa-solid fa-users', roles: ['admin'] },
   { path: '/choice', label: 'Выбор задания', icon: 'fa-solid fa-hand-pointer', roles: ['operator'] },
   { path: '/tasks', label: 'Задания на смену', icon: 'fa-solid fa-clipboard-list', roles: ['operator'] },
@@ -45,22 +45,6 @@ const Sidebar = () => {
     !item.roles || item.roles.includes(role)
   );
 
-  // 👉 считаем высоту линии до последнего элемента
-  useEffect(() => {
-    if (openSettings && containerRef.current) {
-      const lastChild = containerRef.current.querySelector('li:last-child');
-
-      if (lastChild) {
-        const rect = lastChild.getBoundingClientRect();
-        const parentRect = containerRef.current.getBoundingClientRect();
-
-        setLineHeight(rect.bottom - parentRect.top - 8); // небольшой отступ
-      }
-    } else {
-      setLineHeight(0);
-    }
-  }, [openSettings]);
-
   return (
     <nav className="w-[250px] h-screen bg-[#34495e] text-white flex flex-col p-5 fixed left-0 top-0 overflow-y-auto">
 
@@ -86,7 +70,6 @@ const Sidebar = () => {
                   <i className={`fa-solid ${openSettings ? 'fa-chevron-up' : 'fa-chevron-down'} text-[12px]`} />
                 </button>
 
-                {/* 🔥 АНИМИРОВАННОЕ ПОДМЕНЮ */}
                 <div
                   className={`
                     transition-all duration-500 overflow-hidden
@@ -95,15 +78,13 @@ const Sidebar = () => {
                 >
                   <div className="relative ml-[10px]" ref={containerRef}>
 
-                    {/* линия */}
-                    <div
-                      className="absolute left-[6px] w-[2px] bg-white/20 transition-all duration-500"
-                      style={{ height: lineHeight }}
-                    />
-
                     <ul className="list-none pl-[20px] space-y-[10px]">
                       {item.children.map((child, childIndex) => (
                         <li key={childIndex} className="relative">
+
+                          {childIndex !== item.children.length - 1 && (
+                            <div className="absolute left-[-14px] top-[20px] w-[2px] h-full bg-white/20" />
+                          )}
 
                           {/* уголок */}
                           <div className={`
@@ -123,11 +104,9 @@ const Sidebar = () => {
                             <i className={child.icon}></i>
                             <span>{child.label}</span>
                           </NavLink>
-
                         </li>
                       ))}
                     </ul>
-
                   </div>
                 </div>
               </>

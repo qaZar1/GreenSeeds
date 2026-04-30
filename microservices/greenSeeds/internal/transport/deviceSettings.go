@@ -38,24 +38,24 @@ func (transport *Transport) PostApiDeviceSettingsAdd(w http.ResponseWriter, r *h
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var deviceSettings models.DeviceSettings
 	if err := jsoniter.Unmarshal(body, &deviceSettings); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
 	inserted, err := transport.app.AddSetting(deviceSettings)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add device settings: %w", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add device settings: %v", err))
 		return
 	}
 
 	if inserted == (models.DeviceSettings{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add device settings: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add device settings: %v", err))
 		return
 	}
 
@@ -81,7 +81,7 @@ func (transport *Transport) PostApiDeviceSettingsAdd(w http.ResponseWriter, r *h
 func (transport *Transport) GetApiDeviceSettingsGet(w http.ResponseWriter, r *http.Request) {
 	deviceSettings, err := transport.app.GetSettings()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get device settings: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get device settings: %v", err))
 		return
 	}
 
@@ -112,7 +112,7 @@ func (transport *Transport) GetApiDeviceSettingsGetKey(w http.ResponseWriter, r 
 
 	deviceSettings, err := transport.app.GetSettingsByKey(key)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get device settings by key: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get device settings by key: %v", err))
 		return
 	}
 
@@ -142,24 +142,24 @@ func (transport *Transport) PutApiDeviceSettingsUpdate(w http.ResponseWriter, r 
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
 	var deviceSettings models.DeviceSettings
 	if err := jsoniter.Unmarshal(data, &deviceSettings); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
 	updated, err := transport.app.UpdateSetting(deviceSettings)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update settings: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update settings: %v", err))
 		return
 	}
 
 	if updated == (models.DeviceSettings{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update settings: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update settings: %v", err))
 		return
 	}
 
@@ -200,7 +200,7 @@ func (transport *Transport) DeleteApiDeviceSettingsDelete(w http.ResponseWriter,
 	}
 
 	if !ok {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid delete settings: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid delete settings: %v", err))
 		return
 	}
 

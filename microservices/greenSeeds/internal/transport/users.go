@@ -32,7 +32,7 @@ func (transport *Transport) GetApiUserGetUsername(w http.ResponseWriter, r *http
 	userId := chi.URLParam(r, "user_id")
 	user, err := transport.app.GetUserById(userId)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not get user by id: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not get user by id: %v", err))
 		return
 	}
 
@@ -55,7 +55,7 @@ func (transport *Transport) GetApiUserGetUsername(w http.ResponseWriter, r *http
 func (transport *Transport) GetApiCheckAllUsers(w http.ResponseWriter, r *http.Request) {
 	allUsers, err := transport.app.CheckAllUsers()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not get all users: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not get all users: %v", err))
 		return
 	}
 
@@ -87,19 +87,19 @@ func (transport *Transport) PutApiChangePassword(w http.ResponseWriter, r *http.
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var updatePassword models.UpdatePassword
 	if err := jsoniter.Unmarshal(data, &updatePassword); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
 	ok, err = transport.app.ChangePassword(updatePassword)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not change password: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not change password: %v", err))
 		return
 	}
 
@@ -178,19 +178,19 @@ func (transport *Transport) DeleteApiRemoveUser(w http.ResponseWriter, r *http.R
 func (transport *Transport) PutApiUpdateUser(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var user models.User
 	if err := jsoniter.Unmarshal(data, &user); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
 	ok, err := transport.app.Update(user)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not update user: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not update user: %v", err))
 		return
 	}
 

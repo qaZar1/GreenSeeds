@@ -32,24 +32,24 @@ import (
 func (transport *Transport) PostApiSeedAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var seed models.Seeds
 	if err := jsoniter.Unmarshal(body, &seed); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
 	inserted, err := transport.app.AddSeed(seed)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add seed: %w", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add seed: %v", err))
 		return
 	}
 
 	if inserted == (models.Seeds{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add seed: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add seed: %v", err))
 		return
 	}
 
@@ -73,7 +73,7 @@ func (transport *Transport) PostApiSeedAdd(w http.ResponseWriter, r *http.Reques
 func (transport *Transport) GetApiSeedGet(w http.ResponseWriter, r *http.Request) {
 	seeds, err := transport.app.GetSeeds()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seeds: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seeds: %v", err))
 		return
 	}
 
@@ -104,7 +104,7 @@ func (transport *Transport) GetApiSeedGetSeed(w http.ResponseWriter, r *http.Req
 
 	seeds, err := transport.app.GetSeedBySeed(seedId)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seed by id: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seed by id: %v", err))
 		return
 	}
 
@@ -130,7 +130,7 @@ func (transport *Transport) GetApiSeedWithBunkers(w http.ResponseWriter, r *http
 
 	result, err := transport.app.GetSeedWithBunkers(seed)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seed by id: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get seed by id: %v", err))
 		return
 	}
 
@@ -154,24 +154,24 @@ func (transport *Transport) GetApiSeedWithBunkers(w http.ResponseWriter, r *http
 func (transport *Transport) PutApiSeedUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
 	var seed models.Seeds
 	if err := jsoniter.Unmarshal(data, &seed); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
 	updated, err := transport.app.UpdateSeed(seed)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update seed: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update seed: %v", err))
 		return
 	}
 
 	if updated == (models.Seeds{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update seed: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update seed: %v", err))
 		return
 	}
 
@@ -210,7 +210,7 @@ func (transport *Transport) DeleteApiSeedDelete(w http.ResponseWriter, r *http.R
 	}
 
 	if !ok {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid delete seed: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid delete seed: %v", err))
 		return
 	}
 

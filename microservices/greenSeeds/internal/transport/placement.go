@@ -30,24 +30,24 @@ import (
 func (transport *Transport) PostApiPlacementAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var placement models.Placement
 	if err := jsoniter.Unmarshal(body, &placement); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
 	inserted, err := transport.app.AddPlacement(placement)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %w", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %v", err))
 		return
 	}
 
 	if inserted == (models.Placement{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %v", err))
 		return
 	}
 
@@ -71,7 +71,7 @@ func (transport *Transport) PostApiPlacementAdd(w http.ResponseWriter, r *http.R
 func (transport *Transport) GetApiPlacementGet(w http.ResponseWriter, r *http.Request) {
 	placements, err := transport.app.GetPlacements()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get placements: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get placements: %v", err))
 		return
 	}
 
@@ -102,7 +102,7 @@ func (transport *Transport) GetApiPlacementGetBunker(w http.ResponseWriter, r *h
 
 	placement, err := transport.app.GetPlacementByBunker(bunkerId)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get placement by bunker: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get placement by bunker: %v", err))
 		return
 	}
 
@@ -128,24 +128,24 @@ func (transport *Transport) GetApiPlacementGetBunker(w http.ResponseWriter, r *h
 func (transport *Transport) PutApiPlacementUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
 	var placement models.Placement
 	if err := jsoniter.Unmarshal(data, &placement); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
 	updated, err := transport.app.UpdatePlacement(placement)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %v", err))
 		return
 	}
 
 	if updated == (models.Placement{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %v", err))
 		return
 	}
 
@@ -204,24 +204,24 @@ func (transport *Transport) DeleteApiPlacementDelete(w http.ResponseWriter, r *h
 func (transport *Transport) PutApiPlacementFill(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
 	var fillPlacement models.FillPlacement
 	if err := jsoniter.Unmarshal(data, &fillPlacement); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
 	updated, err := transport.app.FillPlacment(fillPlacement)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %v", err))
 		return
 	}
 
 	if updated == (models.Placement{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %v", err))
 		return
 	}
 

@@ -16,7 +16,8 @@ type Transport struct {
 	infra  *infrastructure.Infrastructure
 	mu     sync.RWMutex
 	ws     *ws.Server
-	camera *camera.Camera
+	camera camera.ICamera
+	Calibrate application.ICalibrationApp
 }
 
 func NewTransport(
@@ -24,9 +25,10 @@ func NewTransport(
 	cfg models.Config,
 	infra *infrastructure.Infrastructure,
 	ws *ws.Server,
-	camera *camera.Camera,
+	camera camera.ICamera,
 ) *Transport {
 	app := application.NewApp(repo, cfg, infra, ws, camera)
+	calibrate := application.NewCalibration(repo, camera)
 
 	return &Transport{
 		app,
@@ -34,5 +36,6 @@ func NewTransport(
 		sync.RWMutex{},
 		ws,
 		camera,
+		calibrate,
 	}
 }

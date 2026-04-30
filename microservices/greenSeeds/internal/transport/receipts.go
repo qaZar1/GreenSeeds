@@ -33,24 +33,24 @@ import (
 func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var receipt models.Receipts
 	if err := jsoniter.Unmarshal(body, &receipt); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
 	addedReceipt, err := transport.app.AddReceipts(receipt)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add receipts: %w", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add receipts: %v", err))
 		return
 	}
 
 	if addedReceipt == (models.Receipts{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %v", err))
 		return
 	}
 
@@ -74,7 +74,7 @@ func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Re
 func (transport *Transport) GetApiReceiptsGet(w http.ResponseWriter, r *http.Request) {
 	receipts, err := transport.app.GetReceipts()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipts: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipts: %v", err))
 		return
 	}
 
@@ -105,13 +105,13 @@ func (transport *Transport) GetApiReceiptsGetReceipt(w http.ResponseWriter, r *h
 
 	receiptNum, err := strconv.Atoi(receiptName)
 	if err != nil{
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
 		return
 	}
 
 	receipt, err := transport.app.GetReceiptsByReceipt(receiptNum)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
 		return
 	}
 
@@ -137,24 +137,24 @@ func (transport *Transport) GetApiReceiptsGetReceipt(w http.ResponseWriter, r *h
 func (transport *Transport) PutApiReceiptsUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
 	var receipt models.Receipts
 	if err := jsoniter.Unmarshal(data, &receipt); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
 	updatedReceipt, err := transport.app.UpdateReceipts(receipt)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %v", err))
 		return
 	}
 
 	if updatedReceipt == (models.Receipts{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %v", err))
 		return
 	}
 
@@ -188,7 +188,7 @@ func (transport *Transport) DeleteApiReceiptsDelete(w http.ResponseWriter, r *ht
 
 	receiptNum, err := strconv.Atoi(receiptName)
 	if err != nil{
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
 		return
 	}
 

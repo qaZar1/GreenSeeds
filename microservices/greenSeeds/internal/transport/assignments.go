@@ -32,24 +32,24 @@ import (
 func (transport *Transport) PostApiAssignmentsAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var assignment models.Assignments
 	if err := jsoniter.Unmarshal(body, &assignment); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
 	addedAssignment, err := transport.app.AddAssignment(assignment)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add assignment: %w", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add assignment: %v", err))
 		return
 	}
 
 	if addedAssignment == (models.Assignments{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add assignment: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add assignment: %v", err))
 		return
 	}
 
@@ -73,7 +73,7 @@ func (transport *Transport) PostApiAssignmentsAdd(w http.ResponseWriter, r *http
 func (transport *Transport) GetApiAssignmentsGet(w http.ResponseWriter, r *http.Request) {
 	assignments, err := transport.app.GetAssignments()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get assignments: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get assignments: %v", err))
 		return
 	}
 
@@ -106,7 +106,7 @@ func (transport *Transport) GetApiAssignmentsGetAssignment(w http.ResponseWriter
 
 	assignment, err := transport.app.GetAssignmentsByAssignment(idStr)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get assignment by assignment: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get assignment by assignment: %v", err))
 		return
 	}
 
@@ -132,24 +132,24 @@ func (transport *Transport) GetApiAssignmentsGetAssignment(w http.ResponseWriter
 func (transport *Transport) PutApiAssignmentsUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
 	var assignment models.Assignments
 	if err := jsoniter.Unmarshal(data, &assignment); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
 	updatedAssignment, err := transport.app.UpdateAssignment(assignment)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update assignment: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update assignment: %v", err))
 		return
 	}
 
 	if updatedAssignment == (models.Assignments{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update assignment: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update assignment: %v", err))
 		return
 	}
 
@@ -218,7 +218,7 @@ func (transport *Transport) GetApiActiveTasks(w http.ResponseWriter, r *http.Req
 
 	check, err := transport.app.CheckActiveTasks(userId)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get active task: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get active task: %v", err))
 		return
 	}
 
@@ -251,7 +251,7 @@ func (transport *Transport) GetApiTask(w http.ResponseWriter, r *http.Request) {
 
 	task, err := transport.app.GetTaskById(idStr)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get task: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get task: %v", err))
 		return
 	}
 

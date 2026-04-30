@@ -7,12 +7,50 @@ import (
 	"strconv"
 	"time"
 
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/opencv"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 )
 
-func (app *App) CalibrationHandshake() (string, error) {
-	// if ok := app.ws.Serial.InitialHandshake(); !ok {
+//go:generate mockgen -source=calibration.go -destination=./../mocks/mock_calibration.go -package=mocks
+type ICalibrationApp interface {
+	CalibrationHandshake() (string, error)
+	GetPhoto(sessionId, number string) ([]byte, error)
+	CalculateResult(models.Calibration) (models.Calibration, error)
+	Clear(sessionId string) error
+	Save(sessionId string) error
+	BytesFromPhoto(path string) ([]byte, error)
+}
+
+type Calibration struct {
+	repo 		*repository.Repository
+	camera 		camera.ICamera
+	calibrate 	map[string]models.Calibration
+	opencv      *opencv.Calibration
+	validate    *validator.Validate
+}
+
+func NewCalibration(
+	repo *repository.Repository,
+	camera camera.ICamera,
+) ICalibrationApp {
+	validate := validator.New()
+
+	opencv := opencv.NewCalibration()
+	return &Calibration{
+		repo: repo,
+		camera: camera,
+		calibrate: make(map[string]models.Calibration),
+		opencv: opencv,
+		validate: validate,
+	}
+}
+
+func (c *Calibration) CalibrationHandshake() (string, error) {
+	// if ok := c.ws.Serial.InitialHandshake(); !ok {
 	// 	return "", errors.New("Failed to initial handshake")
 	// }
 
@@ -20,12 +58,12 @@ func (app *App) CalibrationHandshake() (string, error) {
 	now := time.Now()
 
 	// добавляем в базу
-	ok, err := app.repo.SQLite.AddCalibration(sessionId, now)
+	ok, err := c.repo.SQLite.AddCalibration(sessionId, now)
 	if err != nil || !ok {
 		return "", err
 	}
 
-	toStart, err := app.repo.DevSet.GetSettingsByKey("toStart")
+	toStart, err := c.repo.DevSet.GetSettingsByKey("toStart")
 	if err != nil {
 		return "", err
 	}
@@ -34,7 +72,7 @@ func (app *App) CalibrationHandshake() (string, error) {
 		return "", errors.New("toStart is empty")
 	}
 
-	// msg := app.ws.Serial.RunGcode(toStart.Value)
+	// msg := c.ws.Serial.RunGcode(toStart.Value)
 	// if msg.Error != nil {
 	// 	return "", errors.New(*msg.Error)
 	// }
@@ -42,18 +80,18 @@ func (app *App) CalibrationHandshake() (string, error) {
 	return sessionId, nil
 }
 
-func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error) {
+func (c *Calibration) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error) {
 	numberPhoto, err := strconv.Atoi(numberPhotoStr)
 	if err != nil {
 		return nil, err
 	}
 
-	cal, err := app.repo.SQLite.GetCalibration(sessionId)
+	cal, err := c.repo.SQLite.GetCalibration(sessionId)
 	if err != nil {
 		return nil, err
 	}
 
-	buf, err := app.camera.TakePhoto()
+	buf, err := c.camera.TakePhoto()
 	if err != nil {
 		return nil, err
 	}
@@ -67,14 +105,14 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 	var path string
 	switch numberPhoto {
 	case 1:
-		path = fmt.Sprintf("./tmp/%s/%app.jpg", sessionId, "1")
+		path = fmt.Sprintf("./tmp/%s/%s.jpg", sessionId, "1")
 		cal.FirstPhotoPath = &path
 
-		if err := app.camera.SavePhoto(path, sessionId, buf); err != nil {
+		if err := c.camera.SavePhoto(path, sessionId, buf); err != nil {
 			return nil, err
 		}
 
-		// toEnd, err := app.repo.DevSet.GetSettingsByKey("toEnd")
+		// toEnd, err := c.repo.DevSet.GetSettingsByKey("toEnd")
 		// if err != nil {
 		// 	return nil, err
 		// }
@@ -83,7 +121,7 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 		// 	return nil, errors.New("toEnd is empty")
 		// }
 
-		// msg := app.ws.Serial.RunGcode(toEnd.Value)
+		// msg := c.ws.Serial.RunGcode(toEnd.Value)
 		// if msg.Error != nil {
 		// 	return nil, errors.New(*msg.Error)
 		// }
@@ -93,10 +131,10 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 			return nil, errors.New("first photo is nil")
 		}
 
-		path = fmt.Sprintf("./tmp/%s/%app.jpg", sessionId, "2")
+		path = fmt.Sprintf("./tmp/%s/%s.jpg", sessionId, "2")
 		cal.SecondPhotoPath = &path
 
-		if err := app.camera.SavePhoto(path, sessionId, buf); err != nil {
+		if err := c.camera.SavePhoto(path, sessionId, buf); err != nil {
 			return nil, err
 		}
 
@@ -104,7 +142,7 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 		return nil, errors.New("number of photo is invalid")
 	}
 
-	ok, err := app.repo.SQLite.UpdateCalibration(cal, sessionId)
+	ok, err := c.repo.SQLite.UpdateCalibration(cal, sessionId)
 	if err != nil {
 		return nil, err
 	}
@@ -115,12 +153,12 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 	return photo, nil
 }
 
-func (app *App) CalculateResult(calibration models.Calibration) (models.Calibration, error) {
-	if err := app.validate.Struct(calibration); err != nil {
+func (c *Calibration) CalculateResult(calibration models.Calibration) (models.Calibration, error) {
+	if err := c.validate.Struct(calibration); err != nil {
 		return models.Calibration{}, err
 	}
 
-	cal, err := app.repo.SQLite.GetCalibration(calibration.SessionId)
+	cal, err := c.repo.SQLite.GetCalibration(calibration.SessionId)
 	if err != nil {
 		return models.Calibration{}, err
 	}
@@ -131,17 +169,17 @@ func (app *App) CalculateResult(calibration models.Calibration) (models.Calibrat
 		return models.Calibration{}, errors.New("Photos not ready")
 	}
 
-	firstPhoto, err := app.BytesFromPhoto(*firstPath)
+	firstPhoto, err := c.BytesFromPhoto(*firstPath)
 	if err != nil {
 		return models.Calibration{}, err
 	}
 
-	secondPhoto, err := app.BytesFromPhoto(*secondPath)
+	secondPhoto, err := c.BytesFromPhoto(*secondPath)
 	if err != nil {
 		return models.Calibration{}, err
 	}
 
-	dx, dy, err := app.calib.Finder(firstPhoto, secondPhoto)
+	dx, dy, err := c.opencv.Finder(firstPhoto, secondPhoto)
 	if err != nil {
 		return models.Calibration{}, err
 	}
@@ -160,7 +198,7 @@ func (app *App) CalculateResult(calibration models.Calibration) (models.Calibrat
 		DPerStep:  &dPerStep,
 	}
 
-	ok, err := app.repo.SQLite.UpdateCalibration(cal, cal.SessionId)
+	ok, err := c.repo.SQLite.UpdateCalibration(cal, cal.SessionId)
 	if err != nil {
 		return models.Calibration{}, err
 	}
@@ -171,27 +209,27 @@ func (app *App) CalculateResult(calibration models.Calibration) (models.Calibrat
 	return cal, nil
 }
 
-func (app *App) Clear(sessionId string) error {
+func (c *Calibration) Clear(sessionId string) error {
 	if sessionId == "" {
 		return errors.New("session id is empty")
 	}
 
-	delete(app.calibration, sessionId)
+	delete(c.calibrate, sessionId)
 
 	return nil
 }
 
-func (app *App) Save(sessionId string) error {
-	calibrate, err := app.repo.SQLite.GetCalibration(sessionId)
+func (c *Calibration) Save(sessionId string) error {
+	calibrate, err := c.repo.SQLite.GetCalibration(sessionId)
 	if err != nil {
 		return err
 	}
 
-	return app.repo.CalRepo.TxUpsert(*calibrate.DPerStep)
+	return c.repo.CalRepo.TxUpsert(*calibrate.DPerStep)
 }
 
-func (app *App) BytesFromPhoto(path string) ([]byte, error) {
-	buf, err := app.camera.GetBytesFromPhoto(path)
+func (c *Calibration) BytesFromPhoto(path string) ([]byte, error) {
+	buf, err := c.camera.GetBytesFromPhoto(path)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +242,7 @@ func (app *App) BytesFromPhoto(path string) ([]byte, error) {
 }
 
 // func (s *Service) Stream() {
-// 	if err := app.camera.Run(); err != nil {
+// 	if err := c.camera.Run(); err != nil {
 // 		logrus.Printf("%s", err)
 // 	}
 // }
