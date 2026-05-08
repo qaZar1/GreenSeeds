@@ -41,7 +41,7 @@ const logo = `
 // @description API для работы c GreenSeeds
 // @BasePath /
 func main() {
-	fmt.Println(logo)
+	fmt.Printf(logo)
 	log := logger.New(zerolog.DebugLevel)
 
 	var configPath string

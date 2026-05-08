@@ -12,12 +12,22 @@ import (
 )
 
 type Transport struct {
-	app    *application.App
+	Assignments    application.IAssignmentsApp
+	Bunkers        application.IBunkersApp
+	DeviceSettings application.IDeviceSettingsApp
+	Placements     application.IPlacementsApp
+	Receipts       application.IReceiptsApp
+	Reports        application.IReportsApp
+	Seeds          application.ISeedsApp
+	Shifts         application.IShiftsApp
+	Users          application.IUsersApp
+	Calibration    application.ICalibrationApp
+	Logs           application.ILogsApp
+
 	infra  *infrastructure.Infrastructure
 	mu     sync.RWMutex
 	ws     *ws.Server
 	camera camera.ICamera
-	Calibrate application.ICalibrationApp
 }
 
 func NewTransport(
@@ -28,14 +38,21 @@ func NewTransport(
 	camera camera.ICamera,
 ) *Transport {
 	app := application.NewApp(repo, cfg, infra, ws, camera)
-	calibrate := application.NewCalibration(repo, camera)
-
 	return &Transport{
-		app,
-		infra,
-		sync.RWMutex{},
-		ws,
-		camera,
-		calibrate,
+		Assignments:    app,
+		Bunkers:        app,
+		DeviceSettings: app,
+		Placements:     app,
+		Receipts:       app,
+		Reports:        app,
+		Seeds:          app,
+		Shifts:         app,
+		Users:          app,
+		Calibration:    app,
+		Logs:           app,
+		infra:          infra,
+		mu:             sync.RWMutex{},
+		ws:             ws,
+		camera:         camera,
 	}
 }

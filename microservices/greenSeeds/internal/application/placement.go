@@ -7,6 +7,16 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
+//go:generate mockgen -source=placement.go -destination=./../mocks/mock_placement.go -package=mocks
+type IPlacementsApp interface {
+	AddPlacement(models.Placement) (models.Placement, error)
+	GetPlacements() ([]models.Placement, error)
+	GetPlacementByBunker(string) (models.Placement, error)
+	UpdatePlacement(models.Placement) (models.Placement, error)
+	DeletePlacement(string) (bool, error)
+	FillPlacement(models.FillPlacement) (models.Placement, error)
+}
+
 func (app *App) AddPlacement(placement models.Placement) (models.Placement, error) {
 	if err := app.validate.Struct(placement); err != nil {
 		return models.Placement{}, err
@@ -63,7 +73,7 @@ func (app *App) DeletePlacement(bunkerId string) (bool, error) {
 	return app.repo.PlcRepo.DeletePlacement(bunkerIdInt)
 }
 
-func (app *App) FillPlacment(fillPlacement models.FillPlacement) (models.Placement, error) {
+func (app *App) FillPlacement(fillPlacement models.FillPlacement) (models.Placement, error) {
 	seedWithBunkers, err := app.GetSeedWithBunkers(fillPlacement.Seed)
 	if err != nil {
 		return models.Placement{}, err

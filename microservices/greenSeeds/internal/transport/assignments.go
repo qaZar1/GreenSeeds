@@ -42,7 +42,7 @@ func (transport *Transport) PostApiAssignmentsAdd(w http.ResponseWriter, r *http
 		return
 	}
 
-	addedAssignment, err := transport.app.AddAssignment(assignment)
+	addedAssignment, err := transport.Assignments.AddAssignment(assignment)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add assignment: %v", err))
 		return
@@ -71,7 +71,7 @@ func (transport *Transport) PostApiAssignmentsAdd(w http.ResponseWriter, r *http
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiAssignmentsGet(w http.ResponseWriter, r *http.Request) {
-	assignments, err := transport.app.GetAssignments()
+	assignments, err := transport.Assignments.GetAssignments()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get assignments: %v", err))
 		return
@@ -104,7 +104,7 @@ func (transport *Transport) GetApiAssignmentsGet(w http.ResponseWriter, r *http.
 func (transport *Transport) GetApiAssignmentsGetAssignment(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 
-	assignment, err := transport.app.GetAssignmentsByAssignment(idStr)
+	assignment, err := transport.Assignments.GetAssignmentsByAssignment(idStr)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get assignment by assignment: %v", err))
 		return
@@ -142,7 +142,7 @@ func (transport *Transport) PutApiAssignmentsUpdate(w http.ResponseWriter, r *ht
 		return
 	}
 
-	updatedAssignment, err := transport.app.UpdateAssignment(assignment)
+	updatedAssignment, err := transport.Assignments.UpdateAssignment(assignment)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update assignment: %v", err))
 		return
@@ -181,7 +181,7 @@ func (transport *Transport) DeleteApiAssignmentsDelete(w http.ResponseWriter, r 
 
 	idStr := chi.URLParam(r, "id")
 
-	ok, err := transport.app.DeleteAssignments(idStr)
+	ok, err := transport.Assignments.DeleteAssignments(idStr)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return
@@ -216,7 +216,7 @@ func (transport *Transport) DeleteApiAssignmentsDelete(w http.ResponseWriter, r 
 func (transport *Transport) GetApiActiveTasks(w http.ResponseWriter, r *http.Request) {
 	userId := chi.URLParam(r, "user_id")
 
-	check, err := transport.app.CheckActiveTasks(userId)
+	check, err := transport.Assignments.CheckActiveTasks(userId)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get active task: %v", err))
 		return
@@ -249,7 +249,7 @@ func (transport *Transport) GetApiActiveTasks(w http.ResponseWriter, r *http.Req
 func (transport *Transport) GetApiTask(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 
-	task, err := transport.app.GetTaskById(idStr)
+	task, err := transport.Assignments.GetTaskById(idStr)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get task: %v", err))
 		return

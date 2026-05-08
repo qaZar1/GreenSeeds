@@ -43,7 +43,7 @@ func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	addedReceipt, err := transport.app.AddReceipts(receipt)
+	addedReceipt, err := transport.Receipts.AddReceipts(receipt)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add receipts: %v", err))
 		return
@@ -72,7 +72,7 @@ func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Re
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiReceiptsGet(w http.ResponseWriter, r *http.Request) {
-	receipts, err := transport.app.GetReceipts()
+	receipts, err := transport.Receipts.GetReceipts()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipts: %v", err))
 		return
@@ -104,12 +104,12 @@ func (transport *Transport) GetApiReceiptsGetReceipt(w http.ResponseWriter, r *h
 	receiptName := chi.URLParam(r, "receipt")
 
 	receiptNum, err := strconv.Atoi(receiptName)
-	if err != nil{
+	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
 		return
 	}
 
-	receipt, err := transport.app.GetReceiptsByReceipt(receiptNum)
+	receipt, err := transport.Receipts.GetReceiptsByReceipt(receiptNum)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
 		return
@@ -147,7 +147,7 @@ func (transport *Transport) PutApiReceiptsUpdate(w http.ResponseWriter, r *http.
 		return
 	}
 
-	updatedReceipt, err := transport.app.UpdateReceipts(receipt)
+	updatedReceipt, err := transport.Receipts.UpdateReceipts(receipt)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %v", err))
 		return
@@ -187,12 +187,12 @@ func (transport *Transport) DeleteApiReceiptsDelete(w http.ResponseWriter, r *ht
 	receiptName := chi.URLParam(r, "receipt")
 
 	receiptNum, err := strconv.Atoi(receiptName)
-	if err != nil{
+	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
 		return
 	}
 
-	ok, err = transport.app.DeleteReceipts(receiptNum)
+	ok, err = transport.Receipts.DeleteReceipts(receiptNum)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return

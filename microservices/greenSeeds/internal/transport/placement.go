@@ -40,7 +40,7 @@ func (transport *Transport) PostApiPlacementAdd(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	inserted, err := transport.app.AddPlacement(placement)
+	inserted, err := transport.Placements.AddPlacement(placement)
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %v", err))
 		return
@@ -69,7 +69,7 @@ func (transport *Transport) PostApiPlacementAdd(w http.ResponseWriter, r *http.R
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiPlacementGet(w http.ResponseWriter, r *http.Request) {
-	placements, err := transport.app.GetPlacements()
+	placements, err := transport.Placements.GetPlacements()
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get placements: %v", err))
 		return
@@ -100,7 +100,7 @@ func (transport *Transport) GetApiPlacementGet(w http.ResponseWriter, r *http.Re
 func (transport *Transport) GetApiPlacementGetBunker(w http.ResponseWriter, r *http.Request) {
 	bunkerId := chi.URLParam(r, "bunker")
 
-	placement, err := transport.app.GetPlacementByBunker(bunkerId)
+	placement, err := transport.Placements.GetPlacementByBunker(bunkerId)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get placement by bunker: %v", err))
 		return
@@ -138,7 +138,7 @@ func (transport *Transport) PutApiPlacementUpdate(w http.ResponseWriter, r *http
 		return
 	}
 
-	updated, err := transport.app.UpdatePlacement(placement)
+	updated, err := transport.Placements.UpdatePlacement(placement)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %v", err))
 		return
@@ -171,7 +171,7 @@ func (transport *Transport) PutApiPlacementUpdate(w http.ResponseWriter, r *http
 func (transport *Transport) DeleteApiPlacementDelete(w http.ResponseWriter, r *http.Request) {
 	bunkerId := chi.URLParam(r, "bunker")
 
-	ok, err := transport.app.DeletePlacement(bunkerId)
+	ok, err := transport.Placements.DeletePlacement(bunkerId)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return
@@ -214,7 +214,7 @@ func (transport *Transport) PutApiPlacementFill(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	updated, err := transport.app.FillPlacment(fillPlacement)
+	updated, err := transport.Placements.FillPlacement(fillPlacement)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update placement: %v", err))
 		return

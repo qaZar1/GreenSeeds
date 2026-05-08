@@ -4,6 +4,15 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
+//go:generate mockgen -source=receipts.go -destination=./../mocks/mock_receipts.go -package=mocks
+type IReceiptsApp interface {
+	AddReceipts(models.Receipts) (models.Receipts, error)
+	GetReceipts() ([]models.Receipts, error)
+	GetReceiptsByReceipt(int) (models.Receipts, error)
+	UpdateReceipts(models.Receipts) (models.Receipts, error)
+	DeleteReceipts(int) (bool, error)
+}
+
 func (app *App) AddReceipts(receipts models.Receipts) (models.Receipts, error) {
 	if err := app.validate.Struct(receipts); err != nil {
 		return models.Receipts{}, err

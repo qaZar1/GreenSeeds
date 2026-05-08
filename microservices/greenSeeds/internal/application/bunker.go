@@ -6,6 +6,16 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
+//go:generate mockgen -source=bunker.go -destination=./../mocks/mock_bunker.go -package=mocks
+type IBunkersApp interface {
+	AddBunker(models.Bunkers) (models.Bunkers, error)
+	GetBunkers() ([]models.Bunkers, error)
+	GetBunkersForPlacement() ([]models.Bunkers, error)
+	GetBunkersById(string) (models.Bunkers, error)
+	UpdateBunker(models.Bunkers) (models.Bunkers, error)
+	DeleteBunker(string) (bool, error)
+}
+
 func (app *App) AddBunker(bunker models.Bunkers) (models.Bunkers, error) {
 	if err := app.validate.Struct(bunker); err != nil {
 		return models.Bunkers{}, err

@@ -30,7 +30,7 @@ import (
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) PostApiCalibrationHandshake(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := transport.Calibrate.CalibrationHandshake()
+	sessionId, err := transport.Calibration.CalibrationHandshake()
 	if err != nil {
 		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid calibration handshake: %s", err))
 		return
@@ -62,7 +62,7 @@ func (transport *Transport) PostApiCalibrationPhoto(w http.ResponseWriter, r *ht
 	}
 
 	numberOfPhoto := chi.URLParam(r, "number-of-photo")
-	photo, err := transport.Calibrate.GetPhoto(sessionId, numberOfPhoto)
+	photo, err := transport.Calibration.GetPhoto(sessionId, numberOfPhoto)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get photo: %s", err))
 		return
@@ -94,7 +94,7 @@ func (transport *Transport) PostApiCalibrationClear(w http.ResponseWriter, r *ht
 		return
 	}
 
-	if err := transport.Calibrate.Clear(sessionId); err != nil {
+	if err := transport.Calibration.Clear(sessionId); err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid clear: %s", err))
 		return
 	}
@@ -139,7 +139,7 @@ func (transport *Transport) PostApiCalibrationCalc(w http.ResponseWriter, r *htt
 
 	calibration.SessionId = sessionId
 
-	found, err := transport.Calibrate.CalculateResult(calibration)
+	found, err := transport.Calibration.CalculateResult(calibration)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update assignment: %v", err))
 		return
@@ -177,7 +177,7 @@ func (transport *Transport) PostApiCalibrationSave(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if err := transport.Calibrate.Save(sessionId); err != nil {
+	if err := transport.Calibration.Save(sessionId); err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update distance by step: %s", err))
 		return
 	}
@@ -201,6 +201,6 @@ func (transport *Transport) PostApiCalibrationSave(w http.ResponseWriter, r *htt
 // // @Failure 401 {object} nil "Ошибка авторизации"
 // // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 // func (transport *Transport) GetApiCalibrationStream(w http.ResponseWriter, r *http.Request) {
-// 	transport.app.Calibrate.Stream()
+// 	transport.Calibration.Calibration.Stream()
 // 	utils.WriteStream(w, http.StatusOK, []byte{})
 // }

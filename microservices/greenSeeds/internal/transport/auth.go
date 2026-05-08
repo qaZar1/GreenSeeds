@@ -47,7 +47,7 @@ func (transport *Transport) PostApiRegisterUser(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	status, err := transport.app.RegisterUser(regUser)
+	status, err := transport.Users.RegisterUser(regUser)
 	if err != nil {
 		utils.WriteJSON(w, status, err)
 		return
@@ -86,7 +86,7 @@ func (transport *Transport) PostApiLoginUser(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	tokenResponse, status, err := transport.app.LoginUser(user)
+	tokenResponse, status, err := transport.Users.LoginUser(user)
 	if err != nil {
 		utils.WriteString(w, status, err.Error())
 		return

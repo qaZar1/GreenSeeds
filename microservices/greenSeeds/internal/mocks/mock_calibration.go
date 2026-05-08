@@ -34,34 +34,19 @@ func (m *MockICalibrationApp) EXPECT() *MockICalibrationAppMockRecorder {
 	return m.recorder
 }
 
-// BytesFromPhoto mocks base method.
-func (m *MockICalibrationApp) BytesFromPhoto(path string) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BytesFromPhoto", path)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// BytesFromPhoto indicates an expected call of BytesFromPhoto.
-func (mr *MockICalibrationAppMockRecorder) BytesFromPhoto(path interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BytesFromPhoto", reflect.TypeOf((*MockICalibrationApp)(nil).BytesFromPhoto), path)
-}
-
 // CalculateResult mocks base method.
-func (m *MockICalibrationApp) CalculateResult(arg0 models.Calibration) (models.Calibration, error) {
+func (m *MockICalibrationApp) CalculateResult(calibration models.Calibration) (models.Calibration, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalculateResult", arg0)
+	ret := m.ctrl.Call(m, "CalculateResult", calibration)
 	ret0, _ := ret[0].(models.Calibration)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CalculateResult indicates an expected call of CalculateResult.
-func (mr *MockICalibrationAppMockRecorder) CalculateResult(arg0 interface{}) *gomock.Call {
+func (mr *MockICalibrationAppMockRecorder) CalculateResult(calibration interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateResult", reflect.TypeOf((*MockICalibrationApp)(nil).CalculateResult), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateResult", reflect.TypeOf((*MockICalibrationApp)(nil).CalculateResult), calibration)
 }
 
 // CalibrationHandshake mocks base method.
@@ -94,18 +79,18 @@ func (mr *MockICalibrationAppMockRecorder) Clear(sessionId interface{}) *gomock.
 }
 
 // GetPhoto mocks base method.
-func (m *MockICalibrationApp) GetPhoto(sessionId, number string) ([]byte, error) {
+func (m *MockICalibrationApp) GetPhoto(sessionId, numberPhotoStr string) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPhoto", sessionId, number)
+	ret := m.ctrl.Call(m, "GetPhoto", sessionId, numberPhotoStr)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPhoto indicates an expected call of GetPhoto.
-func (mr *MockICalibrationAppMockRecorder) GetPhoto(sessionId, number interface{}) *gomock.Call {
+func (mr *MockICalibrationAppMockRecorder) GetPhoto(sessionId, numberPhotoStr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhoto", reflect.TypeOf((*MockICalibrationApp)(nil).GetPhoto), sessionId, number)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhoto", reflect.TypeOf((*MockICalibrationApp)(nil).GetPhoto), sessionId, numberPhotoStr)
 }
 
 // Save mocks base method.
