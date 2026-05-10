@@ -9,6 +9,8 @@ import FormModal from "../../utils/FormModal";
 import { StatCard } from "../../utils/Card";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ActionButton from "../../utils/AсtionButton";
+import ResponsiveTable from "../../utils/ResponsiveTable";
 
 const SeedsPage: React.FC = () => {
 
@@ -246,22 +248,102 @@ const SeedsPage: React.FC = () => {
   return (
     <div className="space-y-[24px] w-full">
 
-      {/* add button */}
+      {/* кнопка добавления */}
       <div className="flex justify-end">
-        <button
+        <ActionButton
           onClick={handleAdd}
-          className="inline-flex items-center gap-[8px] px-[20px] py-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] rounded-[10px]"
+          icon="fa-solid fa-plus"
         >
-          <i className="fa-solid fa-plus text-[14px]" />
           Добавить
-        </button>
+        </ActionButton>
       </div>
 
       {/* active */}
-      <Table
-        data={activeSeeds}
-        columns={columns}
-        emptyMessage="Семена еще не заданы"
+      <ResponsiveTable
+          data={activeSeeds}
+          table={
+            <Table
+              data={activeSeeds}
+              columns={columns}
+              emptyMessage="Семена еще не заданы"
+            />
+          }
+          emptyMessage="Семена еще не заданы"
+          renderCard={(seed) => (
+            <>
+            {/* content */}
+            <div className="space-y-[10px] text-[14px]">
+
+              <div className="text-[var(--text-primary)] break-words">
+                <span className="text-[var(--text-secondary)]">
+                  Семена:
+                </span>{" "}
+                {seed.seed_ru}
+              </div>
+
+              <div className="text-[var(--text-primary)]">
+                <span className="text-[var(--text-secondary)]">
+                  Мин. плотность:
+                </span>{" "}
+                {seed.min_density}
+              </div>
+
+              <div className="text-[var(--text-primary)]">
+                <span className="text-[var(--text-secondary)]">
+                  Макс. плотность:
+                </span>{" "}
+                {seed.max_density}
+              </div>
+
+              <div className="text-[var(--text-primary)]">
+                <span className="text-[var(--text-secondary)]">
+                  Емкость:
+                </span>{" "}
+                {seed.tank_capacity}
+              </div>
+
+            </div>
+
+            {/* actions */}
+            <div className="flex items-center gap-[10px]">
+
+              <button
+                onClick={() => handleEdit(seed)}
+                className="
+                  flex-1
+                  flex items-center justify-center gap-[8px]
+                  py-[10px]
+                  rounded-[10px]
+                  border border-[var(--border-color)]
+                  text-[var(--text-secondary)]
+                  hover:bg-[var(--status-info-bg)]
+                  hover:text-[var(--status-info-text)]
+                  transition-colors
+                "
+              >
+                <i className="fa-solid fa-pen-to-square" />
+              </button>
+
+              <button
+                onClick={() => handleDelete(seed)}
+                className="
+                  flex-1
+                  flex items-center justify-center gap-[8px]
+                  py-[10px]
+                  rounded-[10px]
+                  border border-[var(--border-color)]
+                  text-[var(--text-secondary)]
+                  hover:bg-[var(--status-danger-bg)]
+                  hover:text-[var(--status-danger-text)]
+                  transition-colors
+                "
+              >
+                <i className="fa-solid fa-trash" />
+              </button>
+
+            </div>
+          </>
+        )}
       />
 
       {/* deleted */}
@@ -286,17 +368,62 @@ const SeedsPage: React.FC = () => {
               showDeleted ? "max-h-[800px] mt-[16px]" : "max-h-0"
             }`}
           >
-            <Table
+            <ResponsiveTable
               data={deletedSeeds}
-              columns={deletedColumns}
+              table={
+                <Table
+                  data={deletedSeeds}
+                  columns={deletedColumns}
+                  emptyMessage="Удаленных записей нет"
+                />
+              }
               emptyMessage="Удаленных записей нет"
+              renderCard={(seed) => (
+                <>
+                  {/* content */}
+                  <div className="space-y-[10px] text-[14px]">
+
+                    <div className="text-[var(--text-primary)] break-words">
+                      <span className="text-[var(--text-secondary)]">
+                        Семена:
+                      </span>{" "}
+                      {seed.seed_ru}
+                    </div>
+
+                    <div className="text-[var(--text-primary)]">
+                      <span className="text-[var(--text-secondary)]">
+                        Емкость:
+                      </span>{" "}
+                      {seed.tank_capacity}
+                    </div>
+
+                  </div>
+
+                  {/* actions */}
+                  <button
+                    onClick={() => handleRestore(seed)}
+                    className="
+                      w-full
+                      flex items-center justify-center gap-[8px]
+                      py-[10px]
+                      rounded-[10px]
+                      border border-[var(--border-color)]
+                      text-[var(--text-secondary)]
+                      hover:bg-[var(--status-success-bg)]
+                      hover:text-[var(--status-success-text)]
+                      transition-colors
+                    "
+                  >
+                    <i className="fa-solid fa-rotate-left" />
+                  </button>
+                </>
+              )}
             />
           </div>
         </div>
       )}
 
       {/* modal */}
-
       <FormModal
         key={editingSeed?.seed ?? "new"}
         title={editingSeed ? "Изменение семян" : "Добавление семян"}

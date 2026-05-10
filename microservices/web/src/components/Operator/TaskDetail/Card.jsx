@@ -60,7 +60,6 @@ const TaskCard = () => {
       });
     },
     onBunkersUpdate: (incoming) => {
-      console.log("incoming", incoming)
       setBunkers(
         incoming.map(b => ({
           bunker: Number(b.bunker),
@@ -102,10 +101,6 @@ const TaskCard = () => {
       console.error("Ошибка заполнения бункера", err);
     }
   };
-
-  useEffect(() => {
-    console.log("BUNKERS", bunkers);
-  }, [bunkers]);
 
   useEffect(() => {
     if (!bunkers.length) return;
@@ -182,7 +177,6 @@ const TaskCard = () => {
   };
 
   useEffect(() => {
-    console.log("activeBunker", activeBunker);
     if (!isRunning) return;
     if (activeBunker === null) {
       handleStop();
@@ -292,8 +286,6 @@ const TaskCard = () => {
       </Typography>
     </Box>
   );
-
-  console.log("record", record)
 
   return (
     <Card

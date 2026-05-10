@@ -5,6 +5,7 @@ import { api } from "../../../api/apiProvider";
 import { usePageHeader } from "../../../context/HeaderContext";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ActionButton from "../../utils/AсtionButton";
 
 const DeviceSettingCreatePage: React.FC = () => {
 
@@ -166,20 +167,23 @@ const DeviceSettingCreatePage: React.FC = () => {
           </div>
 
           {/* buttons */}
-          <div className="flex gap-[12px] pt-[8px]">
-            <button
+          <div className="flex flex-col sm:flex-row gap-[12px] pt-[8px]">
+            <ActionButton type="submit">
+              {id ? "Сохранить" : "Создать"}
+            </ActionButton>
+
+            <ActionButton
               type="button"
               onClick={() => navigate(-1)}
-              className="flex-1 px-[16px] py-[10px] rounded-[10px] border border-[var(--border-color)] text-[var(--text-primary)]"
+              className="
+                bg-transparent
+                border border-[var(--border-color)]
+                text-[var(--text-primary)]
+                hover:bg-[var(--bg-hover)]
+              "
             >
               Отмена
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-[16px] py-[10px] rounded-[10px] bg-[var(--color-primary)] text-[var(--text-primary)]"
-            >
-              {id ? "Сохранить" : "Создать"}
-            </button>
+            </ActionButton>
           </div>
         </form>
       </div>

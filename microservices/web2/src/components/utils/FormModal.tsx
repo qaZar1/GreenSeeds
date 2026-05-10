@@ -160,17 +160,40 @@ const FormModal: React.FC<Props> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-[20px] isolate">
+    <div
+      className="
+        fixed left-0 top-0
+        z-50
+        w-screen
+        h-dvh
+        overflow-y-auto
+        overscroll-contain
+        flex items-center justify-center
+        p-[16px] sm:p-[20px]
+        isolate
+      "
+    >
 
+      <div className="absolute left-0 top-0 w-full h-full bg-black/30" />
+
+      {/* modal */}
       <div
-        className="absolute inset-0 bg-black/40"
-      />
-
-      <div className="relative w-full max-w-[480px] bg-[var(--bg-card)] rounded-[16px] shadow-2xl border border-[var(--border-color)]">
-
+        className="
+          relative
+          w-full
+          max-w-[480px]
+          max-h-[90vh]
+          overflow-hidden
+          bg-[var(--bg-card)]
+          rounded-[16px]
+          shadow-2xl
+          border border-[var(--border-color)]
+          flex flex-col
+        "
+      >
         {/* header */}
-        <div className="flex items-center justify-between px-[24px] py-[20px] border-b border-[var(--border-color)]">
-          <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">
+        <div className="flex items-center justify-between px-[16px] sm:px-[24px] py-[16px] sm:py-[20px] border-b border-[var(--border-color)]">
+          <h3 className="text-[16px] sm:text-[18px] font-semibold text-[var(--text-primary)] break-words pr-[12px]">
             {title}
           </h3>
 
@@ -183,7 +206,15 @@ const FormModal: React.FC<Props> = ({
         </div>
 
         {/* form */}
-        <form onSubmit={handleSubmit} className="p-[24px] space-y-[20px]">
+        <form
+          onSubmit={handleSubmit}
+          className="
+            p-[16px] sm:p-[24px]
+            space-y-[20px]
+            overflow-y-auto
+            flex-1
+          "
+        >
 
           {fields.map(field => {
             const error = errors[field.name];
@@ -211,7 +242,7 @@ const FormModal: React.FC<Props> = ({
                     placeholder={field.placeholder}
                     disabled={disabled}
                     onChange={e => update(field.name, e.target.value)}
-                    className={`w-full px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
+                    className={`w-full min-w-0 px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
                     ${showError ? "border-red-500" : "border-[var(--border-color)]"}
                     disabled:opacity-60 disabled:cursor-not-allowed`}
                   />
@@ -227,7 +258,7 @@ const FormModal: React.FC<Props> = ({
                       const val = e.target.value === "" ? "" : Number(e.target.value);
                       update(field.name, val);
                     }}
-                    className={`w-full px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
+                    className={`w-full min-w-0 px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
                     ${showError ? "border-red-500" : "border-[var(--border-color)]"}
                     disabled:opacity-60 disabled:cursor-not-allowed`}
                   />
@@ -240,7 +271,7 @@ const FormModal: React.FC<Props> = ({
                     value={value}
                     disabled={disabled}
                     onChange={e => update(field.name, e.target.value)}
-                    className={`w-full px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
+                    className={`w-full min-w-0 px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
                     ${showError ? "border-red-500" : "border-[var(--border-color)]"}
                     disabled:opacity-60 disabled:cursor-not-allowed`}
                   />
@@ -253,7 +284,7 @@ const FormModal: React.FC<Props> = ({
                       value={value}
                       disabled={disabled}
                       onChange={e => update(field.name, e.target.value)}
-                      className={`w-full px-[14px] py-[10px] pr-[36px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)] appearance-none
+                      className={`w-full min-w-0 px-[14px] py-[10px] pr-[36px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)] appearance-none
                       ${showError ? "border-red-500" : "border-[var(--border-color)]"}
                       disabled:opacity-60 disabled:cursor-not-allowed`}
                     >
@@ -276,7 +307,7 @@ const FormModal: React.FC<Props> = ({
                     disabled={disabled}
                     rows={6}
                     onChange={e => update(field.name, e.target.value)}
-                    className={`w-full px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)] resize-none font-mono
+                    className={`w-full min-w-0 px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)] resize-none font-mono
                     ${showError ? "border-red-500" : "border-[var(--border-color)]"}
                     disabled:opacity-60 disabled:cursor-not-allowed`}
                   />
@@ -291,7 +322,7 @@ const FormModal: React.FC<Props> = ({
                       placeholder={field.placeholder}
                       disabled={disabled}
                       onChange={e => update(field.name, e.target.value)}
-                      className={`w-full px-[14px] py-[10px] pr-[40px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
+                      className={`w-full min-w-0 px-[14px] py-[10px] pr-[40px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
                       ${showError ? "border-red-500" : "border-[var(--border-color)]"}
                       disabled:opacity-60 disabled:cursor-not-allowed`}
                     />
@@ -317,7 +348,7 @@ const FormModal: React.FC<Props> = ({
           })}
 
           {/* buttons */}
-          <div className="flex gap-[12px] pt-[8px]">
+          <div className="flex flex-col-reverse sm:flex-row gap-[12px] pt-[8px]">
 
             <button
               type="button"

@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { StatCard } from "../../utils/Card";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ResponsiveTable from "../../utils/ResponsiveTable";
 
 const ReportsPage: React.FC = () => {
 
@@ -180,16 +181,100 @@ const ReportsPage: React.FC = () => {
               />
             </button>
 
-            {isOpen && (
-              <div className="p-[12px]">
-                <Table
-                  data={items}
-                  columns={columns}
-                  emptyMessage="Отчёты отсутствуют"
-                />
-              </div>
-            )}
+                      {isOpen && (
+            <div className="p-[12px]">
+              <ResponsiveTable
+                data={items}
+                table={
+                  <Table
+                    data={items}
+                    columns={columns}
+                    emptyMessage="Отчёты отсутствуют"
+                  />
+                }
+                emptyMessage="Отчёты отсутствуют"
+                renderCard={(rec) => (
+                  <>
+                    {/* content */}
+                    <div className="space-y-[10px] text-[14px]">
 
+                      <div className="text-[var(--text-primary)]">
+                        <span className="text-[var(--text-secondary)]">
+                          Задание:
+                        </span>{" "}
+                        {rec.number}
+                      </div>
+
+                      <div className="text-[var(--text-primary)] break-words">
+                        <span className="text-[var(--text-secondary)]">
+                          Рецепт:
+                        </span>{" "}
+                        {rec.receipt}
+                      </div>
+
+                      <div className="text-[var(--text-primary)]">
+                        <span className="text-[var(--text-secondary)]">
+                          Выполнение:
+                        </span>{" "}
+                        {rec.turn}
+                      </div>
+
+                      <div className="text-[var(--text-primary)]">
+                        <span className="text-[var(--text-secondary)]">
+                          Дата:
+                        </span>{" "}
+                        {rec.dt
+                          ? new Date(rec.dt).toLocaleString("ru-RU")
+                          : "-"}
+                      </div>
+
+                      <div>
+                        <span
+                          className={`
+                            inline-flex
+                            px-[8px] py-[4px]
+                            rounded-[6px]
+                            text-[12px]
+                            font-medium
+                            ${
+                              rec.success
+                                ? "bg-[var(--status-success-bg)] text-[var(--status-success-text)]"
+                                : "bg-[var(--status-danger-bg)] text-[var(--status-danger-text)]"
+                            }
+                          `}
+                        >
+                          {rec.success ? "Успешно" : "Ошибка"}
+                        </span>
+                      </div>
+
+                    </div>
+
+                    {/* actions */}
+                    <div className="flex items-center gap-[10px]">
+
+                      <button
+                        onClick={() => window.location.href = `/reports/${rec.id}`}
+                        className="
+                          w-full
+                          flex items-center justify-center gap-[8px]
+                          py-[10px]
+                          rounded-[10px]
+                          border border-[var(--border-color)]
+                          text-[var(--text-secondary)]
+                          hover:bg-[var(--status-info-bg)]
+                          hover:text-[var(--status-info-text)]
+                          transition-colors
+                        "
+                      >
+                        <i className="fa-solid fa-eye" />
+                      </button>
+
+                    </div>
+                  </>
+                )}
+              />
+            </div>
+          )}
           </div>
         );
       })}
@@ -252,14 +337,99 @@ const ReportsPage: React.FC = () => {
                   </button>
 
                   {isOpen && (
-                    <div className="p-[12px]">
-                      <Table
-                        data={items}
-                        columns={columns}
-                        emptyMessage="Отчёты отсутствуют"
-                      />
-                    </div>
-                  )}
+                  <div className="p-[12px]">
+                    <ResponsiveTable
+                      data={items}
+                      table={
+                        <Table
+                          data={items}
+                          columns={columns}
+                          emptyMessage="Отчёты отсутствуют"
+                        />
+                      }
+                      emptyMessage="Отчёты отсутствуют"
+                      renderCard={(rec) => (
+                        <>
+                          {/* content */}
+                          <div className="space-y-[10px] text-[14px]">
+
+                            <div className="text-[var(--text-primary)]">
+                              <span className="text-[var(--text-secondary)]">
+                                Задание:
+                              </span>{" "}
+                              {rec.number}
+                            </div>
+
+                            <div className="text-[var(--text-primary)] break-words">
+                              <span className="text-[var(--text-secondary)]">
+                                Рецепт:
+                              </span>{" "}
+                              {rec.receipt}
+                            </div>
+
+                            <div className="text-[var(--text-primary)]">
+                              <span className="text-[var(--text-secondary)]">
+                                Выполнение:
+                              </span>{" "}
+                              {rec.turn}
+                            </div>
+
+                            <div className="text-[var(--text-primary)]">
+                              <span className="text-[var(--text-secondary)]">
+                                Дата:
+                              </span>{" "}
+                              {rec.dt
+                                ? new Date(rec.dt).toLocaleString("ru-RU")
+                                : "-"}
+                            </div>
+
+                            <div>
+                              <span
+                                className={`
+                                  inline-flex
+                                  px-[8px] py-[4px]
+                                  rounded-[6px]
+                                  text-[12px]
+                                  font-medium
+                                  ${
+                                    rec.success
+                                      ? "bg-[var(--status-success-bg)] text-[var(--status-success-text)]"
+                                      : "bg-[var(--status-danger-bg)] text-[var(--status-danger-text)]"
+                                  }
+                                `}
+                              >
+                                {rec.success ? "Успешно" : "Ошибка"}
+                              </span>
+                            </div>
+
+                          </div>
+
+                          {/* actions */}
+                          <div className="flex items-center gap-[10px]">
+
+                            <button
+                              onClick={() => window.location.href = `/reports/${rec.id}`}
+                              className="
+                                w-full
+                                flex items-center justify-center gap-[8px]
+                                py-[10px]
+                                rounded-[10px]
+                                border border-[var(--border-color)]
+                                text-[var(--text-secondary)]
+                                hover:bg-[var(--status-info-bg)]
+                                hover:text-[var(--status-info-text)]
+                                transition-colors
+                              "
+                            >
+                              <i className="fa-solid fa-eye" />
+                            </button>
+
+                          </div>
+                        </>
+                      )}
+                    />
+                  </div>
+                )}
 
                 </div>
               );

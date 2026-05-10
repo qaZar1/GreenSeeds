@@ -9,6 +9,9 @@ import { StatCard } from "../../utils/Card";
 import FormModal from "../../utils/FormModal";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ResponsiveTable from "../../utils/ResponsiveTable";
+import AddButton from "../../utils/AсtionButton";
+import ActionButton from "../../utils/AсtionButton";
 
 const AssignmentsPage: React.FC = () => {
 	usePageHeader("Сменные задания", "Управление производственными заданиями");
@@ -84,13 +87,10 @@ const AssignmentsPage: React.FC = () => {
 
     try {
       if (editingAssignment) {
-				console.log(editingAssignment)
         const updated = await api.update("assignments", {
 					id: editingAssignment.id,
           ...data,
         });
-
-        console.log("UPDATED", updated);
 
         setAssignments(prev =>
           prev.map(a => (a.id === updated.data.id ? updated.data : a))
@@ -100,7 +100,6 @@ const AssignmentsPage: React.FC = () => {
 
       } else {
         const created = await api.create("assignments", data);
-        console.log("CREATED", created);
         setAssignments(prev => [...prev, created.data]);
         toast.success("Задание создано", { id: loading });
       }
@@ -187,13 +186,12 @@ const AssignmentsPage: React.FC = () => {
 
       {/* кнопка добавления */}
       <div className="flex justify-end">
-        <button
+        <ActionButton
           onClick={handleAddAssignment}
-          className="inline-flex items-center gap-[8px] px-[20px] py-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] rounded-[10px] font-medium hover:bg-[var(--color-primary-hover)] transition-colors shadow-sm"
+          icon="fa-solid fa-plus"
         >
-          <i className="fa-solid fa-plus text-[14px]" />
           Добавить
-        </button>
+        </ActionButton>
       </div>
 
       {/* статистика */}
@@ -233,15 +231,94 @@ const AssignmentsPage: React.FC = () => {
             </button>
 
             {isOpen && (
-              <div className="p-[12px]">
-                <Table
-                  data={items}
-                  columns={columns}
-                  emptyMessage="Задания отсутствуют"
-                />
-              </div>
-            )}
+            <div className="p-[12px]">
+              <ResponsiveTable
+                data={items}
+                table={
+                  <Table
+                    data={items}
+                    columns={columns}
+                    emptyMessage="Задания отсутствуют"
+                  />
+                }
+                emptyMessage="Задания отсутствуют"
+                renderCard={(rec) => {
+                  const receipt = receiptsList.find(
+                    r => r.id === rec.receipt
+                  );
 
+                  return (
+                    <>
+                      {/* content */}
+                      <div className="space-y-[10px] text-[14px]">
+
+                        <div className="text-[var(--text-primary)]">
+                          <span className="text-[var(--text-secondary)]">
+                            Номер:
+                          </span>{" "}
+                          {rec.number}
+                        </div>
+
+                        <div className="text-[var(--text-primary)] break-words">
+                          <span className="text-[var(--text-secondary)]">
+                            Рецепт:
+                          </span>{" "}
+                          {receipt?.name ?? `Рецепт ${rec.receipt}`}
+                        </div>
+
+                        <div className="text-[var(--text-primary)]">
+                          <span className="text-[var(--text-secondary)]">
+                            Количество:
+                          </span>{" "}
+                          {rec.amount}
+                        </div>
+
+                      </div>
+
+                      {/* actions */}
+                      <div className="flex items-center gap-[10px]">
+
+                        <button
+                          onClick={() => handleEdit(rec)}
+                          className="
+                            flex-1
+                            flex items-center justify-center gap-[8px]
+                            py-[10px]
+                            rounded-[10px]
+                            border border-[var(--border-color)]
+                            text-[var(--text-secondary)]
+                            hover:bg-[var(--status-info-bg)]
+                            hover:text-[var(--status-info-text)]
+                            transition-colors
+                          "
+                        >
+                          <i className="fa-solid fa-pen" />
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(rec)}
+                          className="
+                            flex-1
+                            flex items-center justify-center gap-[8px]
+                            py-[10px]
+                            rounded-[10px]
+                            border border-[var(--border-color)]
+                            text-[var(--text-secondary)]
+                            hover:bg-[var(--status-danger-bg)]
+                            hover:text-[var(--status-danger-text)]
+                            transition-colors
+                          "
+                        >
+                          <i className="fa-solid fa-trash" />
+                        </button>
+
+                      </div>
+                    </>
+                  );
+                }}
+              />
+            </div>
+          )}
           </div>
         );
       })}

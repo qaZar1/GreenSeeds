@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }: Props) => {
   const login = async ({ username, password }: LoginCredentials) => {
     const response = await api.create("auth", { username, password });
 
-    console.log(response.data)
     const { access_token } = await response.data;
 
     const decoded: any = jwtDecode(access_token);

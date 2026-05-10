@@ -226,7 +226,6 @@ export function useWSConnection(token: string | null) {
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
-      console.log("WS:", msg);
 
       if (handleDeviceMessage(msg)) return;
 

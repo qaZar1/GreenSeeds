@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import type { Report } from "../../../types/reports";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ActionButton from "../../utils/AсtionButton";
 
 const Field: React.FC<{ label: string; value?: any }> = ({ label, value }) => (
   <div className="flex flex-col gap-[4px]">
@@ -59,13 +60,24 @@ const ReportShow: React.FC = () => {
     <div className="space-y-[24px] w-full">
 
       {/* кнопка назад */}
-      <div>
-        <button
+      <div className="w-full sm:w-auto">
+        <ActionButton
           onClick={() => navigate(-1)}
-          className="px-[16px] py-[8px] rounded-[8px] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-colors text-[var(--text-primary)]"
+          icon="fa-solid fa-arrow-left"
+          className="
+            !w-full sm:!w-auto
+
+            !bg-transparent
+            !text-[var(--text-primary)]
+
+            !border
+            !border-[var(--border-color)]
+
+            hover:!bg-[var(--bg-hover)]
+          "
         >
-          ← Назад
-        </button>
+          Назад
+        </ActionButton>
       </div>
 
       <div className="border border-[var(--border-color)] rounded-[12px] p-[20px] space-y-[20px]">

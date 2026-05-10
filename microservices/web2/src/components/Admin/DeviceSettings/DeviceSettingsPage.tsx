@@ -3,13 +3,13 @@ import { usePageHeader } from "../../../context/HeaderContext";
 import { api } from "../../../api/apiProvider";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-
-import { Table } from "../../utils/Table";
-
 import type { Column } from "../../../types/table";
 import type { Setting } from "../../../types/device-settings";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ActionButton from "../../utils/AсtionButton";
+import ResponsiveTable from "../../utils/ResponsiveTable";
+import { Table } from "../../utils/Table";
 
 const DeviceSettingsPage: React.FC = () => {
 
@@ -124,25 +124,91 @@ const DeviceSettingsPage: React.FC = () => {
 
     <div className="space-y-[24px] w-full">
 
-      {/* add */}
-
+      {/* кнопка добавления */}
       <div className="flex justify-end">
-
-        <button
+        <ActionButton
           onClick={() => navigate("/settings/device-settings/create")}
-          className="inline-flex items-center gap-[8px] px-[20px] py-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] rounded-[10px]"
+          icon="fa-solid fa-plus"
         >
-          <i className="fa-solid fa-plus text-[14px]" />
           Добавить
-        </button>
-
+        </ActionButton>
       </div>
 
-      {/* table */}
-      <Table
+      <ResponsiveTable
         data={settings}
-        columns={columns}
+        table={
+          <Table
+            data={settings}
+            columns={columns}
+            emptyMessage="Настройки ещё не созданы"
+          />
+        }
         emptyMessage="Настройки ещё не созданы"
+        renderCard={(s) => (
+          <>
+            {/* content */}
+            <div className="space-y-[10px] text-[14px]">
+
+              <div className="text-[var(--text-primary)] break-all">
+                <span className="text-[var(--text-secondary)]">
+                  Ключ:
+                </span>{" "}
+                <span className="font-mono">
+                  {s.key}
+                </span>
+              </div>
+
+              <div className="text-[var(--text-primary)] break-all">
+                <span className="text-[var(--text-secondary)]">
+                  Значение:
+                </span>{" "}
+                {s.value}
+              </div>
+
+            </div>
+
+            {/* actions */}
+            <div className="flex items-center gap-[10px]">
+
+              <button
+                onClick={() =>
+                  navigate(`/settings/device-settings/${s.key}/edit`)
+                }
+                className="
+                  flex-1
+                  flex items-center justify-center gap-[8px]
+                  py-[10px]
+                  rounded-[10px]
+                  border border-[var(--border-color)]
+                  text-[var(--text-secondary)]
+                  hover:bg-[var(--status-info-bg)]
+                  hover:text-[var(--status-info-text)]
+                  transition-colors
+                "
+              >
+                <i className="fa-solid fa-pen-to-square" />
+              </button>
+
+              <button
+                onClick={() => handleDelete(s)}
+                className="
+                  flex-1
+                  flex items-center justify-center gap-[8px]
+                  py-[10px]
+                  rounded-[10px]
+                  border border-[var(--border-color)]
+                  text-[var(--text-secondary)]
+                  hover:bg-[var(--status-danger-bg)]
+                  hover:text-[var(--status-danger-text)]
+                  transition-colors
+                "
+              >
+                <i className="fa-solid fa-trash" />
+              </button>
+
+            </div>
+          </>
+        )}
       />
     </div>
   );

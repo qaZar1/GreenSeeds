@@ -11,6 +11,8 @@ import { StatCard } from "../../utils/Card";
 import FormModal from "../../utils/FormModal";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ResponsiveTable from "../../utils/ResponsiveTable";
+import ActionButton from "../../utils/AсtionButton";
 
 const UsersPage: React.FC = () => {
   usePageHeader("Пользователи", "Управление доступом");
@@ -34,7 +36,6 @@ const UsersPage: React.FC = () => {
       setError(false);
       const data = await api.getList("users");
       if (data) {
-        console.log(data)
         setUsers(data || []);
         setLoading(false);
       }
@@ -138,8 +139,8 @@ const UsersPage: React.FC = () => {
     {
       header: "ФИО",
       render: user => (
-        <div className="flex items-center gap-[12px]">
-          <div className="w-[40px] h-[40px] rounded-full bg-[var(--color-primary)] flex items-center justify-center text-[var(--text-inverse)] font-bold text-[14px]">
+        <div className="flex items-center gap-[10px] min-w-0">
+          <div className="w-[36px] h-[36px] rounded-full flex-shrink-0 bg-[var(--color-primary)] flex items-center justify-center text-[var(--text-inverse)] font-bold text-[14px]">
             {user.full_name
               .split(" ")
               .map(w => w[0])
@@ -148,11 +149,11 @@ const UsersPage: React.FC = () => {
               .slice(0, 2)}
           </div>
 
-          <div>
-            <div className="text-[14px] font-medium text-[var(--text-primary)]">
+          <div className="min-w-0">
+            <div className="text-[13px] sm:text-[14px] font-medium text-[var(--text-primary)] truncate">
               {user.full_name}
             </div>
-            <div className="text-[12px] text-[var(--text-secondary)]">
+            <div className="text-[11px] sm:text-[12px] text-[var(--text-secondary)] truncate">
               @{user.username}
             </div>
           </div>
@@ -227,16 +228,15 @@ const UsersPage: React.FC = () => {
   return (
     <div className="space-y-[24px] w-full">
       <div className="flex justify-end">
-        <button
+        <ActionButton
           onClick={handleAddUser}
-          className="inline-flex items-center gap-[8px] px-[20px] py-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] rounded-[10px] font-medium hover:bg-[var(--color-primary-hover)] transition-colors shadow-sm"
+          icon="fa-solid fa-plus"
         >
-          <i className="fa-solid fa-plus text-[14px]" />
           Добавить
-        </button>
+        </ActionButton>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-[12px]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[12px]">
         <StatCard title="Всего" value={users.length} />
         <StatCard
           title="Администраторов"
@@ -249,7 +249,132 @@ const UsersPage: React.FC = () => {
         />
       </div>
 
-      <Table data={users} columns={columns} emptyMessage="Пользователи не найдены" />
+      <ResponsiveTable
+  data={users}
+  table={
+    <Table
+      data={users}
+      columns={columns}
+      emptyMessage="Пользователи не найдены"
+    />
+  }
+  renderCard={(user) => {
+    const isCurrentUser =
+      user.username === currentUsername;
+
+    return (
+      <>
+        {/* user */}
+        <div className="flex items-center gap-[12px]">
+          <div
+            className="
+              w-[42px] h-[42px]
+              rounded-full
+              bg-[var(--color-primary)]
+              flex items-center justify-center
+              text-white font-bold text-[14px]
+              flex-shrink-0
+            "
+          >
+            {user.full_name
+              .split(' ')
+              .map(w => w[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2)}
+          </div>
+
+          <div className="min-w-0 break-words">
+            <div className="text-[14px] font-medium text-[var(--text-primary)] break-words">
+              {user.full_name}
+            </div>
+
+            <div className="text-[12px] text-[var(--text-secondary)] break-all">
+              @{user.username}
+            </div>
+          </div>
+        </div>
+
+        {/* role */}
+        <button
+          onClick={() => handleToggleAdmin(user, !user.is_admin)}
+          disabled={isCurrentUser}
+          className={`
+            w-full
+            inline-flex items-center justify-center gap-[8px]
+            px-[12px] py-[10px]
+            rounded-[10px]
+            text-[13px]
+            font-medium
+            transition-colors
+            ${
+              user.is_admin
+                ? 'bg-[var(--status-warning-bg)] text-[var(--status-warning-text)]'
+                : 'bg-[var(--status-info-bg)] text-[var(--status-info-text)]'
+            }
+            ${
+              isCurrentUser
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:opacity-80'
+            }
+          `}
+        >
+          <i
+            className={`fa-solid ${
+              user.is_admin
+                ? 'fa-shield-halved'
+                : 'fa-user'
+            }`}
+          />
+
+          {user.is_admin
+            ? 'Администратор'
+            : 'Оператор'}
+        </button>
+
+        {/* actions */}
+        <div className="flex items-center gap-[10px]">
+          <button
+            onClick={() => handleResetPassword(user)}
+            className="
+              flex-1
+              flex items-center justify-center gap-[8px]
+              py-[10px]
+              rounded-[10px]
+              border border-[var(--border-color)]
+              text-[var(--text-secondary)]
+              hover:bg-[var(--status-info-bg)]
+              hover:text-[var(--status-info-text)]
+              transition-colors
+            "
+          >
+            <i className="fa-solid fa-key" />
+          </button>
+
+          <button
+            onClick={() => handleDeleteClick(user)}
+            disabled={isCurrentUser}
+            className={`
+              flex-1
+              flex items-center justify-center gap-[8px]
+              py-[10px]
+              rounded-[10px]
+              border border-[var(--border-color)]
+              transition-colors
+              ${
+                isCurrentUser
+                  ? 'opacity-40 cursor-not-allowed text-[var(--text-secondary)]'
+                  : 'text-[var(--text-secondary)] hover:bg-[var(--status-danger-bg)] hover:text-[var(--status-danger-text)]'
+              }
+            `}
+          >
+            <i className="fa-solid fa-trash" />
+          </button>
+        </div>
+      </>
+    );
+  }}
+/>
 
       {/* <UserModal
         isOpen={isModalOpen}

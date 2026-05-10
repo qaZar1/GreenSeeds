@@ -138,10 +138,8 @@ const baseProvider = {
         }
 
         const response = data ?? params.data;
-        console.log("response", response)
 
         const transformedData = transformData(resource, response)
-        console.log("transformedData", transformedData)
 
         return { data: transformedData };
     },
@@ -151,15 +149,11 @@ const baseProvider = {
         const url = getApiUrl(resource, "update");
         const cfg = resourcesConfig[resource];
 
-        console.log("params.data", params.data)
-
         if (!cfg.updatePayload) {
             throw new Error(`updatePayload is not defined for ${resource}`);
         }
 
         const bodyData = cfg.updatePayload(params.data);
-
-        console.log("bd", bodyData)
 
         const data = await apiRequest(url, {
             method: "PUT",

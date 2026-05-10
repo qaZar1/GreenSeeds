@@ -1,4 +1,8 @@
-import React, { useState, type FormEvent, type ChangeEvent } from "react";
+import React, { useState } from "react";
+import type {
+  FormEvent,
+  ChangeEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -36,8 +40,15 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-page)] px-4">
-
+    <div
+      className="
+        min-h-[100dvh]
+        flex items-center justify-center
+        bg-[var(--bg-page)]
+        px-4
+        py-[20px]
+      "
+    >
       {/* Карточка */}
       <div className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[14px] shadow-lg p-[32px]">
 

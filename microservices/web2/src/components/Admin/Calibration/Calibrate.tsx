@@ -85,8 +85,8 @@ const CalibrationPage: React.FC = () => {
             Камера
           </div>
 
-          <div className="p-[20px]">
-            <div className="h-[360px] bg-black rounded-[8px] flex items-center justify-center text-white/50 text-[13px]">
+          <div className="p-[14px] sm:p-[20px]">
+            <div className="h-[220px] sm:h-[360px] bg-black rounded-[8px] flex items-center justify-center text-white/50 text-[13px]">
               live preview
             </div>
           </div>
@@ -98,7 +98,7 @@ const CalibrationPage: React.FC = () => {
             Управление
           </div>
 
-          <div className="p-[20px] space-y-[16px] flex flex-col flex-1">
+          <div className="p-[14px] sm:p-[20px] space-y-[16px] flex flex-col flex-1">
 
             {photo1 && (
               <div className="space-y-[6px]">
@@ -108,7 +108,7 @@ const CalibrationPage: React.FC = () => {
 
                 <img
                   src={photo1}
-                  className="max-h-[160px] w-full object-contain rounded-[8px] border border-[var(--border-color)]"
+                  className="max-h-[220px] sm:max-h-[160px] w-full object-contain rounded-[8px] border border-[var(--border-color)]"
                 />
               </div>
             )}
@@ -158,13 +158,22 @@ const CalibrationPage: React.FC = () => {
               </div>
             )}
 
-            <div className="flex gap-[12px] mt-auto pt-[10px]">
+            <div className="flex flex-col sm:flex-row gap-[12px] mt-auto pt-[10px]">
 
               {step !== "prepare" && (
                 <button
                   onClick={back}
                   disabled={loading}
-                  className="flex-1 px-[16px] py-[10px] rounded-[10px] border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-page)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="
+                    w-full flex-1
+                    px-[16px] py-[10px]
+                    rounded-[10px]
+                    border border-[var(--border-color)]
+                    text-[var(--text-primary)]
+                    hover:bg-[var(--bg-page)]
+                    disabled:opacity-50
+                    disabled:cursor-not-allowed
+                  "
                 >
                   Назад
                 </button>
@@ -173,7 +182,16 @@ const CalibrationPage: React.FC = () => {
               <button
                 onClick={handleRun}
                 disabled={loading}
-                className="flex-1 px-[16px] py-[10px] rounded-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="
+                  w-full flex-1
+                  px-[16px] py-[10px]
+                  rounded-[10px]
+                  bg-[var(--color-primary)]
+                  text-[var(--text-inverse)]
+                  hover:bg-[var(--color-primary-hover)]
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                "
               >
                 {loading ? "Выполнение..." : nextLabel[step]}
               </button>

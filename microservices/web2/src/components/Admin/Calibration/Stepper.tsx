@@ -8,15 +8,27 @@ export function Stepper({ steps, current }: Props) {
   return (
     <div className="w-full select-none">
 
-      <div className="flex items-start w-full">
-
+      <div
+        className="
+          flex items-start w-full
+          overflow-x-auto
+          scrollbar-thin
+          pb-[4px]
+        "
+      >
         {steps.map((step, i) => {
 
           const done = i < current;
           const active = i === current;
 
           return (
-            <div key={i} className="flex-1 flex flex-col items-center relative">
+            <div
+              key={i}
+              className="
+                flex flex-col items-center relative
+                min-w-[90px] sm:min-w-0 flex-1
+              "
+            >
 
               {/* линия */}
               {i !== steps.length - 1 && (
@@ -60,15 +72,16 @@ export function Stepper({ steps, current }: Props) {
               {/* текст */}
               <div
                 className={`
-                mt-[8px]
-                text-[12px]
-                text-center
-                max-w-[120px]
-                ${
-                  active
-                    ? "text-[var(--text-primary)]"
-                    : "text-[var(--text-secondary)]"
-                }
+                  mt-[8px]
+                  text-[11px] sm:text-[12px]
+                  text-center
+                  max-w-[80px] sm:max-w-[120px]
+                  leading-[1.3]
+                  ${
+                    active
+                      ? "text-[var(--text-primary)]"
+                      : "text-[var(--text-secondary)]"
+                  }
                 `}
               >
                 {step}
