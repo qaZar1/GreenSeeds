@@ -21,11 +21,21 @@ type ICalibrationApp interface {
 }
 
 func (app *App) CalibrationHandshake() (string, error) {
-	// if ok := app.ws.Serial.InitialHandshake(); !ok {
-	// 	return "", errors.New("Failed to initial handshake")
-	// }
-
 	sessionId := uuid.NewString()
+
+	if !app.device.Manager.TryAcquireSession(sessionId) {
+		return "", errors.New("device busy")
+	}
+	defer app.device.Manager.ReleaseSession(sessionId)
+
+	// 3. Останавливаем фоновый пинг на время сессии
+	app.device.PausePolling()
+	defer app.device.RefreshPolling()
+
+	if err := app.device.CalibrationHandshake(sessionId); err != nil {
+		return "", err
+	}
+
 	now := time.Now()
 
 	// добавляем в базу
@@ -43,10 +53,9 @@ func (app *App) CalibrationHandshake() (string, error) {
 		return "", errors.New("toStart is empty")
 	}
 
-	// msg := app.ws.Serial.RunGcode(toStart.Value)
-	// if msg.Error != nil {
-	// 	return "", errors.New(*msg.Error)
-	// }
+	if err := app.device.RunGcode(toStart.Value, sessionId); err != nil {
+		return "", err
+	}
 
 	return sessionId, nil
 }

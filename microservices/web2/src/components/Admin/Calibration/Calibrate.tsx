@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { usePageHeader } from "../../../context/HeaderContext";
-import { Stepper } from "./Stepper";
+import { Stepper } from "../../utils/Stepper";
 import { steps } from "../../../types/calibration";
 import { useCalibrationFlow } from "../../hooks/useCalibrationFlow";
 
@@ -78,28 +78,25 @@ const CalibrationPage: React.FC = () => {
         <Stepper steps={steps as unknown as string[]} current={stepIndex} />
       </div>
 
-      <div className="grid gap-[20px] grid-cols-1 lg:grid-cols-2">
+      <div className="flex justify-center">
+        <div
+          className="
+            w-full
+            max-w-[720px]
 
-        <div className="rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-card)] overflow-hidden">
-          <div className="px-[20px] py-[14px] border-b border-[var(--border-light)] text-[14px] font-bold text-[var(--text-primary)] text-center">
-            Камера
-          </div>
+            rounded-[10px]
+            border border-[var(--border-color)]
+            bg-[var(--bg-card)]
 
-          <div className="p-[14px] sm:p-[20px]">
-            <div className="h-[220px] sm:h-[360px] bg-black rounded-[8px] flex items-center justify-center text-white/50 text-[13px]">
-              live preview
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-card)] overflow-hidden flex flex-col">
-
+            overflow-hidden
+            flex flex-col
+          "
+        >
           <div className="px-[20px] py-[14px] border-b border-[var(--border-light)] text-[14px] font-bold text-[var(--text-primary)] text-center">
             Управление
           </div>
 
           <div className="p-[14px] sm:p-[20px] space-y-[16px] flex flex-col flex-1">
-
             {photo1 && (
               <div className="space-y-[6px]">
                 <div className="text-[13px] text-[var(--text-secondary)]">

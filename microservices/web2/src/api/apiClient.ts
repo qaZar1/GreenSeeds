@@ -22,9 +22,12 @@ export const apiClient = async (
 
   if (!response.ok) {
     if (response.status === 401) {
-      localStorage.removeItem("auth");
-      window.location.href = "/login";
-      return;
+      // не редиректим если уже на login
+      if (window.location.pathname !== "/login") {
+        localStorage.removeItem("auth");
+        window.location.replace("/login");
+      }
+      throw new Error("UNAUTHORIZED");
     }
 
     if (response.status === 403) {

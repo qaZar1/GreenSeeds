@@ -271,7 +271,7 @@ const FormModal: React.FC<Props> = ({
                     value={value}
                     disabled={disabled}
                     onChange={e => update(field.name, e.target.value)}
-                    className={`w-full min-w-0 px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
+                    className={`datetime-input w-full min-w-0 px-[14px] py-[10px] rounded-[10px] border bg-[var(--bg-page)] text-[var(--text-primary)]
                     ${showError ? "border-red-500" : "border-[var(--border-color)]"}
                     disabled:opacity-60 disabled:cursor-not-allowed`}
                   />

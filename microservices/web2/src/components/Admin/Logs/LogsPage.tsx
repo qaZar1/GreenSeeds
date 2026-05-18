@@ -172,8 +172,13 @@ const LogsPage: React.FC = () => {
     },
   ];
 
-  if (loading) return <SproutLoader />
-  if (error) return <ErrorState onRetry={fetchLogs}/>
+  if (loading && offset === 0) {
+    return <SproutLoader />;
+  }
+
+  if (error && data.length === 0) {
+    return <ErrorState onRetry={fetchLogs} />;
+  }
 
   return (
     <div className="flex flex-col w-full space-y-[20px]">

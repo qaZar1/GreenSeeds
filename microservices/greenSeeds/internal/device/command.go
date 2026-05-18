@@ -23,7 +23,7 @@ func (c *DeviceClient) Ping(sessionId string) error {
 	ch, err := c.Manager.Do(c.ctx, []byte("BOOT"+delimeterStr), matchResults, 10, sessionId)
 	if err != nil {
 		response := models.WSResponse{
-			Type:  BOOT,
+			Type:    BOOT,
 			Message: err.Error(),
 		}
 		select {
@@ -85,14 +85,14 @@ func (c *DeviceClient) Begin(sessionId string, command string, iter int) error {
 
 		respArr := strings.Split(respStr, " ")
 		progress := strings.Split(respArr[1], "/")
-		
+
 		response := models.WSResponse{
-			Type:   "STATE",
+			Type:      "STATE",
 			Iteration: iter,
 			Data: map[string]string{
-				"shift":progress[0],
-				"number":progress[1],
-				"turn":progress[2],
+				"shift":  progress[0],
+				"number": progress[1],
+				"turn":   progress[2],
 			},
 		}
 		if respArr[0] == "ACK" {
@@ -176,7 +176,7 @@ func (c *DeviceClient) SetStatusReady(sessionId string) {
 	ch, err := c.Manager.Do(c.ctx, []byte(SETSTATUS_READY+delimeterStr), matchResults, 10, sessionId)
 	if err != nil {
 		response := models.WSResponse{
-			Type:  SETSTATUS_READY,
+			Type:    SETSTATUS_READY,
 			Message: err.Error(),
 		}
 
@@ -207,15 +207,15 @@ func (c *DeviceClient) Status(sessionId string) {
 	matchResults := func(data []byte) MatchResult {
 		str := strings.TrimSpace(string(data))
 		c.Manager.parseStatus(str)
-		
+
 		return MatchResult{Matched: true, Done: true}
 	}
 
 	ch, err := c.Manager.Do(c.ctx, []byte(STATUS+delimeterStr), matchResults, 10, sessionId)
 	if err != nil {
 		response := models.WSResponse{
-			Type:  STATUS,
-			Status: "ERROR",
+			Type:    STATUS,
+			Status:  "ERROR",
 			Message: err.Error(),
 		}
 
@@ -228,8 +228,8 @@ func (c *DeviceClient) Status(sessionId string) {
 	for resp := range ch {
 		respStr := string(resp)
 		response := models.WSResponse{
-			Type:   STATUS,
-			Status: "OK",
+			Type:    STATUS,
+			Status:  "OK",
 			Message: respStr,
 		}
 
@@ -238,6 +238,83 @@ func (c *DeviceClient) Status(sessionId string) {
 		default:
 		}
 	}
+}
+
+func (c *DeviceClient) CalibrationHandshake(sessionId string) error {
+	matchResults := func(data []byte) MatchResult {
+		str := strings.TrimSpace(string(data))
+		c.Manager.parseStatus(str)
+		switch {
+		case strings.Contains(str, "ACK BOOT"):
+			return MatchResult{Matched: true, Done: true}
+		}
+		return MatchResult{}
+	}
+
+	ch, err := c.Manager.Do(c.ctx, []byte("BOOT"+delimeterStr), matchResults, 10, sessionId)
+	if err != nil {
+		response := models.WSResponse{
+			Type:    BOOT,
+			Message: err.Error(),
+		}
+		select {
+		case c.RespCh <- response:
+		default:
+		}
+
+		return err
+	}
+
+	for {
+		select {
+		case _, ok := <-ch:
+			if !ok {
+				return fmt.Errorf("channel closed")
+			}
+
+			return nil
+		case <-c.ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (c *DeviceClient) RunGcode(gcode string, sessionId string) error {
+	matchResults := func(data []byte) MatchResult {
+		str := strings.TrimSpace(string(data))
+		c.Manager.parseStatus(str)
+
+		switch {
+		case strings.Contains(str, "ACK"):
+			return MatchResult{Matched: true}
+		case strings.Contains(str, "END"):
+			return MatchResult{Matched: true, Done: true}
+		}
+		return MatchResult{}
+	}
+
+	// run command
+	ch, err := c.Manager.Do(c.ctx, []byte(gcode+delimeterStr), matchResults, 10, sessionId)
+	if err != nil {
+		c.Manager.ReleaseSession(sessionId)
+		c.RefreshPolling()
+		return err
+	}
+
+	for {
+		select {
+		case _, ok := <-ch:
+			if !ok {
+				return fmt.Errorf("channel closed")
+			}
+
+			return nil
+		case <-c.ctx.Done():
+			return nil
+		}
+	}
+
+	return nil
 }
 
 func (c *DeviceClient) Stop(sessionId string) error {

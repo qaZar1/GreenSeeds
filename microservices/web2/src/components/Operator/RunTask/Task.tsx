@@ -4,6 +4,7 @@ import { useWSConnection } from "../../hooks/useRobotWS";
 import { useAuth } from "../../../context/AuthContext";
 import ActionButton from "../../utils/AсtionButton";
 import { usePageHeader } from "../../../context/HeaderContext";
+import { Stepper } from "../../utils/Stepper";
 
 type Props = {
   record: TaskRecord;
@@ -98,59 +99,6 @@ const getStatusColor = (beginState: string) => {
   }
 
   return "text-[var(--text-secondary)]";
-};
-
-// ================= STEPPER =================
-const Stepper = ({
-  current,
-}: {
-  current: string;
-}) => {
-  const index = STEPS.indexOf(current);
-
-  const currentIndex =
-    index === -1 ? -1 : index;
-
-  return (
-    <div className="flex items-start justify-between gap-[12px]">
-
-      {STEPS.map((step, i) => {
-
-        const isActive = current === step;
-        const isPassed = currentIndex > i;
-
-        return (
-          <div
-            key={step}
-            className="flex-1 flex flex-col items-center"
-          >
-            <div
-              className={`
-                w-6 h-6
-                rounded-full
-                border-2
-                transition-all
-
-                ${
-                  isPassed
-                    ? "bg-[var(--status-success-text)] border-[var(--status-success-text)]"
-                    : isActive
-                      ? "bg-[var(--color-primary)] border-[var(--color-primary)]"
-                      : "border-[var(--border-color)]"
-                }
-              `}
-            />
-
-            <div className="text-[10px] mt-1 text-[var(--text-secondary)] text-center px-[4px] break-words">
-              {STATE_LABELS[step]}
-            </div>
-          </div>
-        );
-
-      })}
-
-    </div>
-  );
 };
 
 // ================= COMPONENT =================
@@ -251,11 +199,10 @@ const TaskCard: React.FC<Props> = ({
       </div>
 
       {/* STEPPER */}
-      <div className="overflow-x-auto pb-[4px]">
-        <div className="min-w-[520px]">
-          <Stepper current={rawStatus} />
-        </div>
-      </div>
+      <Stepper
+        steps={STEPS.map(step => STATE_LABELS[step])}
+        current={Math.max(STEPS.indexOf(rawStatus), 0)}
+      />
 
       {/* STATUS */}
       <div className="text-center">
@@ -386,7 +333,7 @@ const TaskCard: React.FC<Props> = ({
                 validActions.length ===
                   0) && (
                 <div className="text-xs text-[var(--text-secondary)] mt-2 text-center">
-                  Обратитесь к оператору
+                  Обратитесь к администратору
                   или перезапустите задание
                 </div>
               )}
@@ -414,6 +361,7 @@ const TaskCard: React.FC<Props> = ({
         <ActionButton
           onClick={() => startBegin(record)}
           disabled={
+            !isConnected ||
             isFullyDisabled ||
             (beginState !== "idle" &&
               beginState !== "done")

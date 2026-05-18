@@ -3,6 +3,7 @@ package application
 import (
 	validator "github.com/go-playground/validator/v10"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/device"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/opencv"
@@ -33,6 +34,7 @@ type App struct {
 	camera    camera.ICamera
 	opencv    *opencv.Calibration
 	calibrate map[string]models.Calibration
+	device    *device.DeviceClient
 }
 
 func NewApp(
@@ -41,6 +43,7 @@ func NewApp(
 	infra *infrastructure.Infrastructure,
 	ws *ws.Server,
 	camera camera.ICamera,
+	client *device.DeviceClient,
 ) IApp {
 	validate := validator.New()
 
@@ -54,5 +57,6 @@ func NewApp(
 		camera:    camera,
 		opencv:    calibration,
 		calibrate: make(map[string]models.Calibration),
+		device:    client,
 	}
 }

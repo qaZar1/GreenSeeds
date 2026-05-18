@@ -104,7 +104,7 @@ func main() {
 	}
 	defer ws.Close()
 
-	router := router.NewRouter(repo, cfg, ws, log, camera, infra)
+	router := router.NewRouter(repo, cfg, ws, log, camera, infra, client)
 	if router == nil {
 		log.Error().Msg("Invalid router")
 		return

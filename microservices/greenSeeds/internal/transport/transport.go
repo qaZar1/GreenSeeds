@@ -5,6 +5,7 @@ import (
 
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/application"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/device"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
@@ -36,8 +37,9 @@ func NewTransport(
 	infra *infrastructure.Infrastructure,
 	ws *ws.Server,
 	camera camera.ICamera,
+	client *device.DeviceClient,
 ) *Transport {
-	app := application.NewApp(repo, cfg, infra, ws, camera)
+	app := application.NewApp(repo, cfg, infra, ws, camera, client)
 	return &Transport{
 		Assignments:    app,
 		Bunkers:        app,

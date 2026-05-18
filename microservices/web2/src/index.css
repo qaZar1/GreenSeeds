@@ -85,8 +85,10 @@
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.datetime-input::-webkit-calendar-picker-indicator, .date::-webkit-calendar-picker-indicator{
+.datetime-input::-webkit-calendar-picker-indicator {
   filter: var(--datetime-icon-filter);
+  opacity: 1;
+  cursor: pointer;
 }
 
 .modal-blur {
