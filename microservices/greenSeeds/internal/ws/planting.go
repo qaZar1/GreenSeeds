@@ -32,16 +32,15 @@ func waitForDeviceReady(manager *device.Manager, c *Client, timeout time.Duratio
 			}
 
 			if msg.Type == "STOP" {
-                if iter != nil {
-                    iter.Finished = true
-                }
-                if c != nil {
-                    c.planting.Stop = true
-                    c.Send <- okResponse("STOP", "Stopped by user")
-                }
-                return errors.New("Stopped")
-            }
-		
+				if iter != nil {
+					iter.Finished = true
+				}
+				if c != nil {
+					c.planting.Stop = true
+					c.Send <- okResponse("STOP", "Stopped by user")
+				}
+				return errors.New("Stopped")
+			}
 
 		case <-ticker.C:
 			if manager.GetStatus() != device.ManagerStateConnected {
@@ -60,8 +59,8 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 	iter.CurrentState = StateWaitingReady
 	iter.NextState = StateBegin
 
-	for{
-		if !isDeviceAlive(s.dClient.Manager){
+	for {
+		if !isDeviceAlive(s.dClient.Manager) {
 			iter.Success = false
 			iter.Finished = true
 
@@ -73,30 +72,35 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 			iter.Finished = true
 		}
 
-		if s.dClient.Manager.GetState() == device.StateDisconnected{
+		if s.dClient.Manager.GetState() == device.StateDisconnected {
 			c.planting.Stop = true
 			iter.Finished = true
 		}
-		
+
 		switch iter.CurrentState {
 		case StateWaitingReady:
 			state(s, "WAIT_READY", iter.Turn)
 
-			if err := waitForDeviceReady(s.dClient.Manager, c, 30*time.Second, iter); err != nil {
-				return
-			}
+			// if err := waitForDeviceReady(s.dClient.Manager, c, 30*time.Second, iter); err != nil {
+			// 	return
+			// }
+			time.Sleep(5 * time.Second)
 
 			iter.CurrentState = StateBegin
 
 		case StateBegin:
 			Begin(s, c, iter)
+			time.Sleep(3 * time.Second)
 		case StatePhoto:
 			Photo(s, c, iter)
 
+			time.Sleep(5 * time.Second)
 			state(s, "PHOTO_DONE", iter.Turn)
+
 		case StateControl:
 			Control(s, c, iter)
 
+			time.Sleep(5 * time.Second)
 			state(s, "AI_OK", iter.Turn)
 		case StateProcess:
 			if checkStop(c) {
@@ -105,13 +109,14 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 				return
 			}
 
-			if err := s.dClient.Return(c.SessionId); err != nil{
+			if err := s.dClient.Return(c.SessionId); err != nil {
 				iter.PrevState = StateControl
 				iter.CurrentState = StateError
 				iter.Err = append(iter.Err, err)
 				continue
 			}
 
+			time.Sleep(5 * time.Second)
 			state(s, "RETURN_DONE", iter.Turn)
 
 			iter.CurrentState = StateDone
@@ -122,12 +127,13 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 		case StateDone:
 			iter.Success = true
 			iter.Finished = true
+			time.Sleep(2 * time.Second)
 		}
 
-		if iter.Finished{
+		if iter.Finished {
 			errsStr := ErrorsToString(iter.Err)
 			solutionsStr := ArrayToString(iter.Solutions)
-			
+
 			finishIteration(
 				s,
 				c,
@@ -145,7 +151,7 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 }
 
 func isDeviceAlive(m *device.Manager) bool {
-    return m.GetStatus() == device.ManagerStateConnected
+	return m.GetStatus() == device.ManagerStateConnected
 }
 
 func buildGcode(c *Client, iter *models.Iteration) string {
@@ -269,38 +275,37 @@ func ArrayToString(strs []string) string {
 }
 
 func checkStop(c *Client) bool {
-    select {
-    case <-c.Control:
-        c.planting.Stop = true
-        c.Send <- okResponse("STOP", "Stopped by user")
-        return true
-    default:
-        return false
-    }
+	select {
+	case <-c.Control:
+		c.planting.Stop = true
+		c.Send <- okResponse("STOP", "Stopped by user")
+		return true
+	default:
+		return false
+	}
 }
 
 func waitAction(c *Client) (models.Action, string, bool) {
-    select {
-    case msg := <-c.Actions:
-        switch msg.Type {
-        case "RETRY":
-            return ActionRetry, "RETRY", true
-        case "SKIP":
-            return ActionSkip, "SKIP", true
-        case "ABORT":
-            return ActionAbort, "ABORT", false
-        }
+	select {
+	case msg := <-c.Actions:
+		switch msg.Type {
+		case "RETRY":
+			return ActionRetry, "RETRY", true
+		case "SKIP":
+			return ActionSkip, "SKIP", true
+		case "ABORT":
+			return ActionAbort, "ABORT", false
+		}
 
 		return ActionAbort, "", false
-    case <-time.After(60 * time.Second):
-        return ActionAbort, "", false
-    }
-
+	case <-time.After(60 * time.Second):
+		return ActionAbort, "", false
+	}
 }
 
 func Begin(s *Server, c *Client, iter *models.Iteration) {
 	bunkers, err := s.repo.SeedRepo.GetBestBunker(iter.Seed)
-	if err != nil{
+	if err != nil {
 		err := errors.New(fmt.Sprintf("Бункеры с семенами %s пусты", iter.Seed))
 		c.Send <- errResponse(models.TypeBegin, err)
 
@@ -312,7 +317,7 @@ func Begin(s *Server, c *Client, iter *models.Iteration) {
 	}
 
 	iter.Bunker = bunkers.Bunker
-	
+
 	command := buildGcode(c, iter)
 
 	if err := s.dClient.Begin(c.SessionId, command, iter.Turn); err != nil {
@@ -321,7 +326,7 @@ func Begin(s *Server, c *Client, iter *models.Iteration) {
 		iter.Err = append(iter.Err, err)
 		return
 	}
-	
+
 	if err := s.repo.PlcRepo.DecrementSeed(iter.Bunker); err != nil {
 		c.Send <- errResponse("BEGIN", errors.New("bunker is empty"))
 
@@ -369,7 +374,7 @@ func Control(s *Server, c *Client, iter *models.Iteration) {
 }
 
 func Err(s *Server, c *Client, iter *models.Iteration) string {
-	if len(iter.Err) == 0{
+	if len(iter.Err) == 0 {
 		return ""
 	}
 

@@ -34,32 +34,56 @@ const STATE_LABELS: Record<string, string> = {
 // ================= ACTION BUTTON CONFIG =================
 const ACTION_CONFIG: Record<OperatorAction, ActionConfig> = {
   RETRY: {
-    label: "🔄 Повторить",
+    label: "Повторить",
     bg: "!bg-yellow-500 hover:!bg-yellow-600",
     hint: "Повторить последнюю операцию",
   },
 
   SKIP: {
-    label: "⏭️ Пропустить",
+    label: "Пропустить",
     bg: "!bg-[var(--color-primary)] hover:!bg-[var(--color-primary-hover)]",
     hint: "Пропустить текущий шаг",
   },
 
   ABORT: {
-    label: "❌ Отменить",
+    label: "Отменить",
     bg: "!bg-red-600 hover:!bg-red-700",
     hint: "Прервать задание",
   },
 };
 
-// ================= STEPS =================
-const STEPS = [
-  "WAIT_READY",
-  "BEGIN_ACK",
-  "PHOTO_DONE",
-  "AI_OK",
-  "DONE",
+const STEP_LABELS = [
+  "Ожидание",
+  "Запуск",
+  "Фото",
+  "Анализ",
+  "Готово",
 ];
+
+const STEP_INDEX: Record<string, number> = {
+  WAIT_READY: 0,
+  "STAND BY": 0,
+
+  BEGIN_ACK: 1,
+  BEGIN_END: 1,
+
+  PHOTO_DONE: 2,
+
+  AI_OK: 3,
+
+  DONE: 4,
+  RETURN_DONE: 4,
+};
+
+const STATE_DESCRIPTIONS: Record<string, string> = {
+  WAIT_READY: "Ожидание готовности устройства",
+  BEGIN_ACK: "Устройство приняло команду. Выполняется посев",
+  BEGIN_END: "Посев завершен",
+  PHOTO_DONE: "Фотография получена",
+  AI_OK: "Изображение обработано",
+  DONE: "Все этапы успешно завершены",
+  RETURN_DONE: "Оборудование вернулось в исходное положение",
+};
 
 // ================= HELPERS =================
 const getHumanStatus = (
@@ -113,6 +137,7 @@ const TaskCard: React.FC<Props> = ({
 
   const {
     sendMessage,
+    stopProcess,
     rawStatus,
     isConnected,
     beginState,
@@ -200,8 +225,8 @@ const TaskCard: React.FC<Props> = ({
 
       {/* STEPPER */}
       <Stepper
-        steps={STEPS.map(step => STATE_LABELS[step])}
-        current={Math.max(STEPS.indexOf(rawStatus), 0)}
+        steps={STEP_LABELS}
+        current={STEP_INDEX[rawStatus] ?? 0}
       />
 
       {/* STATUS */}
@@ -224,10 +249,11 @@ const TaskCard: React.FC<Props> = ({
           )}
         </div>
 
-        {beginState === "running" && (
-          <div className="text-[var(--status-info-text)] text-sm mt-1 animate-pulse">
-            Идёт выполнение...
-          </div>
+        {beginState === "running" &&
+          STATE_DESCRIPTIONS[rawStatus] && (
+            <div className="text-[var(--status-info-text)] text-sm mt-1">
+              {STATE_DESCRIPTIONS[rawStatus]}
+            </div>
         )}
 
         {/* DISCONNECTED */}
@@ -363,8 +389,7 @@ const TaskCard: React.FC<Props> = ({
           disabled={
             !isConnected ||
             isFullyDisabled ||
-            (beginState !== "idle" &&
-              beginState !== "done")
+            beginState !== "idle"
           }
           className="
             flex-1
@@ -373,17 +398,16 @@ const TaskCard: React.FC<Props> = ({
           "
         >
           {deviceError === "DISCONNECTED"
-            ? "⏳ Ожидание..."
+            ? "Ожидание..."
             : "Начать"}
         </ActionButton>
 
         <ActionButton
           onClick={() =>
-            sendMessage({ type: "STOP" })
+            stopProcess()
           }
           disabled={
-            isFullyDisabled ||
-            beginState !== "running"
+            isFullyDisabled
           }
           className="
             flex-1
@@ -394,7 +418,7 @@ const TaskCard: React.FC<Props> = ({
           Стоп
         </ActionButton>
 
-        <ActionButton
+        {/* <ActionButton
           onClick={() =>
             sendMessage({
               type: "SET STATUS READY",
@@ -411,19 +435,17 @@ const TaskCard: React.FC<Props> = ({
           "
         >
           DEV: READY
-        </ActionButton>
+        </ActionButton> */}
 
       </div>
 
       {/* FOOTER */}
       {isFullyDisabled && (
         <div className="text-center text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)] break-words px-[4px]">
-
           {deviceError ===
           "DISCONNECTED"
-            ? "🔌 Все функции заблокированы до восстановления связи"
-            : "⚠️ Интерфейс временно недоступен"}
-
+            ? "Все функции заблокированы до восстановления связи"
+            : "Интерфейс временно недоступен"}
         </div>
       )}
 

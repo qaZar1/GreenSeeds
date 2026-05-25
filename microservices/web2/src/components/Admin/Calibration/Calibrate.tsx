@@ -7,6 +7,7 @@ import { useCalibrationFlow } from "../../hooks/useCalibrationFlow";
 type Result = {
   dx: number;
   dy: number;
+  d_per_step: number;
 };
 
 const order = [
@@ -103,10 +104,27 @@ const CalibrationPage: React.FC = () => {
                   Первое фото
                 </div>
 
-                <img
-                  src={photo1}
-                  className="max-h-[220px] sm:max-h-[160px] w-full object-contain rounded-[8px] border border-[var(--border-color)]"
-                />
+                <div
+                  className="
+                    h-[220px]
+                    w-full
+                    rounded-[8px]
+                    border border-[var(--border-color)]
+                    bg-[var(--bg-page)]
+
+                    flex items-center justify-center
+                    overflow-hidden
+                  "
+                >
+                  <img
+                    src={photo1}
+                    className="
+                      max-h-full
+                      max-w-full
+                      object-contain
+                    "
+                  />
+                </div>
               </div>
             )}
 
@@ -116,10 +134,27 @@ const CalibrationPage: React.FC = () => {
                   Второе фото
                 </div>
 
-                <img
-                  src={photo2}
-                  className="max-h-[160px] w-full object-contain rounded-[8px] border border-[var(--border-color)]"
-                />
+                <div
+                  className="
+                    h-[220px]
+                    w-full
+                    rounded-[8px]
+                    border border-[var(--border-color)]
+                    bg-[var(--bg-page)]
+
+                    flex items-center justify-center
+                    overflow-hidden
+                  "
+                >
+                  <img
+                    src={photo2}
+                    className="
+                      max-h-full
+                      max-w-full
+                      object-contain
+                    "
+                  />
+                </div>
               </div>
             )}
 
@@ -146,11 +181,15 @@ const CalibrationPage: React.FC = () => {
                 </div>
 
                 <div className="text-[var(--text-secondary)]">
-                  X shift: <span className="text-[var(--text-primary)]">{result.dx}px</span>
+                  X shift: <span className="text-[var(--text-primary)]">{Math.abs(result.dx).toFixed(2)} см</span>
                 </div>
 
                 <div className="text-[var(--text-secondary)]">
-                  Y shift: <span className="text-[var(--text-primary)]">{result.dy}px</span>
+                  Y shift: <span className="text-[var(--text-primary)]">{Math.abs(result.dy).toFixed(2)} см</span>
+                </div>
+
+                <div className="text-[var(--text-secondary)]">
+                  Один шаг: <span className="text-[var(--text-primary)]">{result.d_per_step.toFixed(2)} см</span>
                 </div>
               </div>
             )}

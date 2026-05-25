@@ -23,6 +23,7 @@ type Action =
   | { type: "STATUS"; status: string; message?: string }
   | {
       type: "UPDATE_STATE";
+      messageType?: string;
       status: string;
       iteration?: number | null;
       error?: string | null;
@@ -31,14 +32,37 @@ type Action =
     }
   | { type: "ACTIONS"; actions: OperatorAction[] }
   | { type: "RESET_ERROR" }
-  | { type: "DEVICE_STATUS"; connected: boolean; message?: string };
+  | { type: "DEVICE_STATUS"; connected: boolean; message?: string }
+  | { type: "FORCE_IDLE" };
 
-// ================= MAPPER =================
-const mapStateToBegin = (status: string): MachineState["beginState"] => {
-  if (["WAIT_READY", "STAND BY"].includes(status)) return "idle";
-  if (["BEGIN_ACK"].includes(status)) return "running";
-  if (["DONE", "RETURN_DONE"].includes(status)) return "done";
-  if (["WAIT_ACTION"].includes(status)) return "error";
+const mapStateToBegin = (
+  messageType: string,
+  status: string,
+  prevState: MachineState["beginState"]
+): MachineState["beginState"] => {
+  if (
+    messageType === "RETURN" &&
+    status === "STAND BY"
+  ) {
+    return prevState;
+  }
+
+  if (["WAIT_READY", "STAND BY"].includes(status)) {
+    return "idle";
+  }
+
+  if (["BEGIN_ACK", "BEGIN_END"].includes(status)) {
+    return "running";
+  }
+
+  if (["DONE", "RETURN_DONE"].includes(status)) {
+    return "done";
+  }
+
+  if (["WAIT_ACTION"].includes(status)) {
+    return "error";
+  }
+
   return "running";
 };
 
@@ -87,30 +111,61 @@ export const Reducer = (state: MachineState, action: Action): MachineState => {
         } else {
           // Чистое состояние, ошибок не было и нет
           nextError = null;
-          nextBeginState = mapStateToBegin(action.status);
+          nextBeginState = mapStateToBegin(
+            action.messageType ?? "",
+            action.status,
+            state.beginState
+          );
         }
       }
 
+      const shouldIgnoreReturnStandBy =
+        action.messageType === "RETURN" &&
+        action.status === "STAND BY";
+
       return {
         ...state,
-        status: action.status,
-        iteration: action.iteration ?? state.iteration,
-        availableActions: action.actions ?? state.availableActions,
+
+        status: shouldIgnoreReturnStandBy
+          ? state.status
+          : action.status,
+
+        // 🔥 НЕ ДАЕМ RETURN STAND BY СБРОСИТЬ ИТЕРАЦИЮ
+        iteration: shouldIgnoreReturnStandBy
+          ? state.iteration
+          : (action.iteration ?? state.iteration),
+
+        availableActions:
+          action.actions ?? state.availableActions,
+
         beginState: nextBeginState,
+
         error: nextError,
       };
     }
 
+    case "FORCE_IDLE":
+      return {
+        ...state,
+
+        status: "WAIT_READY",
+
+        beginState: "idle",
+
+        iteration: null,
+
+        error: null,
+
+        availableActions: null,
+      };
     case "ACTIONS":
       return { ...state, availableActions: action.actions };
 
     case "RESET_ERROR":
-      return { 
-        ...state, 
-        error: null, 
-        deviceError: null, 
-        beginState: "idle",
-        availableActions: null 
+      return {
+        ...state,
+        error: null,
+        availableActions: null,
       };
 
     case "DEVICE_STATUS": {
@@ -161,9 +216,21 @@ export function useWSConnection(token: string | null) {
   } as MachineState);
 
   const sendMessage = (msg: any) => {
+    console.log(
+      "%c[WS OUT]",
+      "color:#4ade80;font-weight:bold",
+      msg
+    );
+
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(msg));
     } else {
+      console.log(
+        "%c[WS QUEUED]",
+        "color:#facc15;font-weight:bold",
+        msg
+      );
+
       queueRef.current.push(msg);
     }
   };
@@ -187,6 +254,11 @@ export function useWSConnection(token: string | null) {
         seed: record.seed,
       },
     });
+  };
+
+  const stopProcess = () => {
+    dispatch({ type: "FORCE_IDLE" });
+    sendMessage({ type: "STOP" });
   };
 
   const sendOperatorAction = (choice: OperatorAction) => {
@@ -225,7 +297,26 @@ export function useWSConnection(token: string | null) {
     };
 
     ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
+      console.log(
+        "%c[WS RAW IN]",
+        "color:orange;font-weight:bold",
+        e.data
+      );
+
+      let msg;
+
+      try {
+        msg = JSON.parse(e.data);
+      } catch (err) {
+        console.error("[WS PARSE ERROR]", err);
+        return;
+      }
+
+      console.log(
+        "%c[WS IN]",
+        "color:#60a5fa;font-weight:bold",
+        msg
+      );
 
       if (handleDeviceMessage(msg)) return;
 
@@ -256,12 +347,22 @@ export function useWSConnection(token: string | null) {
         
         dispatch({
           type: "UPDATE_STATE",
-          // Для END: OK статус будет "OK" или сообщение. 
-          // Но так как isErrorStatus=false, сработает логика "липкой ошибки" в редюсере.
-          status: isErrorStatus ? "ERROR" : (msg.message || msg.status || "UNKNOWN"),
+          messageType: msg.type,
+          status: isErrorStatus
+            ? "ERROR"
+            : (msg.message || msg.status || "UNKNOWN"),
+
           iteration: msg.Iteration ?? msg.iteration ?? null,
-          error: isErrorStatus ? (msg.error ?? msg.message ?? "Ошибка выполнения") : null,
-          actions: (msg.actions ?? msg.availableActions ?? msg.choices) as OperatorAction[] | null,
+
+          error: isErrorStatus
+            ? (msg.error ?? msg.message ?? "Ошибка выполнения")
+            : null,
+
+          actions:
+            (msg.actions ??
+              msg.availableActions ??
+              msg.choices) as OperatorAction[] | null,
+
           isCriticalError: isErrorStatus,
         });
         return;
@@ -292,6 +393,7 @@ export function useWSConnection(token: string | null) {
 
   return {
     sendMessage, startBegin, sendOperatorAction,
+    stopProcess,
     rawStatus: state.status, beginState: state.beginState,
     availableActions: state.availableActions, error: state.error,
     deviceError: state.deviceError, iteration: state.iteration,

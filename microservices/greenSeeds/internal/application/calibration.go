@@ -71,10 +71,22 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 		return nil, err
 	}
 
-	buf, err := app.camera.TakePhoto()
+	photoPath := ""
+	if numberPhoto == 1 {
+		photoPath = "./1.jpg"
+	} else {
+		photoPath = "./2.jpg"
+	}
+
+	buf, err := app.camera.GetBytesFromPhoto(photoPath)
 	if err != nil {
 		return nil, err
 	}
+
+	// buf, err := app.camera.TakePhoto()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	if buf == nil || buf.Len() == 0 {
 		return nil, errors.New("photo is nil")
@@ -92,21 +104,22 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 			return nil, err
 		}
 
-		// toEnd, err := app.repo.DevSet.GetSettingsByKey("toEnd")
-		// if err != nil {
-		// 	return nil, err
-		// }
+		toEnd, err := app.repo.DevSet.GetSettingsByKey("toEnd")
+		if err != nil {
+			return nil, err
+		}
 
-		// if toEnd == (models.DeviceSettings{}) {
-		// 	return nil, errors.New("toEnd is empty")
-		// }
+		if toEnd == (models.DeviceSettings{}) {
+			return nil, errors.New("toEnd is empty")
+		}
 
-		// msg := app.ws.Serial.RunGcode(toEnd.Value)
-		// if msg.Error != nil {
-		// 	return nil, errors.New(*msg.Error)
-		// }
+		err = app.device.RunGcode(toEnd.Value, sessionId)
+		if err != nil {
+			return nil, err
+		}
 
 	case 2:
+		time.Sleep(2 * time.Second)
 		if cal.FirstPhotoPath == nil {
 			return nil, errors.New("first photo is nil")
 		}
