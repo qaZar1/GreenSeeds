@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"io"
-	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -187,13 +186,12 @@ func BuildCleanDotMaskWithMask(src gocv.Mat, debugDir string) (gocv.Mat, gocv.Ma
 	return finalResult.Clone(), solidMask.Clone()
 }
 
-func (cl *Classification) Counter(imagePath string, outDir string) int {
+func (cl *Classification) Counter(data []byte) int {
 	// img := gocv.IMRead(imagePath, gocv.IMReadColor)
 	// if img.Empty() {
 	// 	panic("cannot read image")
 	// }
 	// defer img.Close()
-	data, _ := os.ReadFile(imagePath)
 	// origin := img.Clone()
 	// defer origin.Close()
 

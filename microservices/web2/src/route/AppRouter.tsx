@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../components/pages/LoginPage";
-import AppLayout from "../components/layout/DashboardLayout";
+import AppLayout from "../components/layout/Layout";
 import UsersPage from "../components/Admin/Users/UserPage";
 import ShiftsPage from "../components/Admin/Shifts/ShiftsPage";
 import AssignmentsPage from "../components/Admin/Assignment/Assignment";
@@ -9,7 +9,6 @@ import ReportShow from "../components/Admin/Reports/ReportShow";
 import LogsPage from "../components/Admin/Logs/LogsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import ProfilePage from "../components/Menu/Profile/ProfilePage";
-import DashboardPage from "../components/Admin/Dashboard/Dashboard";
 import BunkersPage from "../components/Admin/Bunkers/Bunkers";
 import CalibrationPage from "../components/Admin/Calibration/Calibrate";
 import DeviceSettingCreatePage from "../components/Admin/DeviceSettings/DeviceSettingsCreatePage";
@@ -57,9 +56,7 @@ export const AppRouter = () => {
           <Route path="/settings/device-settings/:id/edit" element={<DeviceSettingCreatePage />} />
         </Route>
         
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage/>} />
-        
+        <Route path="/" element={<Navigate to="/calibrate" replace />} />
 
         <Route path="/calibrate" element={<CalibrationPage />} />
 

@@ -10,7 +10,6 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-// В том же файле или в helpers
 func waitForDeviceReady(manager *device.Manager, c *Client, timeout time.Duration, iter *models.Iteration) error {
 	ticker := time.NewTicker(500 * time.Millisecond) // опрос раз в 0.5с
 	defer ticker.Stop()
@@ -32,16 +31,15 @@ func waitForDeviceReady(manager *device.Manager, c *Client, timeout time.Duratio
 			}
 
 			if msg.Type == "STOP" {
-                if iter != nil {
-                    iter.Finished = true
-                }
-                if c != nil {
-                    c.planting.Stop = true
-                    c.Send <- okResponse("STOP", "Stopped by user")
-                }
-                return errors.New("Stopped")
-            }
-		
+				if iter != nil {
+					iter.Finished = true
+				}
+				if c != nil {
+					c.planting.Stop = true
+					safeSend(c.Send, okResponse("STOP", "Stopped by user"))
+				}
+				return errors.New("Stopped")
+			}
 
 		case <-ticker.C:
 			if manager.GetStatus() != device.ManagerStateConnected {
@@ -56,96 +54,170 @@ func waitForDeviceReady(manager *device.Manager, c *Client, timeout time.Duratio
 }
 
 func RunIteration(s *Server, c *Client, iter *models.Iteration) {
-	iter.PrevState = StateWaitingReady
 	iter.CurrentState = StateWaitingReady
-	iter.NextState = StateBegin
 
-	for{
-		if !isDeviceAlive(s.dClient.Manager){
-			iter.Success = false
-			iter.Finished = true
+	for {
 
-			iter.Err = append(iter.Err, errors.New("device disconnected"))
-			return
+		if !isDeviceAlive(s.dClient.Manager) {
+			Err(iter, errors.New("device disconnected"))
+			break
 		}
+
 		if checkStop(c) {
-			iter.Success = false
-			iter.Finished = true
+			Err(iter, errors.New("stopped by user"))
 		}
 
-		if s.dClient.Manager.GetState() == device.StateDisconnected{
+		if s.dClient.Manager.GetState() == device.StateDisconnected {
 			c.planting.Stop = true
-			iter.Finished = true
+			Err(iter, errors.New("device state disconnected"))
+			break
 		}
-		
-		switch iter.CurrentState {
-		case StateWaitingReady:
-			state(s, "WAIT_READY", iter.Turn)
 
-			if err := waitForDeviceReady(s.dClient.Manager, c, 30*time.Second, iter); err != nil {
-				return
+		switch iter.CurrentState {
+
+		case StateWaitingReady:
+			state(
+				s,
+				StatusWaitReady,
+				MessageWaitingReady,
+				iter.Turn,
+			)
+
+			if err := waitForDeviceReady(
+				s.dClient.Manager,
+				c,
+				30*time.Second,
+				iter,
+			); err != nil {
+				Err(iter, err)
+				break
 			}
 
 			iter.CurrentState = StateBegin
 
 		case StateBegin:
-			Begin(s, c, iter)
-		case StatePhoto:
-			Photo(s, c, iter)
+			state(
+				s,
+				StatusBegin,
+				MessageBegin,
+				iter.Turn,
+			)
 
-			state(s, "PHOTO_DONE", iter.Turn)
-		case StateControl:
-			Control(s, c, iter)
-
-			state(s, "AI_OK", iter.Turn)
-		case StateProcess:
-			if checkStop(c) {
-				c.planting.Stop = true
-				iter.CurrentState = StateDone
-				return
+			if err := Begin(s, c, iter); err != nil {
+				Err(iter, err)
+				break
 			}
 
-			if err := s.dClient.Return(c.SessionId); err != nil{
-				iter.PrevState = StateControl
-				iter.CurrentState = StateError
-				iter.Err = append(iter.Err, err)
+			state(
+				s,
+				StatusBegin,
+				MessageSeedPlanted,
+				iter.Turn,
+			)
+
+			iter.CurrentState = StatePhoto
+
+		case StatePhoto:
+			state(
+				s,
+				StatusPhoto,
+				MessagePhoto,
+				iter.Turn,
+			)
+
+			if err := Photo(s, c, iter); err != nil {
+				Err(iter, err)
+				break
+			}
+
+			state(
+				s,
+				StatusPhoto,
+				MessagePhotoDone,
+				iter.Turn,
+			)
+
+			iter.CurrentState = StateControl
+
+		case StateControl:
+			state(
+				s,
+				StatusControl,
+				MessageControlStart,
+				iter.Turn,
+			)
+
+			ok, err := Control(s, c, iter)
+			if err != nil {
+				Err(iter, err)
+				break
+			}
+
+			if !ok {
+				iter.CurrentState = StateBegin
 				continue
 			}
 
-			state(s, "RETURN_DONE", iter.Turn)
+			state(
+				s,
+				StatusControl,
+				MessageControlEnd,
+				iter.Turn,
+			)
+
+			iter.CurrentState = StateProcess
+
+		case StateProcess:
+			state(
+				s,
+				StatusReturn,
+				MessageWaitingReturn,
+				iter.Turn,
+			)
+
+			if err := s.dClient.Return(c.SessionId); err != nil {
+				Err(iter, err)
+				break
+			}
+
+			state(
+				s,
+				StatusReturn,
+				MessageReturned,
+				iter.Turn,
+			)
 
 			iter.CurrentState = StateDone
 
-		case StateError:
-			solution := Err(s, c, iter)
-			iter.Solutions = append(iter.Solutions, solution)
 		case StateDone:
 			iter.Success = true
 			iter.Finished = true
 		}
 
-		if iter.Finished{
+		if iter.Finished {
 			errsStr := ErrorsToString(iter.Err)
-			solutionsStr := ArrayToString(iter.Solutions)
-			
+
 			finishIteration(
 				s,
 				c,
 				iter,
 				iter.Success,
 				errsStr,
-				solutionsStr,
+				"",
 				"",
 			)
 
-			state(s, "DONE", iter.Turn)
+			if iter.Success {
+				state(s, StatusDone, MessageDone, iter.Turn)
+			} else {
+				state(s, StatusError, errsStr, iter.Turn)
+			}
+
+			c.planting.Stop = true
+
 			return
 		}
 	}
-}
-
-func isDeviceAlive(m *device.Manager) bool {
-    return m.GetStatus() == device.ManagerStateConnected
 }
 
 func buildGcode(c *Client, iter *models.Iteration) string {
@@ -250,15 +322,6 @@ func SetActiveBunker(bunkersBySeed []models.SeedsWithBunker) *models.SeedsWithBu
 	return selected
 }
 
-func ErrorsToString(errs []error) string {
-	builder := strings.Builder{}
-	for _, err := range errs {
-		builder.WriteString(err.Error() + ";\n")
-	}
-
-	return builder.String()
-}
-
 func ArrayToString(strs []string) string {
 	builder := strings.Builder{}
 	for _, str := range strs {
@@ -268,143 +331,80 @@ func ArrayToString(strs []string) string {
 	return builder.String()
 }
 
-func checkStop(c *Client) bool {
-    select {
-    case <-c.Control:
-        c.planting.Stop = true
-        c.Send <- okResponse("STOP", "Stopped by user")
-        return true
-    default:
-        return false
-    }
-}
-
-func waitAction(c *Client) (models.Action, string, bool) {
-    select {
-    case msg := <-c.Actions:
-        switch msg.Type {
-        case "RETRY":
-            return ActionRetry, "RETRY", true
-        case "SKIP":
-            return ActionSkip, "SKIP", true
-        case "ABORT":
-            return ActionAbort, "ABORT", false
-        }
-
-		return ActionAbort, "", false
-    case <-time.After(60 * time.Second):
-        return ActionAbort, "", false
-    }
-
-}
-
-func Begin(s *Server, c *Client, iter *models.Iteration) {
+func Begin(s *Server, c *Client, iter *models.Iteration) error {
 	bunkers, err := s.repo.SeedRepo.GetBestBunker(iter.Seed)
-	if err != nil{
-		err := errors.New(fmt.Sprintf("Бункеры с семенами %s пусты", iter.Seed))
-		c.Send <- errResponse(models.TypeBegin, err)
+	if err != nil {
+		err = fmt.Errorf("bunkers with seed %s are empty", iter.Seed)
 
-		iter.Err = append(iter.Err, err)
-		iter.Success = false
-		iter.Finished = true
+		safeSend(c.Send, errResponse(models.TypeBegin, err))
+
 		c.planting.Stop = true
-		return
+
+		return err
 	}
 
 	iter.Bunker = bunkers.Bunker
-	
+
 	command := buildGcode(c, iter)
 
 	if err := s.dClient.Begin(c.SessionId, command, iter.Turn); err != nil {
-		iter.PrevState = StateBegin
-		iter.CurrentState = StateError
-		iter.Err = append(iter.Err, err)
-		return
+		return err
 	}
-	
+
 	if err := s.repo.PlcRepo.DecrementSeed(iter.Bunker); err != nil {
-		c.Send <- errResponse("BEGIN", errors.New("bunker is empty"))
-
-		iter.PrevState = StateBegin
-		iter.CurrentState = StateError
-		iter.Err = append(iter.Err, err)
-		return
+		safeSend(c.Send, errResponse(models.TypeBegin, errors.New("bunker is empty")))
+		return err
 	}
 
-	iter.CurrentState = StatePhoto
+	return nil
 }
 
-func Photo(s *Server, c *Client, iter *models.Iteration) {
-	// buf, err = s.camera.TakePhoto()
+func Photo(s *Server, c *Client, iter *models.Iteration) error {
 	buf, err := s.camera.GetBytesFromPhoto("./Proj_img/Amarant/photo_2024-06-18_15-22-18.jpg")
-	if err != nil || buf == nil || buf.Len() == 0 {
-		iter.PrevState = StatePhoto
-		iter.CurrentState = StateError
-		iter.Err = append(iter.Err, err)
-		return
+	if err != nil {
+		return err
+	}
+
+	if buf == nil || buf.Len() == 0 {
+		return emptyPhotoError()
 	}
 
 	iter.LastBuf = buf
-	iter.CurrentState = StateControl
+
+	return nil
 }
 
-func Control(s *Server, c *Client, iter *models.Iteration) {
-	_, err := s.api.CheckAI(iter.Seed, *iter.LastBuf)
+func Control(s *Server, c *Client, iter *models.Iteration) (bool, error) {
+	response, err := s.api.CheckAI(iter.Seed, *iter.LastBuf)
 	if err != nil {
-		iter.PrevState = StateControl
-		iter.CurrentState = StateError
-		iter.Err = append(iter.Err, err)
-		return
+		return false, err
 	}
 
-	// if resp.Seed != c.planting.Params.Seed {
-	// 	err = errors.New("wrong seed")
-	// 	iter.PrevState = StateControl
-	// 	iter.CurrentState = StateError
-	// 	iter.Err = append(iter.Err, err)
-	// 	return
-	// }
-
-	iter.CurrentState = StateProcess
-}
-
-func Err(s *Server, c *Client, iter *models.Iteration) string {
-	if len(iter.Err) == 0{
-		return ""
+	if response.PercentOfMatch < s.config.MinMatchPercent {
+		return false, errors.New(
+			fmt.Sprintf("percent of match is less than %d", int(s.config.MinMatchPercent*100)),
+		)
 	}
 
-	lastErr := iter.Err[len(iter.Err)-1]
-	s.Send <- errResponseWithActions(
-		models.TypeBegin,
-		lastErr,
-		[]string{"RETRY", "ABORT"},
-		iter.Turn,
-	)
-
-	action, lastSolution, ok := waitAction(c)
-
-	if !ok {
-		iter.Success = false
-		iter.Finished = true
-		iter.Solutions = append(iter.Solutions, lastSolution)
-		return ""
+	if response.Seed != iter.Seed {
+		return false, errors.New(
+			fmt.Sprintf("seed mismatch. expected %s, but got %s", iter.Seed, response.Seed),
+		)
 	}
 
-	switch action {
-	case ActionRetry:
-		iter.CurrentState = iter.PrevState
-		return lastSolution
-
-	case ActionSkip:
-		iter.CurrentState = StateProcess
-		return lastSolution
-
-	case ActionAbort:
-		iter.Success = false
-		iter.Finished = true
-		iter.Solutions = append(iter.Solutions, lastSolution)
-		return ""
+	count := s.opencv.Counter(iter.LastBuf.Bytes())
+	if count == 0 {
+		return false, errors.New("counting failed")
 	}
 
-	return lastSolution
+	seed, err := s.repo.SeedRepo.GetSeedsBySeed(iter.Seed)
+	if err != nil {
+		return false, err
+	}
+
+	if count < seed.MinDensity || count > seed.MaxDensity {
+		return false, nil
+	}
+
+	return true, nil
 }

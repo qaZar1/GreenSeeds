@@ -11,10 +11,24 @@ const (
 	StateProcess
 	StateError
 	StateDone
-)
 
-const (
-	ActionSkip  models.Action = "SKIP"
-	ActionRetry models.Action = "RETRY"
-	ActionAbort models.Action = "ABORT"
+	StatusWaitReady = "WAIT_READY"
+	StatusBegin     = "BEGIN"
+	StatusPhoto     = "PHOTO"
+	StatusControl   = "CONTROL"
+	StatusReturn    = "RETURN"
+	StatusError     = "ERROR"
+	StatusDone      = "DONE"
+
+	MessageWaitingReady  = "Ожидание готовности устройства"
+	MessageBegin         = "Начало процесса посева"
+	MessageSeedPlanted   = "Посадка выполнена, переход к фотографированию"
+	MessagePhoto         = "Фотографирование"
+	MessagePhotoDone     = "Фотографирование завершено"
+	MessageControlStart  = "Начало проведения контроля качества"
+	MessageControlEnd    = "Контроль качества завершен"
+	MessageWaitingReturn = "Возврат устройства"
+	MessageReturned      = "Устройство возвращено"
+	MessageError         = "Ошибка"
+	MessageDone          = "Процесс завершен"
 )

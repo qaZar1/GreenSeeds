@@ -9,6 +9,8 @@ import { StatCard } from "../../utils/Card";
 import FormModal from "../../utils/FormModal";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ResponsiveTable from "../../utils/ResponsiveTable";
+import ActionButton from "../../utils/AсtionButton";
 
 const ShiftsPage: React.FC = () => {
   usePageHeader("План производства", "Планируемые смены на сегодня и будущие даты");
@@ -166,13 +168,12 @@ const ShiftsPage: React.FC = () => {
 
       {/* кнопка добавления */}
       <div className="flex justify-end">
-        <button
+        <ActionButton
           onClick={handleAddShift}
-          className="inline-flex items-center gap-[8px] px-[20px] py-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] rounded-[10px] font-medium hover:bg-[var(--color-primary-hover)] transition-colors shadow-sm"
+          icon="fa-solid fa-plus"
         >
-          <i className="fa-solid fa-plus text-[14px]" />
           Добавить
-        </button>
+        </ActionButton>
       </div>
 
       {/* статистика */}
@@ -186,13 +187,75 @@ const ShiftsPage: React.FC = () => {
       </div>
 
       {/* ближайшие смены */}
-      <div>
-        <Table
-          data={upcomingShifts}
-          columns={columns}
-          emptyMessage="Ближайшие смены отсутствуют"
-        />
-      </div>
+      <ResponsiveTable
+        data={upcomingShifts}
+        table={
+          <Table
+            data={upcomingShifts}
+            columns={columns}
+            emptyMessage="Ближайшие смены отсутствуют"
+          />
+        }
+        emptyMessage="Ближайшие смены отсутствуют"
+        renderCard={(shift) => {
+          const isPast = new Date(shift.dt) < today;
+
+          return (
+            <>
+              {/* date */}
+              <div className="space-y-[4px]">
+                <div className="text-[12px] text-[var(--text-secondary)]">
+                  Дата смены
+                </div>
+
+                <div className="text-[15px] font-medium text-[var(--text-primary)] break-words">
+                  {dt(shift.dt)}
+                </div>
+              </div>
+
+              {/* actions */}
+              <div className="flex items-center gap-[10px]">
+                <button
+                  onClick={() => handleEdit(shift)}
+                  disabled={isPast}
+                  className={`
+                    flex-1
+                    flex items-center justify-center gap-[8px]
+                    py-[10px]
+                    rounded-[10px]
+                    border border-[var(--border-color)]
+                    transition-colors
+                    ${
+                      isPast
+                        ? 'opacity-40 cursor-not-allowed text-[var(--text-secondary)]'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--status-info-bg)] hover:text-[var(--status-info-text)]'
+                    }
+                  `}
+                >
+                  <i className="fa-solid fa-clock" />
+                </button>
+
+                <button
+                  onClick={() => handleDelete(shift)}
+                  className="
+                    flex-1
+                    flex items-center justify-center gap-[8px]
+                    py-[10px]
+                    rounded-[10px]
+                    border border-[var(--border-color)]
+                    text-[var(--text-secondary)]
+                    hover:bg-[var(--status-danger-bg)]
+                    hover:text-[var(--status-danger-text)]
+                    transition-colors
+                  "
+                >
+                  <i className="fa-solid fa-trash" />
+                </button>
+              </div>
+            </>
+          );
+        }}
+      />
 
       {/* история */}
       {historyShifts.length > 0 && (
@@ -218,13 +281,50 @@ const ShiftsPage: React.FC = () => {
               showHistory ? "max-h-[800px] mt-[16px]" : "max-h-0"
             }`}
           >
-            <Table
+            <ResponsiveTable
               data={historyShifts}
-              columns={columns}
+              table={
+                <Table
+                  data={historyShifts}
+                  columns={columns}
+                  emptyMessage="История смен отсутствует"
+                />
+              }
               emptyMessage="История смен отсутствует"
+              renderCard={(shift) => (
+                <>
+                  <div className="space-y-[4px]">
+                    <div className="text-[12px] text-[var(--text-secondary)]">
+                      Дата смены
+                    </div>
+
+                    <div className="text-[15px] font-medium text-[var(--text-primary)] break-words">
+                      {dt(shift.dt)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-[10px]">
+                    <button
+                      onClick={() => handleDelete(shift)}
+                      className="
+                        w-full
+                        flex items-center justify-center gap-[8px]
+                        py-[10px]
+                        rounded-[10px]
+                        border border-[var(--border-color)]
+                        text-[var(--text-secondary)]
+                        hover:bg-[var(--status-danger-bg)]
+                        hover:text-[var(--status-danger-text)]
+                        transition-colors
+                      "
+                    >
+                      <i className="fa-solid fa-trash" />
+                    </button>
+                  </div>
+                </>
+              )}
             />
           </div>
-
         </div>
       )}
 

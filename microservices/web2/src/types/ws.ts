@@ -98,7 +98,6 @@ export type WSOutgoingMessage =
     };
 
 /* ===== Guards ===== */
-
 export const isWSMessage = (msg: unknown): msg is WSIncomingMessage => {
   return (
     typeof msg === "object" &&

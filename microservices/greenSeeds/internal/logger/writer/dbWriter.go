@@ -44,7 +44,9 @@ func (w *DbWriter) WriteLevel(level zerolog.Level, p []byte) (n int, err error) 
 		log.Username = &nilStr
 	}
 
-	w.DB.Get(&log.UserId, "SELECT id FROM green_seeds.users WHERE username = :username", log.Username)
+	var id int64
+	w.DB.Get(&id, "SELECT id FROM green_seeds.users WHERE username = $1", *log.Username)
+	log.UserId = &id
 
 	log.Lvl = strings.ToUpper(log.Lvl)
 

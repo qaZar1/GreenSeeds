@@ -8,7 +8,8 @@ import toast from "react-hot-toast";
 import FormModal from "../../utils/FormModal";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
-
+import ActionButton from "../../utils/AсtionButton";
+import ResponsiveTable from "../../utils/ResponsiveTable";
 
 const BunkersPage: React.FC = () => {
   usePageHeader("Бункеры", "Настройка бункеров и расстояния подачи");
@@ -157,20 +158,86 @@ const BunkersPage: React.FC = () => {
 
       {/* кнопка добавления */}
       <div className="flex justify-end">
-        <button
+        <ActionButton
           onClick={handleAddBunker}
-          className="inline-flex items-center gap-[8px] px-[20px] py-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] rounded-[10px] font-medium hover:bg-[var(--color-primary-hover)] transition-colors shadow-sm"
+          icon="fa-solid fa-plus"
         >
-          <i className="fa-solid fa-plus text-[14px]" />
           Добавить
-        </button>
+        </ActionButton>
       </div>
 
-      <Table
-        data={bunkers}
-        columns={columns}
-        emptyMessage="Бункеры еще не заданы"
-      />
+      <ResponsiveTable
+  data={bunkers}
+  table={
+    <Table
+      data={bunkers}
+      columns={columns}
+      emptyMessage="Бункеры еще не заданы"
+    />
+  }
+  emptyMessage="Бункеры еще не заданы"
+  renderCard={(bunker) => (
+    <>
+      {/* content */}
+      <div className="space-y-[10px] text-[14px]">
+
+        <div className="text-[var(--text-primary)]">
+          <span className="text-[var(--text-secondary)]">
+            Бункер:
+          </span>{" "}
+          {bunker.bunker}
+        </div>
+
+        <div className="text-[var(--text-primary)]">
+          <span className="text-[var(--text-secondary)]">
+            Дистанция:
+          </span>{" "}
+          {bunker.distance}
+        </div>
+
+      </div>
+
+      {/* actions */}
+      <div className="flex items-center gap-[10px]">
+
+        <button
+          onClick={() => handleEdit(bunker)}
+          className="
+            flex-1
+            flex items-center justify-center gap-[8px]
+            py-[10px]
+            rounded-[10px]
+            border border-[var(--border-color)]
+            text-[var(--text-secondary)]
+            hover:bg-[var(--status-info-bg)]
+            hover:text-[var(--status-info-text)]
+            transition-colors
+          "
+        >
+          <i className="fa-solid fa-pen-to-square" />
+        </button>
+
+        <button
+          onClick={() => handleDelete(bunker)}
+          className="
+            flex-1
+            flex items-center justify-center gap-[8px]
+            py-[10px]
+            rounded-[10px]
+            border border-[var(--border-color)]
+            text-[var(--text-secondary)]
+            hover:bg-[var(--status-danger-bg)]
+            hover:text-[var(--status-danger-text)]
+            transition-colors
+          "
+        >
+          <i className="fa-solid fa-trash" />
+        </button>
+
+      </div>
+    </>
+  )}
+/>
 
       {/* модалка */}
       <FormModal 

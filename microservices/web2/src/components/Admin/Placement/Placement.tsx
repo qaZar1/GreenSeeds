@@ -6,12 +6,13 @@ import { api } from "../../../api/apiProvider";
 import toast from "react-hot-toast";
 import FormModal from "../../utils/FormModal";
 import { StatCard } from "../../utils/Card";
-
 import type { Placement } from "../../../types/placement";
 import type { Seed } from "../../../types/seed";
 import type { Bunker } from "../../../types/bunker";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ActionButton from "../../utils/AсtionButton";
+import ResponsiveTable from "../../utils/ResponsiveTable";
 
 const PlacementPage: React.FC = () => {
 
@@ -228,19 +229,15 @@ const PlacementPage: React.FC = () => {
   return (
 
     <div className="space-y-[24px] w-full">
-
-      {/* add */}
-
+      
+      {/* кнопка добавления */}
       <div className="flex justify-end">
-
-        <button
+        <ActionButton
           onClick={handleAdd}
-          className="inline-flex items-center gap-[8px] px-[20px] py-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] rounded-[10px]"
+          icon="fa-solid fa-plus"
         >
-          <i className="fa-solid fa-plus text-[14px]" />
           Добавить
-        </button>
-
+        </ActionButton>
       </div>
 
       {/* stats */}
@@ -279,10 +276,84 @@ const PlacementPage: React.FC = () => {
 
       {/* table */}
 
-      <Table
+      <ResponsiveTable
         data={sortedPlacements}
-        columns={columns}
+        table={
+          <Table
+            data={sortedPlacements}
+            columns={columns}
+            emptyMessage="Размещения еще не заданы"
+          />
+        }
         emptyMessage="Размещения еще не заданы"
+        renderCard={(p) => (
+          <>
+            {/* content */}
+            <div className="space-y-[10px] text-[14px]">
+
+              <div className="text-[var(--text-primary)]">
+                <span className="text-[var(--text-secondary)]">
+                  Бункер:
+                </span>{" "}
+                {p.bunker}
+              </div>
+
+              <div className="text-[var(--text-primary)] break-words">
+                <span className="text-[var(--text-secondary)]">
+                  Семена:
+                </span>{" "}
+                {seedMap[p.seed]?.seed_ru ?? p.seed}
+              </div>
+
+              <div className="text-[var(--text-primary)]">
+                <span className="text-[var(--text-secondary)]">
+                  Количество:
+                </span>{" "}
+                {p.amount}
+              </div>
+
+            </div>
+
+            {/* actions */}
+            <div className="flex items-center gap-[10px]">
+
+              <button
+                onClick={() => handleEdit(p)}
+                className="
+                  flex-1
+                  flex items-center justify-center gap-[8px]
+                  py-[10px]
+                  rounded-[10px]
+                  border border-[var(--border-color)]
+                  text-[var(--text-secondary)]
+                  hover:bg-[var(--status-info-bg)]
+                  hover:text-[var(--status-info-text)]
+                  transition-colors
+                "
+              >
+                <i className="fa-solid fa-pen-to-square" />
+              </button>
+
+              <button
+                onClick={() => handleDelete(p)}
+                className="
+                  flex-1
+                  flex items-center justify-center gap-[8px]
+                  py-[10px]
+                  rounded-[10px]
+                  border border-[var(--border-color)]
+                  text-[var(--text-secondary)]
+                  hover:bg-[var(--status-danger-bg)]
+                  hover:text-[var(--status-danger-text)]
+                  transition-colors
+                "
+              >
+                <i className="fa-solid fa-trash" />
+              </button>
+
+            </div>
+          </>
+        )}
       />
 
       {/* modal */}

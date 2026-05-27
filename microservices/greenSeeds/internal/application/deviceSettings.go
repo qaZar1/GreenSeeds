@@ -4,6 +4,15 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
+//go:generate mockgen -source=deviceSettings.go -destination=./../mocks/mock_deviceSettings.go -package=mocks
+type IDeviceSettingsApp interface {
+	AddSetting(models.DeviceSettings) (models.DeviceSettings, error)
+	GetSettings() ([]models.DeviceSettings, error)
+	GetSettingsByKey(string) (models.DeviceSettings, error)
+	UpdateSetting(models.DeviceSettings) (models.DeviceSettings, error)
+	DeleteSetting(string) (bool, error)
+}
+
 func (app *App) AddSetting(setting models.DeviceSettings) (models.DeviceSettings, error) {
 	if err := app.validate.Struct(setting); err != nil {
 		return models.DeviceSettings{}, err

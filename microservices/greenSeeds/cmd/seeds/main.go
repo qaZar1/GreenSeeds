@@ -41,7 +41,7 @@ const logo = `
 // @description API для работы c GreenSeeds
 // @BasePath /
 func main() {
-	fmt.Println(logo)
+	fmt.Printf(logo)
 	log := logger.New(zerolog.DebugLevel)
 
 	var configPath string
@@ -98,13 +98,14 @@ func main() {
 		infra,
 		camera,
 		&opencv,
+		&cfg,
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot create ws server")
 	}
 	defer ws.Close()
 
-	router := router.NewRouter(repo, cfg, ws, log, camera, infra)
+	router := router.NewRouter(repo, cfg, ws, log, camera, infra, client)
 	if router == nil {
 		log.Error().Msg("Invalid router")
 		return

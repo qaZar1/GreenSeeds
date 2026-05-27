@@ -30,24 +30,24 @@ import (
 func (transport *Transport) PostApiReportsAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
 	var report models.Reports
 	if err := jsoniter.Unmarshal(body, &report); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
-	addedReport, err := transport.app.AddReport(report)
+	addedReport, err := transport.Reports.AddReport(report)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add report: %w", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add report: %v", err))
 		return
 	}
 
 	if addedReport == (models.Reports{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add report: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add report: %v", err))
 		return
 	}
 
@@ -69,9 +69,9 @@ func (transport *Transport) PostApiReportsAdd(w http.ResponseWriter, r *http.Req
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiReports(w http.ResponseWriter, r *http.Request) {
-	reports, err := transport.app.GetReports()
+	reports, err := transport.Reports.GetReports()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get reports: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get reports: %v", err))
 		return
 	}
 
@@ -102,9 +102,9 @@ func (transport *Transport) GetApiReports(w http.ResponseWriter, r *http.Request
 func (transport *Transport) GetApiReportsById(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 
-	reports, err := transport.app.GetReportsByReport(idStr)
+	reports, err := transport.Reports.GetReportsByReport(idStr)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get reports by id: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get reports by id: %v", err))
 		return
 	}
 
@@ -130,24 +130,24 @@ func (transport *Transport) GetApiReportsById(w http.ResponseWriter, r *http.Req
 func (transport *Transport) PutApiReportsUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
 	var report models.Reports
 	if err := jsoniter.Unmarshal(data, &report); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
-	ok, err := transport.app.UpdateReport(report)
+	ok, err := transport.Reports.UpdateReport(report)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update report: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update report: %v", err))
 		return
 	}
 
 	if !ok {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update report: %w", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update report: %v", err))
 		return
 	}
 

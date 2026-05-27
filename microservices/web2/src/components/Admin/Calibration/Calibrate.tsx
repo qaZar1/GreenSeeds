@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { usePageHeader } from "../../../context/HeaderContext";
-import { Stepper } from "./Stepper";
+import { Stepper } from "../../utils/Stepper";
 import { steps } from "../../../types/calibration";
 import { useCalibrationFlow } from "../../hooks/useCalibrationFlow";
 
 type Result = {
   dx: number;
   dy: number;
+  d_per_step: number;
 };
 
 const order = [
@@ -78,38 +79,52 @@ const CalibrationPage: React.FC = () => {
         <Stepper steps={steps as unknown as string[]} current={stepIndex} />
       </div>
 
-      <div className="grid gap-[20px] grid-cols-1 lg:grid-cols-2">
+      <div className="flex justify-center">
+        <div
+          className="
+            w-full
+            max-w-[720px]
 
-        <div className="rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-card)] overflow-hidden">
-          <div className="px-[20px] py-[14px] border-b border-[var(--border-light)] text-[14px] font-bold text-[var(--text-primary)] text-center">
-            Камера
-          </div>
+            rounded-[10px]
+            border border-[var(--border-color)]
+            bg-[var(--bg-card)]
 
-          <div className="p-[20px]">
-            <div className="h-[360px] bg-black rounded-[8px] flex items-center justify-center text-white/50 text-[13px]">
-              live preview
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-card)] overflow-hidden flex flex-col">
-
+            overflow-hidden
+            flex flex-col
+          "
+        >
           <div className="px-[20px] py-[14px] border-b border-[var(--border-light)] text-[14px] font-bold text-[var(--text-primary)] text-center">
             Управление
           </div>
 
-          <div className="p-[20px] space-y-[16px] flex flex-col flex-1">
-
+          <div className="p-[14px] sm:p-[20px] space-y-[16px] flex flex-col flex-1">
             {photo1 && (
               <div className="space-y-[6px]">
                 <div className="text-[13px] text-[var(--text-secondary)]">
                   Первое фото
                 </div>
 
-                <img
-                  src={photo1}
-                  className="max-h-[160px] w-full object-contain rounded-[8px] border border-[var(--border-color)]"
-                />
+                <div
+                  className="
+                    h-[220px]
+                    w-full
+                    rounded-[8px]
+                    border border-[var(--border-color)]
+                    bg-[var(--bg-page)]
+
+                    flex items-center justify-center
+                    overflow-hidden
+                  "
+                >
+                  <img
+                    src={photo1}
+                    className="
+                      max-h-full
+                      max-w-full
+                      object-contain
+                    "
+                  />
+                </div>
               </div>
             )}
 
@@ -119,10 +134,27 @@ const CalibrationPage: React.FC = () => {
                   Второе фото
                 </div>
 
-                <img
-                  src={photo2}
-                  className="max-h-[160px] w-full object-contain rounded-[8px] border border-[var(--border-color)]"
-                />
+                <div
+                  className="
+                    h-[220px]
+                    w-full
+                    rounded-[8px]
+                    border border-[var(--border-color)]
+                    bg-[var(--bg-page)]
+
+                    flex items-center justify-center
+                    overflow-hidden
+                  "
+                >
+                  <img
+                    src={photo2}
+                    className="
+                      max-h-full
+                      max-w-full
+                      object-contain
+                    "
+                  />
+                </div>
               </div>
             )}
 
@@ -149,22 +181,35 @@ const CalibrationPage: React.FC = () => {
                 </div>
 
                 <div className="text-[var(--text-secondary)]">
-                  X shift: <span className="text-[var(--text-primary)]">{result.dx}px</span>
+                  X shift: <span className="text-[var(--text-primary)]">{Math.abs(result.dx).toFixed(2)} см</span>
                 </div>
 
                 <div className="text-[var(--text-secondary)]">
-                  Y shift: <span className="text-[var(--text-primary)]">{result.dy}px</span>
+                  Y shift: <span className="text-[var(--text-primary)]">{Math.abs(result.dy).toFixed(2)} см</span>
+                </div>
+
+                <div className="text-[var(--text-secondary)]">
+                  Один шаг: <span className="text-[var(--text-primary)]">{result.d_per_step.toFixed(2)} см</span>
                 </div>
               </div>
             )}
 
-            <div className="flex gap-[12px] mt-auto pt-[10px]">
+            <div className="flex flex-col sm:flex-row gap-[12px] mt-auto pt-[10px]">
 
               {step !== "prepare" && (
                 <button
                   onClick={back}
                   disabled={loading}
-                  className="flex-1 px-[16px] py-[10px] rounded-[10px] border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-page)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="
+                    w-full flex-1
+                    px-[16px] py-[10px]
+                    rounded-[10px]
+                    border border-[var(--border-color)]
+                    text-[var(--text-primary)]
+                    hover:bg-[var(--bg-page)]
+                    disabled:opacity-50
+                    disabled:cursor-not-allowed
+                  "
                 >
                   Назад
                 </button>
@@ -173,7 +218,16 @@ const CalibrationPage: React.FC = () => {
               <button
                 onClick={handleRun}
                 disabled={loading}
-                className="flex-1 px-[16px] py-[10px] rounded-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="
+                  w-full flex-1
+                  px-[16px] py-[10px]
+                  rounded-[10px]
+                  bg-[var(--color-primary)]
+                  text-[var(--text-inverse)]
+                  hover:bg-[var(--color-primary-hover)]
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                "
               >
                 {loading ? "Выполнение..." : nextLabel[step]}
               </button>

@@ -4,6 +4,8 @@ import { api } from "../../../api/apiProvider";
 import toast from "react-hot-toast";
 import TaskCard from "./Task";
 import type { TaskRecord } from "../../../types/task";
+import NotFoundPage from "../../pages/NotFoundPage";
+import SproutLoader from "../../utils/Loader/SproutLoader";
 
 const TaskDetails = () => {
   const { id } = useParams();
@@ -28,8 +30,8 @@ const TaskDetails = () => {
     load();
   }, [id]);
 
-  if (loading) return <div>Загрузка...</div>;
-  if (!task) return <div>Задание не найдено</div>;
+  if (loading) return <SproutLoader />;
+  if (!task) return <NotFoundPage />;
 
   return <TaskCard record={task} />;
 };

@@ -9,6 +9,17 @@ import (
 	bcrypt "golang.org/x/crypto/bcrypt"
 )
 
+//go:generate mockgen -source=users.go -destination=./../mocks/mock_users.go -package=mocks
+type IUsersApp interface {
+	RegisterUser(user models.User) (int, error)
+	LoginUser(user models.User) (*models.TokenResponse, int, error)
+	GetUserById(string) (*models.User, error)
+	CheckAllUsers() ([]models.User, error)
+	Update(models.User) (bool, error)
+	ChangePassword(models.UpdatePassword) (bool, error)
+	RemoveUser(string) (bool, error)
+}
+
 func (app *App) RegisterUser(user models.User) (int, error) {
 	if err := app.validate.Struct(user); err != nil {
 		return http.StatusBadRequest, ErrValidateStruct

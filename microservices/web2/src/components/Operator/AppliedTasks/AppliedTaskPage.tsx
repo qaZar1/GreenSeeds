@@ -28,7 +28,6 @@ const AppliedTasksPage: React.FC = () => {
     setError(false);
 
     try {
-      console.log(user_id);
       const res = await api.getList("tasks", user_id);
       setTasks(res);
     } catch (e) {

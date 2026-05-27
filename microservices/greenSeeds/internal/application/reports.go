@@ -6,6 +6,14 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
+//go:generate mockgen -source=reports.go -destination=./../mocks/mock_reports.go -package=mocks
+type IReportsApp interface {
+	AddReport(models.Reports) (models.Reports, error)
+	GetReports() ([]models.Reports, error)
+	GetReportsByReport(string) (models.Reports, error)
+	UpdateReport(models.Reports) (bool, error)
+}
+
 func (app *App) AddReport(report models.Reports) (models.Reports, error) {
 	if err := app.validate.Struct(report); err != nil {
 		return models.Reports{}, err

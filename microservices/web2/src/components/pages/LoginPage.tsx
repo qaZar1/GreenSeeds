@@ -1,4 +1,8 @@
-import React, { useState, type FormEvent, type ChangeEvent } from "react";
+import React, { useState } from "react";
+import type {
+  FormEvent,
+  ChangeEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -14,7 +18,17 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
+
+    if (!name.trim()) {
+      setError("Введите имя пользователя");
+      return;
+    }
+
+    if (!password.trim()) {
+      setError("Введите пароль");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -30,14 +44,22 @@ const LoginPage: React.FC = () => {
       }
     } catch (err) {
       setError("Неверное имя пользователя или пароль");
+      setPassword("");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-page)] px-4">
-
+    <div
+      className="
+        min-h-[100dvh]
+        flex items-center justify-center
+        bg-[var(--bg-page)]
+        px-4
+        py-[20px]
+      "
+    >
       {/* Карточка */}
       <div className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[14px] shadow-lg p-[32px]">
 
@@ -57,7 +79,11 @@ const LoginPage: React.FC = () => {
         </div>
 
         {/* Форма */}
-        <form onSubmit={handleSubmit} className="space-y-[16px]">
+        <form
+          onSubmit={handleSubmit}
+          autoComplete="off"
+          className="space-y-[16px]"
+        >
 
           {error && (
             <div className="bg-[var(--status-danger-bg)] text-[var(--status-danger-text)] text-[13px] px-[12px] py-[8px] rounded-[8px] text-center">
@@ -71,12 +97,12 @@ const LoginPage: React.FC = () => {
 
             <input
               type="text"
+              autoComplete="username"
               value={name}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setName(e.target.value)
               }
               placeholder="Имя пользователя"
-              required
               disabled={isLoading}
               className="w-full pl-[36px] pr-[12px] py-[10px] rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-page)] text-[var(--text-primary)] text-[14px] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             />
@@ -88,12 +114,12 @@ const LoginPage: React.FC = () => {
 
             <input
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setPassword(e.target.value)
               }
               placeholder="Пароль"
-              required
               disabled={isLoading}
               className="w-full pl-[36px] pr-[12px] py-[10px] rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-page)] text-[var(--text-primary)] text-[14px] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             />

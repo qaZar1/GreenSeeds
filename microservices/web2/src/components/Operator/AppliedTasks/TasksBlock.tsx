@@ -45,7 +45,14 @@ const TasksBlock: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
           <div className="divide-y divide-[var(--border-color)]">
 
             {/* header row */}
-            <div className="grid grid-cols-3 px-[16px] py-[10px] text-[13px] text-[var(--text-secondary)]">
+            <div className="
+              hidden sm:grid
+              grid-cols-3
+              px-[16px]
+              py-[10px]
+              text-[13px]
+              text-[var(--text-secondary)]
+            ">
               <div>Задание</div>
               <div>Кол-во</div>
               <div>Культура</div>
@@ -56,19 +63,65 @@ const TasksBlock: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
               <div
                 key={`${t.id}-${t.shift}`}
                 onClick={() => navigate(`/tasks/${t.id}`)}
-                className="grid grid-cols-3 px-[16px] py-[12px] text-[14px] cursor-pointer hover:bg-[var(--bg-hover)] transition"
+                className="
+                  cursor-pointer
+                  hover:bg-[var(--bg-hover)]
+                  transition
+                  px-[16px]
+                  py-[12px]
+                "
               >
-                <div className="text-[var(--text-primary)]">
-                  {t.number}
+
+                {/* desktop */}
+                <div className="hidden sm:grid grid-cols-3 text-[14px]">
+                  <div className="text-[var(--text-primary)]">
+                    {t.number}
+                  </div>
+
+                  <div className="text-[var(--text-primary)]">
+                    {t.amount}
+                  </div>
+
+                  <div className="text-[var(--text-primary)] break-words">
+                    {t.seed_ru || "—"}
+                  </div>
                 </div>
 
-                <div className="text-[var(--text-primary)]">
-                  {t.amount}
+                {/* mobile */}
+                <div className="sm:hidden space-y-[6px] text-[14px]">
+
+                  <div className="flex justify-between gap-[12px]">
+                    <span className="text-[var(--text-secondary)]">
+                      Задание
+                    </span>
+
+                    <span className="text-[var(--text-primary)] font-medium">
+                      {t.number}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between gap-[12px]">
+                    <span className="text-[var(--text-secondary)]">
+                      Кол-во
+                    </span>
+
+                    <span className="text-[var(--text-primary)]">
+                      {t.amount}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between gap-[12px]">
+                    <span className="text-[var(--text-secondary)]">
+                      Культура
+                    </span>
+
+                    <span className="text-[var(--text-primary)] text-right break-words">
+                      {t.seed_ru || "—"}
+                    </span>
+                  </div>
+
                 </div>
 
-                <div className="text-[var(--text-primary)]">
-                  {t.seed_ru || "—"}
-                </div>
               </div>
             ))}
 

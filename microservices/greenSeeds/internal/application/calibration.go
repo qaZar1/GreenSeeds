@@ -11,12 +11,31 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-func (app *App) CalibrationHandshake() (string, error) {
-	// if ok := app.ws.Serial.InitialHandshake(); !ok {
-	// 	return "", errors.New("Failed to initial handshake")
-	// }
+//go:generate mockgen -source=calibration.go -destination=./../mocks/mock_calibration.go -package=mocks
+type ICalibrationApp interface {
+	CalibrationHandshake() (string, error)
+	GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error)
+	CalculateResult(calibration models.Calibration) (models.Calibration, error)
+	Clear(sessionId string) error
+	Save(sessionId string) error
+}
 
+func (app *App) CalibrationHandshake() (string, error) {
 	sessionId := uuid.NewString()
+
+	if !app.device.Manager.TryAcquireSession(sessionId) {
+		return "", errors.New("device busy")
+	}
+	defer app.device.Manager.ReleaseSession(sessionId)
+
+	// 3. Останавливаем фоновый пинг на время сессии
+	app.device.PausePolling()
+	defer app.device.RefreshPolling()
+
+	if err := app.device.CalibrationHandshake(sessionId); err != nil {
+		return "", err
+	}
+
 	now := time.Now()
 
 	// добавляем в базу
@@ -34,10 +53,9 @@ func (app *App) CalibrationHandshake() (string, error) {
 		return "", errors.New("toStart is empty")
 	}
 
-	// msg := app.ws.Serial.RunGcode(toStart.Value)
-	// if msg.Error != nil {
-	// 	return "", errors.New(*msg.Error)
-	// }
+	if err := app.device.RunGcode(toStart.Value, sessionId); err != nil {
+		return "", err
+	}
 
 	return sessionId, nil
 }
@@ -53,10 +71,22 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 		return nil, err
 	}
 
-	buf, err := app.camera.TakePhoto()
+	photoPath := ""
+	if numberPhoto == 1 {
+		photoPath = "./1.jpg"
+	} else {
+		photoPath = "./2.jpg"
+	}
+
+	buf, err := app.camera.GetBytesFromPhoto(photoPath)
 	if err != nil {
 		return nil, err
 	}
+
+	// buf, err := app.camera.TakePhoto()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	if buf == nil || buf.Len() == 0 {
 		return nil, errors.New("photo is nil")
@@ -67,33 +97,34 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 	var path string
 	switch numberPhoto {
 	case 1:
-		path = fmt.Sprintf("./tmp/%s/%app.jpg", sessionId, "1")
+		path = fmt.Sprintf("./tmp/%s/%s.jpg", sessionId, "1")
 		cal.FirstPhotoPath = &path
 
 		if err := app.camera.SavePhoto(path, sessionId, buf); err != nil {
 			return nil, err
 		}
 
-		// toEnd, err := app.repo.DevSet.GetSettingsByKey("toEnd")
-		// if err != nil {
-		// 	return nil, err
-		// }
+		toEnd, err := app.repo.DevSet.GetSettingsByKey("toEnd")
+		if err != nil {
+			return nil, err
+		}
 
-		// if toEnd == (models.DeviceSettings{}) {
-		// 	return nil, errors.New("toEnd is empty")
-		// }
+		if toEnd == (models.DeviceSettings{}) {
+			return nil, errors.New("toEnd is empty")
+		}
 
-		// msg := app.ws.Serial.RunGcode(toEnd.Value)
-		// if msg.Error != nil {
-		// 	return nil, errors.New(*msg.Error)
-		// }
+		err = app.device.RunGcode(toEnd.Value, sessionId)
+		if err != nil {
+			return nil, err
+		}
 
 	case 2:
+		time.Sleep(2 * time.Second)
 		if cal.FirstPhotoPath == nil {
 			return nil, errors.New("first photo is nil")
 		}
 
-		path = fmt.Sprintf("./tmp/%s/%app.jpg", sessionId, "2")
+		path = fmt.Sprintf("./tmp/%s/%s.jpg", sessionId, "2")
 		cal.SecondPhotoPath = &path
 
 		if err := app.camera.SavePhoto(path, sessionId, buf); err != nil {
@@ -141,7 +172,7 @@ func (app *App) CalculateResult(calibration models.Calibration) (models.Calibrat
 		return models.Calibration{}, err
 	}
 
-	dx, dy, err := app.calib.Finder(firstPhoto, secondPhoto)
+	dx, dy, err := app.opencv.Finder(firstPhoto, secondPhoto)
 	if err != nil {
 		return models.Calibration{}, err
 	}
@@ -176,7 +207,7 @@ func (app *App) Clear(sessionId string) error {
 		return errors.New("session id is empty")
 	}
 
-	delete(app.calibration, sessionId)
+	delete(app.calibrate, sessionId)
 
 	return nil
 }

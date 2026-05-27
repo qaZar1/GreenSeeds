@@ -5,6 +5,7 @@ import (
 
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/application"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/device"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
@@ -12,11 +13,22 @@ import (
 )
 
 type Transport struct {
-	app    *application.App
+	Assignments    application.IAssignmentsApp
+	Bunkers        application.IBunkersApp
+	DeviceSettings application.IDeviceSettingsApp
+	Placements     application.IPlacementsApp
+	Receipts       application.IReceiptsApp
+	Reports        application.IReportsApp
+	Seeds          application.ISeedsApp
+	Shifts         application.IShiftsApp
+	Users          application.IUsersApp
+	Calibration    application.ICalibrationApp
+	Logs           application.ILogsApp
+
 	infra  *infrastructure.Infrastructure
 	mu     sync.RWMutex
 	ws     *ws.Server
-	camera *camera.Camera
+	camera camera.ICamera
 }
 
 func NewTransport(
@@ -24,15 +36,25 @@ func NewTransport(
 	cfg models.Config,
 	infra *infrastructure.Infrastructure,
 	ws *ws.Server,
-	camera *camera.Camera,
+	camera camera.ICamera,
+	client *device.DeviceClient,
 ) *Transport {
-	app := application.NewApp(repo, cfg, infra, ws, camera)
-
+	app := application.NewApp(repo, cfg, infra, ws, camera, client)
 	return &Transport{
-		app,
-		infra,
-		sync.RWMutex{},
-		ws,
-		camera,
+		Assignments:    app,
+		Bunkers:        app,
+		DeviceSettings: app,
+		Placements:     app,
+		Receipts:       app,
+		Reports:        app,
+		Seeds:          app,
+		Shifts:         app,
+		Users:          app,
+		Calibration:    app,
+		Logs:           app,
+		infra:          infra,
+		mu:             sync.RWMutex{},
+		ws:             ws,
+		camera:         camera,
 	}
 }

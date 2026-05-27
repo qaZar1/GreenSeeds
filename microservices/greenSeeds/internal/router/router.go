@@ -12,6 +12,7 @@ import (
 
 	core "github.com/Impisigmatus/service_core/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/camera"
+	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/device"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/infrastructure"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/middlewares"
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
@@ -26,10 +27,11 @@ func NewRouter(
 	cfg models.Config,
 	ws *ws.Server,
 	logger zerolog.Logger,
-	camera *camera.Camera,
+	camera camera.ICamera,
 	infra *infrastructure.Infrastructure,
+	client *device.DeviceClient,
 ) *chi.Mux {
-	transport := transport.NewTransport(repo, cfg, infra, ws, camera)
+	transport := transport.NewTransport(repo, cfg, infra, ws, camera, client)
 
 	router := chi.NewRouter()
 

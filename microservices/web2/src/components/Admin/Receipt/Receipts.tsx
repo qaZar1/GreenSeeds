@@ -2,16 +2,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import { usePageHeader } from "../../../context/HeaderContext";
 import { api } from "../../../api/apiProvider";
 import toast from "react-hot-toast";
-
 import { Table } from "../../utils/Table";
 import { StatCard } from "../../utils/Card";
-
 import type { Column } from "../../../types/table";
 import type { Seed } from "../../../types/seed";
 import type { Receipt } from "../../../types/receipt";
 import { useNavigate } from "react-router-dom";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ActionButton from "../../utils/AсtionButton";
+import ResponsiveTable from "../../utils/ResponsiveTable";
 
 const ReceiptPage: React.FC = () => {
 
@@ -168,18 +168,14 @@ const ReceiptPage: React.FC = () => {
 
     <div className="space-y-[24px] w-full">
 
-      {/* add */}
-
+      {/* кнопка добавления */}
       <div className="flex justify-end">
-
-        <button
-					onClick={() => navigate("/settings/receipts/create")}
-          className="inline-flex items-center gap-[8px] px-[20px] py-[10px] bg-[var(--color-primary)] text-[var(--text-inverse)] rounded-[10px]"
+        <ActionButton
+          onClick={() => navigate("/settings/receipts/create")}
+          icon="fa-solid fa-plus"
         >
-          <i className="fa-solid fa-plus text-[14px]" />
           Добавить
-        </button>
-
+        </ActionButton>
       </div>
 
       {/* stats */}
@@ -204,10 +200,88 @@ const ReceiptPage: React.FC = () => {
       </div>
 
       {/* table */}
-      <Table
+      <ResponsiveTable
         data={receipts}
-        columns={columns}
+        table={
+          <Table
+            data={receipts}
+            columns={columns}
+            emptyMessage="Рецепты ещё не созданы"
+          />
+        }
         emptyMessage="Рецепты ещё не созданы"
+        renderCard={(r) => (
+          <>
+            {/* content */}
+            <div className="space-y-[10px] text-[14px]">
+
+              <div className="text-[var(--text-primary)] break-words">
+                <span className="text-[var(--text-secondary)]">
+                  Семена:
+                </span>{" "}
+                {seedMap[r.seed]?.seed_ru ?? r.seed}
+              </div>
+
+              <div className="text-[var(--text-primary)] break-words">
+                <span className="text-[var(--text-secondary)]">
+                  Описание:
+                </span>{" "}
+                {r.description}
+              </div>
+
+              <div className="text-[var(--text-primary)]">
+                <span className="text-[var(--text-secondary)]">
+                  Обновлено:
+                </span>{" "}
+                {r.updated
+                  ? new Date(r.updated).toLocaleString("ru-RU")
+                  : "-"}
+              </div>
+
+            </div>
+
+            {/* actions */}
+            <div className="flex items-center gap-[10px]">
+
+              <button
+                onClick={() =>
+                  navigate(`/settings/receipts/${r.receipt}/edit`)
+                }
+                className="
+                  flex-1
+                  flex items-center justify-center gap-[8px]
+                  py-[10px]
+                  rounded-[10px]
+                  border border-[var(--border-color)]
+                  text-[var(--text-secondary)]
+                  hover:bg-[var(--status-info-bg)]
+                  hover:text-[var(--status-info-text)]
+                  transition-colors
+                "
+              >
+                <i className="fa-solid fa-pen-to-square" />
+              </button>
+
+              <button
+                onClick={() => handleDelete(r)}
+                className="
+                  flex-1
+                  flex items-center justify-center gap-[8px]
+                  py-[10px]
+                  rounded-[10px]
+                  border border-[var(--border-color)]
+                  text-[var(--text-secondary)]
+                  hover:bg-[var(--status-danger-bg)]
+                  hover:text-[var(--status-danger-text)]
+                  transition-colors
+                "
+              >
+                <i className="fa-solid fa-trash" />
+              </button>
+
+            </div>
+          </>
+        )}
       />
     </div>
 

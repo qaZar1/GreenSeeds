@@ -8,6 +8,17 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
+//go:generate mockgen -source=assignments.go -destination=./../mocks/mock_assignments.go -package=mocks
+type IAssignmentsApp interface {
+	AddAssignment(models.Assignments) (models.Assignments, error)
+	GetAssignments() ([]models.Assignments, error)
+	GetAssignmentsByAssignment(string) (models.Assignments, error)
+	UpdateAssignment(models.Assignments) (models.Assignments, error)
+	DeleteAssignments(string) (bool, error)
+	CheckActiveTasks(string) ([]models.ActiveTask, error)
+	GetTaskById(string) (models.Task, error)
+}
+
 func (app *App) AddAssignment(assignment models.Assignments) (models.Assignments, error) {
 	if err := app.validate.Struct(assignment); err != nil {
 		return models.Assignments{}, err

@@ -28,10 +28,10 @@ const NotFoundPage = () => {
 					</button>
 
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/")}
             className="px-4 py-2 rounded-xl bg-[var(--color-primary)] text-white hover:opacity-90 transition"
           >
-            В Dashboard
+            На главную
           </button>
 
         </div>

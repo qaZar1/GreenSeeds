@@ -7,6 +7,7 @@ import { usePageHeader } from "../../../context/HeaderContext";
 import type { Seed } from "../../../types/seed";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
+import ActionButton from "../../utils/AсtionButton";
 
 const ReceiptCreatePage: React.FC = () => {
 
@@ -230,22 +231,23 @@ G1 X20 Y5`
           </div>
 
           {/* buttons */}
-          <div className="flex gap-[12px] pt-[8px]">
-
-            <button
+          <div className="flex flex-col sm:flex-row gap-[12px] pt-[8px]">
+            <ActionButton type="submit">
+              {id ? "Сохранить" : "Создать"}
+            </ActionButton>
+            
+            <ActionButton
               type="button"
               onClick={() => navigate(-1)}
-              className="flex-1 px-[16px] py-[10px] rounded-[10px] border border-[var(--border-color)] text-[var(--text-primary)]"
+              className="
+                bg-transparent
+                border border-[var(--border-color)]
+                text-[var(--text-primary)]
+                hover:bg-[var(--bg-hover)]
+              "
             >
               Отмена
-            </button>
-
-            <button
-              type="submit"
-              className="flex-1 px-[16px] py-[10px] rounded-[10px] bg-[var(--color-primary)] text-[var(--text-primary)]"
-            >
-              {id ? "Сохранить" : "Создать"}
-            </button>
+            </ActionButton>
           </div>
         </form>
       </div>

@@ -4,6 +4,16 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
+//go:generate mockgen -source=seed.go -destination=./../mocks/mock_seed.go -package=mocks
+type ISeedsApp interface {
+	AddSeed(models.Seeds) (models.Seeds, error)
+	GetSeeds() ([]models.Seeds, error)
+	GetSeedBySeed(string) (models.Seeds, error)
+	GetSeedWithBunkers(string) ([]models.SeedsWithBunker, error)
+	UpdateSeed(models.Seeds) (models.Seeds, error)
+	DeleteSeed(string) (bool, error)
+}
+
 func (app *App) AddSeed(seed models.Seeds) (models.Seeds, error) {
 	if err := app.validate.Struct(seed); err != nil {
 		return models.Seeds{}, err

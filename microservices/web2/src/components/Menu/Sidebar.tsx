@@ -1,9 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import ProfileAction from './header/ProfileAction';
+import LogoutAction from './header/LogoutAction';
+import ThemeAction from './header/ThemeAction';
 
 const menuItems = [
-  { path: '/dashboard', label: 'Дашборд', icon: 'fa-solid fa-chart-line', roles: ['admin', 'operator'] },
   { path: '/users', label: 'Пользователи', icon: 'fa-solid fa-users', roles: ['admin'] },
   { path: '/choice', label: 'Выбор задания', icon: 'fa-solid fa-hand-pointer', roles: ['operator'] },
   { path: '/tasks', label: 'Задания на смену', icon: 'fa-solid fa-clipboard-list', roles: ['operator'] },
@@ -29,128 +31,252 @@ const menuItems = [
   { path: '/calibrate', label: 'Калибровка', icon: 'fa-solid fa-person-walking-arrow-right', roles: ['admin'] },
 ];
 
-const Sidebar = () => {
+interface SidebarProps {
+  isMobileOpen: boolean;
+  setIsMobileOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({
+  isMobileOpen,
+  setIsMobileOpen,
+}) => {
   const [openSettings, setOpenSettings] = useState(false);
-  const [lineHeight, setLineHeight] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { role } = useAuth();
+  const { role, logout } = useAuth();
+  const navigate = useNavigate();
 
   if (!role) {
-    throw new Error("User ID is required");
+    throw new Error('User ID is required');
   }
 
-  const filteredItems = menuItems.filter(item =>
-    !item.roles || item.roles.includes(role)
+  const filteredItems = menuItems.filter(
+    item => !item.roles || item.roles.includes(role)
   );
 
-  // 👉 считаем высоту линии до последнего элемента
-  useEffect(() => {
-    if (openSettings && containerRef.current) {
-      const lastChild = containerRef.current.querySelector('li:last-child');
-
-      if (lastChild) {
-        const rect = lastChild.getBoundingClientRect();
-        const parentRect = containerRef.current.getBoundingClientRect();
-
-        setLineHeight(rect.bottom - parentRect.top - 8); // небольшой отступ
-      }
-    } else {
-      setLineHeight(0);
-    }
-  }, [openSettings]);
-
   return (
-    <nav className="w-[250px] h-screen bg-[#34495e] text-white flex flex-col p-5 fixed left-0 top-0 overflow-y-auto">
+    <>
+      {/* OVERLAY */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
 
-      {/* Логотип */}
-      <div className="flex items-center justify-center gap-[10px] text-[38px] font-bold mb-[30px]">
-        <i className="fa-solid fa-seedling text-[#2ecc71]"></i>
-        <span>Hortus</span>
-      </div>
+      {/* SIDEBAR */}
+      <nav
+        className={`
+          fixed top-0 left-0 z-50
+          w-screen md:w-[250px]
+          h-screen
+          bg-[#34495e]
+          text-white
+          flex flex-col
+          p-5
+          overflow-y-auto
+          transition-transform duration-300
 
-      <ul className="list-none">
+          ${
+            isMobileOpen
+              ? 'translate-x-0'
+              : '-translate-x-full'
+          }
 
-        {filteredItems.map((item, index) => (
-          <li key={index} className="mb-[15px]">
+          md:translate-x-0
+        `}
+      >
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-[30px]">
+          <div className="flex items-center gap-[10px] text-[38px] font-bold">
+            <i className="fa-solid fa-seedling text-[#2ecc71]"></i>
+            <span>Hortus</span>
+          </div>
 
-            {item.isSection ? (
-              <>
-                <button
-                  onClick={() => setOpenSettings(!openSettings)}
-                  className="w-full text-[#bdc3c7] flex items-center gap-[12px] p-[10px] rounded-[8px] transition-all duration-300 hover:bg-white/10 hover:text-white"
-                >
-                  <i className={item.icon}></i>
-                  <span className="flex-1 text-left">{item.label}</span>
-                  <i className={`fa-solid ${openSettings ? 'fa-chevron-up' : 'fa-chevron-down'} text-[12px]`} />
-                </button>
+          {/* CLOSE BUTTON MOBILE */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="
+              md:hidden
+              flex
+              items-center
+              justify-center
+              w-[32px]
+              h-[32px]
+              text-white
+              text-[22px]
+              leading-none
+            "
+          >
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+        </div>
 
-                {/* 🔥 АНИМИРОВАННОЕ ПОДМЕНЮ */}
-                <div
-                  className={`
-                    transition-all duration-500 overflow-hidden
-                    ${openSettings ? "max-h-[500px] opacity-100 mt-[10px]" : "max-h-0 opacity-0"}
-                  `}
-                >
-                  <div className="relative ml-[10px]" ref={containerRef}>
+        <ul className="list-none">
+          {filteredItems.map((item, index) => (
+            <li key={index} className="mb-[15px]">
 
-                    {/* линия */}
-                    <div
-                      className="absolute left-[6px] w-[2px] bg-white/20 transition-all duration-500"
-                      style={{ height: lineHeight }}
+              {item.isSection ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setOpenSettings(!openSettings)
+                    }}
+                    className="
+                      w-full
+                      text-[#bdc3c7]
+                      flex
+                      items-center
+                      gap-[12px]
+                      p-[10px]
+                      rounded-[8px]
+                      transition-all
+                      duration-300
+                      hover:bg-white/10
+                      hover:text-white
+                    "
+                  >
+                    <i className={item.icon}></i>
+
+                    <span className="flex-1 text-left">
+                      {item.label}
+                    </span>
+
+                    <i
+                      className={`fa-solid ${
+                        openSettings
+                          ? 'fa-chevron-up'
+                          : 'fa-chevron-down'
+                      } text-[12px]`}
                     />
+                  </button>
 
-                    <ul className="list-none pl-[20px] space-y-[10px]">
-                      {item.children.map((child, childIndex) => (
-                        <li key={childIndex} className="relative">
+                  <div
+                    className={`
+                      transition-all
+                      duration-500
+                      overflow-hidden
+                      ${
+                        openSettings
+                          ? 'max-h-[500px] opacity-100 mt-[10px]'
+                          : 'max-h-0 opacity-0'
+                      }
+                    `}
+                  >
+                    <div className="relative ml-[10px]" ref={containerRef}>
+                      <ul className="list-none pl-[20px] space-y-[10px]">
 
-                          {/* уголок */}
-                          <div className={`
-                            absolute left-[-14px] top-[12px] w-[10px] h-[10px]
-                            border-l-2 border-b-2 border-white/30 rounded-bl-md
-                            transition-all duration-500
-                            ${openSettings ? "opacity-100 scale-100" : "opacity-0 scale-75"}
-                          `} />
-
-                          <NavLink
-                            to={child.path}
-                            className={({ isActive }) =>
-                              `no-underline text-[#bdc3c7] flex items-center gap-[12px] p-[8px] rounded-[8px] transition-all duration-300 text-[14px]
-                              ${isActive ? 'bg-white/10 text-white' : 'hover:bg-white/10 hover:text-white'}`
-                            }
+                        {item.children.map((child, childIndex) => (
+                          <li
+                            key={childIndex}
+                            className="relative"
                           >
-                            <i className={child.icon}></i>
-                            <span>{child.label}</span>
-                          </NavLink>
 
-                        </li>
-                      ))}
-                    </ul>
+                            {childIndex !== item.children.length - 1 && (
+                              <div className="absolute left-[-14px] top-[20px] w-[2px] h-full bg-white/20" />
+                            )}
 
+                            <div
+                              className={`
+                                absolute left-[-14px] top-[12px]
+                                w-[10px] h-[10px]
+                                border-l-2 border-b-2
+                                border-white/30
+                                rounded-bl-md
+                                transition-all duration-500
+                                ${
+                                  openSettings
+                                    ? 'opacity-100 scale-100'
+                                    : 'opacity-0 scale-75'
+                                }
+                              `}
+                            />
+
+                            <NavLink
+                              to={child.path}
+                              onClick={() => setIsMobileOpen(false)}
+                              className={({ isActive }) =>
+                                `
+                                no-underline
+                                text-[#bdc3c7]
+                                flex
+                                items-center
+                                gap-[12px]
+                                p-[8px]
+                                rounded-[8px]
+                                transition-all
+                                duration-300
+                                text-[14px]
+
+                                ${
+                                  isActive
+                                    ? 'bg-white/10 text-white'
+                                    : 'hover:bg-white/10 hover:text-white'
+                                }
+                              `
+                              }
+                            >
+                              <i className={child.icon}></i>
+                              <span>{child.label}</span>
+                            </NavLink>
+
+                          </li>
+                        ))}
+
+                      </ul>
+                    </div>
                   </div>
-                </div>
-              </>
-            ) : (
-              item.path && (
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `no-underline text-[#bdc3c7] flex items-center gap-[12px] p-[10px] rounded-[8px] transition-all duration-300
-                    ${isActive ? 'bg-white/10 text-white' : 'hover:bg-white/10 hover:text-white'}`
-                  }
-                >
-                  <i className={item.icon}></i>
-                  <span>{item.label}</span>
-                </NavLink>
-              )
-            )}
+                </>
+              ) : (
+                item.path && (
+                  <NavLink
+                    to={item.path}
+                    onClick={() => setIsMobileOpen(false)}
+                    className={({ isActive }) =>
+                      `
+                      no-underline
+                      text-[#bdc3c7]
+                      flex
+                      items-center
+                      gap-[12px]
+                      p-[10px]
+                      rounded-[8px]
+                      transition-all
+                      duration-300
 
-          </li>
-        ))}
+                      ${
+                        isActive
+                          ? 'bg-white/10 text-white'
+                          : 'hover:bg-white/10 hover:text-white'
+                      }
+                    `
+                    }
+                  >
+                    <i className={item.icon}></i>
+                    <span>{item.label}</span>
+                  </NavLink>
+                )
+              )}
 
-      </ul>
-    </nav>
+            </li>
+          ))}
+        </ul>
+
+        {/* MOBILE USER ACTIONS */}
+        <div className="mt-auto pt-[20px] border-t border-white/10 md:hidden">
+          {/* Theme */}
+          <ThemeAction variant="sidebar"/>
+
+          {/* Profile */}
+          <ProfileAction variant="sidebar"/>
+
+          {/* Logout */}
+          <LogoutAction variant="sidebar"/>
+
+        </div>
+      </nav>
+    </>
   );
 };
 
