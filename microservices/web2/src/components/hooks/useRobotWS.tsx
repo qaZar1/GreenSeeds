@@ -2,145 +2,151 @@ import { useEffect, useReducer, useRef } from "react";
 import type { TaskRecord } from "../../types/task";
 
 // ================= TYPES =================
-export type OperatorAction = "RETRY" | "SKIP" | "ABORT";
-
 export type MachineState = {
   connection: "connecting" | "connected" | "disconnected";
+
   deviceAlive: boolean;
+
   deviceReady: boolean;
+
   status: string;
-  beginState: "idle" | "running" | "error" | "done";
+
+  message: string | null;
+
+  beginState: "idle" | "running" | "error" | "done" | "manual";
+
   iteration: number | null;
-  availableActions: OperatorAction[] | null;
+
   error: string | null;
-  deviceError: "DISCONNECTED" | "PORT_ERROR" | "BUSY" | "CALIBRATION" | null;
+
+  deviceError:
+    | "DISCONNECTED"
+    | "PORT_ERROR"
+    | "BUSY"
+    | "CALIBRATION"
+    | null;
 };
 
 type Action =
   | { type: "WS_OPEN" }
   | { type: "WS_CLOSE" }
-  | { type: "ACK BOOT" }
-  | { type: "STATUS"; status: string; message?: string }
+  | { type: "ACK_BOOT" }
+  | {
+      type: "STATUS";
+      status: string;
+      message?: string;
+    }
   | {
       type: "UPDATE_STATE";
-      messageType?: string;
       status: string;
+      message?: string | null;
       iteration?: number | null;
       error?: string | null;
-      actions?: OperatorAction[] | null;
-      isCriticalError?: boolean;
     }
-  | { type: "ACTIONS"; actions: OperatorAction[] }
   | { type: "RESET_ERROR" }
-  | { type: "DEVICE_STATUS"; connected: boolean; message?: string }
-  | { type: "FORCE_IDLE" };
+  | {
+      type: "DEVICE_STATUS";
+      connected: boolean;
+      message?: string;
+    }
+  | {
+      type: "FORCE_IDLE";
+      message?: string | null;
+    };
 
+// ================= HELPERS =================
 const mapStateToBegin = (
-  messageType: string,
   status: string,
-  prevState: MachineState["beginState"]
 ): MachineState["beginState"] => {
-  if (
-    messageType === "RETURN" &&
-    status === "STAND BY"
-  ) {
-    return prevState;
-  }
 
-  if (["WAIT_READY", "STAND BY"].includes(status)) {
+  if (status === "WAIT_READY") {
     return "idle";
   }
 
-  if (["BEGIN_ACK", "BEGIN_END"].includes(status)) {
-    return "running";
-  }
-
-  if (["DONE", "RETURN_DONE"].includes(status)) {
+  if (status === "DONE") {
     return "done";
   }
 
-  if (["WAIT_ACTION"].includes(status)) {
+  if (status === "ERROR") {
     return "error";
+  }
+  
+  if (status === "MANUAL") {
+    return "manual";
   }
 
   return "running";
 };
 
 // ================= REDUCER =================
-export const Reducer = (state: MachineState, action: Action): MachineState => {
+export const Reducer = (
+  state: MachineState,
+  action: Action,
+): MachineState => {
+
   switch (action.type) {
+
     case "WS_OPEN":
-      return { ...state, connection: "connected" };
+      return {
+        ...state,
+        connection: "connected",
+      };
 
     case "WS_CLOSE":
       return {
         ...state,
+
         connection: "disconnected",
+
         deviceAlive: false,
+
         deviceReady: false,
       };
 
-    case "ACK BOOT":
-      return { ...state, deviceAlive: true };
+    case "ACK_BOOT":
+      return {
+        ...state,
+        deviceAlive: true,
+      };
 
     case "STATUS":
       return {
         ...state,
+
         deviceReady: action.status === "READY",
-        deviceError: action.message?.includes("Port is nil") ? "PORT_ERROR" : state.deviceError,
+
+        message:
+          action.message ??
+          state.message,
+
+        deviceError:
+          action.message?.includes("Port is nil")
+            ? "PORT_ERROR"
+            : state.deviceError,
       };
 
     case "UPDATE_STATE": {
-      const incomingError = action.error;
-      const isCritical = action.isCriticalError || !!incomingError;
-
-      let nextError = state.error;
-      let nextBeginState = state.beginState;
-
-      if (isCritical) {
-        // 🔥 Жестко фиксируем новую ошибку
-        nextError = incomingError ?? "Неизвестная ошибка";
-        nextBeginState = "error";
-      } else {
-        // 🔥 Логика "Липкой ошибки":
-        // Если у нас уже есть ошибка, и пришло сообщение БЕЗ ошибки (например END: OK),
-        // мы ИГНОРИРУЕМ его и сохраняем текущую ошибку.
-        if (state.error) {
-          nextError = state.error;
-          nextBeginState = "error";
-        } else {
-          // Чистое состояние, ошибок не было и нет
-          nextError = null;
-          nextBeginState = mapStateToBegin(
-            action.messageType ?? "",
-            action.status,
-            state.beginState
-          );
-        }
-      }
-
-      const shouldIgnoreReturnStandBy =
-        action.messageType === "RETURN" &&
-        action.status === "STAND BY";
+      const isError =
+        !!action.error;
 
       return {
         ...state,
 
-        status: shouldIgnoreReturnStandBy
-          ? state.status
-          : action.status,
+        status: action.status,
 
-        // 🔥 НЕ ДАЕМ RETURN STAND BY СБРОСИТЬ ИТЕРАЦИЮ
-        iteration: shouldIgnoreReturnStandBy
-          ? state.iteration
-          : (action.iteration ?? state.iteration),
+        message:
+          action.message ?? state.message,
 
-        availableActions:
-          action.actions ?? state.availableActions,
+        iteration:
+          action.iteration ?? state.iteration,
 
-        beginState: nextBeginState,
+        beginState:
+          isError
+            ? "error"
+            : mapStateToBegin(action.status),
 
-        error: nextError,
+        error:
+          action.error ?? null,
       };
     }
 
@@ -150,43 +156,51 @@ export const Reducer = (state: MachineState, action: Action): MachineState => {
 
         status: "WAIT_READY",
 
+        message: action.message ?? null,
+
         beginState: "idle",
 
         iteration: null,
 
         error: null,
-
-        availableActions: null,
       };
-    case "ACTIONS":
-      return { ...state, availableActions: action.actions };
 
     case "RESET_ERROR":
       return {
         ...state,
         error: null,
-        availableActions: null,
       };
 
     case "DEVICE_STATUS": {
+
       if (action.connected) {
         return {
           ...state,
+
           deviceError: null,
+
           error: null,
+
           deviceAlive: true,
+
           connection: "connected",
+
           beginState: "idle",
-          availableActions: null,
         };
       }
+
       return {
         ...state,
+
         deviceError: "DISCONNECTED",
+
         deviceAlive: false,
+
         beginState: "error",
-        error: action.message ?? "Устройство отключено",
-        availableActions: null,
+
+        error:
+          action.message ??
+          "Устройство отключено",
       };
     }
 
@@ -198,109 +212,211 @@ export const Reducer = (state: MachineState, action: Action): MachineState => {
 // ================= HOOK =================
 const WS_URL = "/ws";
 
-export function useWSConnection(token: string | null) {
-  const wsRef = useRef<WebSocket | null>(null);
-  const isConnectingRef = useRef(false);
+export function useWSConnection(
+  token: string | null,
+) {
+
+  const wsRef =
+    useRef<WebSocket | null>(null);
+
+  const isConnectingRef =
+    useRef(false);
+
   const queueRef = useRef<any[]>([]);
 
-  const [state, dispatch] = useReducer(Reducer, {
-    connection: "connecting",
-    deviceAlive: false,
-    deviceReady: false,
-    status: "STAND BY",
-    beginState: "idle",
-    iteration: null,
-    availableActions: null,
-    error: null,
-    deviceError: null,
-  } as MachineState);
+  const [state, dispatch] = useReducer(
+    Reducer,
+    {
+      connection: "connecting",
+
+      deviceAlive: false,
+
+      deviceReady: false,
+
+      status: "WAIT_READY",
+
+      message: "Ожидание готовности",
+
+      beginState: "idle",
+
+      iteration: null,
+
+      error: null,
+
+      deviceError: null,
+    } as MachineState,
+  );
 
   const sendMessage = (msg: any) => {
+
     console.log(
       "%c[WS OUT]",
       "color:#4ade80;font-weight:bold",
-      msg
+      msg,
     );
 
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(msg));
-    } else {
-      console.log(
-        "%c[WS QUEUED]",
-        "color:#facc15;font-weight:bold",
-        msg
+    if (
+      wsRef.current?.readyState ===
+      WebSocket.OPEN
+    ) {
+
+      wsRef.current.send(
+        JSON.stringify(msg),
       );
 
-      queueRef.current.push(msg);
+      return;
     }
+
+    console.log(
+      "%c[WS QUEUED]",
+      "color:#facc15;font-weight:bold",
+      msg,
+    );
+
+    queueRef.current.push(msg);
   };
 
-  const startBegin = (record: TaskRecord) => {
-    if (state.deviceError === "DISCONNECTED") return;
-    if (!["idle", "done", "error"].includes(state.beginState)) return;
+  const startBegin = (
+    record: TaskRecord,
+  ) => {
 
-    dispatch({ type: "RESET_ERROR" });
+    if (
+      state.deviceError ===
+      "DISCONNECTED"
+    ) {
+      return;
+    }
+
+    if (
+      ![
+        "idle",
+        "done",
+        "error",
+      ].includes(state.beginState)
+    ) {
+      return;
+    }
+
+    dispatch({
+      type: "RESET_ERROR",
+    });
 
     sendMessage({
       type: "START",
+
       params: {
         shift: record.shift,
+
         number: record.number,
+
         receipt: record.receipt,
-        required_amount: record.required_amount,
+
+        required_amount:
+          record.required_amount,
+
         bunker: record.bunker,
+
         gcode: record.gcode,
+
         extraMode: false,
+
         seed: record.seed,
       },
     });
   };
 
   const stopProcess = () => {
-    dispatch({ type: "FORCE_IDLE" });
-    sendMessage({ type: "STOP" });
+
+    sendMessage({
+      type: "STOP",
+    });
   };
 
-  const sendOperatorAction = (choice: OperatorAction) => {
-    if (state.deviceError === "DISCONNECTED") return;
-    dispatch({ type: "RESET_ERROR" });
-    sendMessage({ type: "BEGIN", choice });
-  };
+  const handleDeviceMessage = (
+    msg: any,
+  ): boolean => {
 
-  const handleDeviceMessage = (msg: any): boolean => {
-    if (msg.type === "DEVICE") {
-      if (msg.status === "ERROR" && msg.message === "DISCONNECTED") {
-        dispatch({ type: "DEVICE_STATUS", connected: false, message: "Устройство отключено" });
-        return true;
-      }
-      if (msg.status === "OK" && msg.message === "CONNECTED") {
-        dispatch({ type: "DEVICE_STATUS", connected: true });
-        return true;
-      }
+    if (msg.type !== "DEVICE") {
+      return false;
     }
+
+    if (
+      msg.status === "ERROR" &&
+      msg.message === "DISCONNECTED"
+    ) {
+
+      dispatch({
+        type: "DEVICE_STATUS",
+
+        connected: false,
+
+        message:
+          "Устройство отключено",
+      });
+
+      return true;
+    }
+
+    if (
+      msg.status === "OK" &&
+      msg.message === "CONNECTED"
+    ) {
+
+      dispatch({
+        type: "DEVICE_STATUS",
+
+        connected: true,
+      });
+
+      return true;
+    }
+
     return false;
   };
 
   const connect = () => {
-    if (wsRef.current || isConnectingRef.current) return;
+
+    if (
+      wsRef.current ||
+      isConnectingRef.current
+    ) {
+      return;
+    }
+
     isConnectingRef.current = true;
 
     const ws = new WebSocket(WS_URL);
+
     wsRef.current = ws;
 
     ws.onopen = () => {
+
       isConnectingRef.current = false;
-      dispatch({ type: "WS_OPEN" });
-      sendMessage({ type: "AUTH", token: "Bearer " + token });
-      queueRef.current.forEach((m) => ws.send(JSON.stringify(m)));
+
+      dispatch({
+        type: "WS_OPEN",
+      });
+
+      sendMessage({
+        type: "AUTH",
+
+        token:
+          "Bearer " + token,
+      });
+
+      queueRef.current.forEach((m) => {
+        ws.send(JSON.stringify(m));
+      });
+
       queueRef.current = [];
     };
 
     ws.onmessage = (e) => {
+
       console.log(
         "%c[WS RAW IN]",
         "color:orange;font-weight:bold",
-        e.data
+        e.data,
       );
 
       let msg;
@@ -308,95 +424,194 @@ export function useWSConnection(token: string | null) {
       try {
         msg = JSON.parse(e.data);
       } catch (err) {
-        console.error("[WS PARSE ERROR]", err);
+
+        console.error(
+          "[WS PARSE ERROR]",
+          err,
+        );
+
         return;
       }
 
       console.log(
         "%c[WS IN]",
         "color:#60a5fa;font-weight:bold",
-        msg
+        msg,
       );
 
-      if (handleDeviceMessage(msg)) return;
+      if (
+        handleDeviceMessage(msg)
+      ) {
+        return;
+      }
 
-      if (msg.type === "AUTH" && msg.status === "OK") {
-        sendMessage({ type: "BOOT" });
-        sendMessage({ type: "STATUS" });
+      if (
+        msg.type === "AUTH" &&
+        msg.status === "OK"
+      ) {
+
+        sendMessage({
+          type: "BOOT",
+        });
+
+        sendMessage({
+          type: "STATUS",
+        });
+
         return;
       }
 
       if (msg.type === "BOOT") {
-        if (msg.status?.includes("ACK")) dispatch({ type: "ACK BOOT" });
+        if (msg.status?.includes("ACK")) {
+          dispatch({
+            type: "ACK_BOOT",
+          });
+        }
+
         return;
       }
 
       if (msg.type === "STATUS") {
-        dispatch({ type: "STATUS", status: msg.message ?? msg.status, message: msg.message });
+        dispatch({
+          type: "STATUS",
+          status:
+            msg.status ??
+            "UNKNOWN",
+          message:
+            msg.message,
+        });
+
         return;
       }
 
-      // 🔥 ОБЪЕДИНЕННАЯ ОБРАБОТКА: STATE, ACTION, RETURN, BEGIN, END
-      const isStatusMessage = ["STATE", "ACTION", "RETURN", "BEGIN", "END"].includes(msg.type);
-      
-      if (isStatusMessage) {
-        const isErrorStatus = msg.status === "ERROR";
-        
-        // 🔥 Если пришла ошибка, мы её обрабатываем.
-        // Если ошибки нет, но у нас уже висит state.error, редюсер сам решит (игнорировать или обновить).
-        
+      if (msg.type === "END") {
+
+        dispatch({
+          type: "FORCE_IDLE",
+
+          message:
+            msg.message ??
+            "Остановлено",
+        });
+
+        return;
+      }
+
+      // backend state messages
+      const isProcessMessage = [
+        "STATE",
+        "BEGIN",
+        "PHOTO",
+        "CONTROL",
+        "PROCESS",
+        "END",
+      ].includes(msg.type);
+
+      if (isProcessMessage) {
+
         dispatch({
           type: "UPDATE_STATE",
-          messageType: msg.type,
-          status: isErrorStatus
-            ? "ERROR"
-            : (msg.message || msg.status || "UNKNOWN"),
 
-          iteration: msg.Iteration ?? msg.iteration ?? null,
+          status:
+            msg.status ??
+            "UNKNOWN",
 
-          error: isErrorStatus
-            ? (msg.error ?? msg.message ?? "Ошибка выполнения")
-            : null,
+          message:
+            msg.message ??
+            null,
 
-          actions:
-            (msg.actions ??
-              msg.availableActions ??
-              msg.choices) as OperatorAction[] | null,
+          iteration:
+            msg.iteration ??
+            msg.Iteration ??
+            null,
 
-          isCriticalError: isErrorStatus,
+          error:
+            msg.status === "ERROR"
+              ? (
+                  msg.message ??
+                  "Ошибка выполнения"
+                )
+              : null,
         });
-        return;
-      }
 
-      if (msg.actions) {
-        dispatch({ type: "ACTIONS", actions: msg.actions as OperatorAction[] });
+        return;
       }
     };
 
     ws.onclose = () => {
+
       isConnectingRef.current = false;
-      dispatch({ type: "WS_CLOSE" });
+
+      dispatch({
+        type: "WS_CLOSE",
+      });
+
       wsRef.current = null;
-      setTimeout(connect, 2000);
+
+      setTimeout(
+        connect,
+        2000,
+      );
     };
 
-    ws.onerror = () => ws.close();
+    ws.onerror = () => {
+      ws.close();
+    };
   };
 
   useEffect(() => {
+
     connect();
-    return () => { wsRef.current?.close(); };
+
+    return () => {
+      wsRef.current?.close();
+    };
+
   }, []);
 
-  const isConnected = state.connection === "connected" && state.deviceAlive && state.deviceError !== "DISCONNECTED";
-  const isFullyDisabled = state.deviceError === "DISCONNECTED" || state.connection === "disconnected";
+  const isConnected =
+    state.connection ===
+      "connected" &&
+    state.deviceAlive &&
+    state.deviceError !==
+      "DISCONNECTED";
+
+  const isFullyDisabled =
+    state.deviceError ===
+      "DISCONNECTED" ||
+    state.connection ===
+      "disconnected";
 
   return {
-    sendMessage, startBegin, sendOperatorAction,
+    sendMessage,
+
+    startBegin,
+
     stopProcess,
-    rawStatus: state.status, beginState: state.beginState,
-    availableActions: state.availableActions, error: state.error,
-    deviceError: state.deviceError, iteration: state.iteration,
-    connectionStatus: state.connection, isConnected, isFullyDisabled,
+
+    rawStatus:
+      state.status,
+
+    message:
+      state.message,
+
+    beginState:
+      state.beginState,
+
+    error:
+      state.error,
+
+    deviceError:
+      state.deviceError,
+
+    iteration:
+      state.iteration,
+
+    connectionStatus:
+      state.connection,
+
+    isConnected,
+
+    isFullyDisabled,
   };
 }

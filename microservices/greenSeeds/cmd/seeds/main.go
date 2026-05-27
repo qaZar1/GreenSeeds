@@ -98,6 +98,7 @@ func main() {
 		infra,
 		camera,
 		&opencv,
+		&cfg,
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot create ws server")

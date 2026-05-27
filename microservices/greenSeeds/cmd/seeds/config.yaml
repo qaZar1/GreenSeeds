@@ -31,3 +31,6 @@ api:
 
 sqlite:
   path_to_db: "./db/calibration.db"                        # Путь к базе данных
+
+min_match_percent: 0.3
+

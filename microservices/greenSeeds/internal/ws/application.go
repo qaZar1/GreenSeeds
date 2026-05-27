@@ -38,13 +38,13 @@ func handleSetStatusReady(s *Server, client *Client, req models.WSRequest) {
 func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 	// Проверяем параметры
 	if req.Params == nil {
-		c.Send <- errResponse("START", errors.New("params required"))
+		safeSend(c.Send, errResponse("START", errors.New("params required")))
 		return
 	}
 
 	// Пытаемся захватить устройство
 	if !s.dClient.Manager.TryAcquireSession(c.SessionId) {
-		c.Send <- errResponse("START", errors.New("device busy"))
+		safeSend(c.Send, errResponse("START", errors.New("device busy")))
 		return
 	}
 	// Гарантированно освобождаем при выходе из функции
@@ -60,13 +60,13 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 		req.Params.Receipt,
 	)
 	if err != nil {
-		c.Send <- errResponse("START", errors.New("Cant start"))
+		safeSend(c.Send, errResponse("START", errors.New("Cant start")))
 		return
 	}
 
 	receipt, err := s.repo.RptRepo.GetReceiptsByReceipt(req.Params.Receipt)
 	if err != nil {
-		c.Send <- errResponse("START", errors.New("Cant start"))
+		safeSend(c.Send, errResponse("START", errors.New("Cant start")))
 		return
 	}
 
@@ -78,6 +78,10 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 	}
 
 	for c.planting.Iteration < c.planting.MaxIter {
+		if c.planting.Stop {
+			break
+		}
+
 		report := allReports[c.planting.Iteration]
 		iter := models.Iteration{
 			Seed:      receipt.Seed,
@@ -93,50 +97,43 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 
 		RunIteration(s, c, &iter)
 
-		if c.planting.Stop {
-			break
-		}
-
 		c.planting.Iteration++
 		time.Sleep(10 * time.Second)
 	}
 
 	// Всё закончили
-	select {
-	case c.Send <- okResponse("END", "Stopped"):
-	default:
-	}
+	safeSend(c.Send, okResponse("END", "Посадка завершена"))
 }
 
 func handleAuth(s *Server, client *Client, req models.WSRequest) {
 	if req.Token == nil {
-		client.Send <- errResponse(req.Type, errors.New("Token is nil"))
+		safeSend(client.Send, errResponse(req.Type, errors.New("Token is nil")))
 		return
 	}
 
 	token := *req.Token
 	if !strings.HasPrefix(token, "Bearer ") {
-		client.Send <- errResponse(req.Type, errors.New("Invalid token format"))
+		safeSend(client.Send, errResponse(req.Type, errors.New("Invalid token format")))
 		return
 	}
 
 	claims, err := s.infra.GetTokenClaims(token[7:])
 	if err != nil {
-		client.Send <- errResponse(req.Type, errors.New("Failed to get token claims"))
+		safeSend(client.Send, errResponse(req.Type, errors.New("Failed to get token claims")))
 		return
 	}
 
 	if claims == nil {
-		client.Send <- errResponse(req.Type, errors.New("Invalid token"))
+		safeSend(client.Send, errResponse(req.Type, errors.New("Invalid token")))
 		return
 	}
 
 	if err := validateJWT(*claims, s.repo); err != nil {
-		client.Send <- errResponse(req.Type, errors.New("Invalid token"))
+		safeSend(client.Send, errResponse(req.Type, errors.New("Invalid token")))
 		return
 	}
 
 	client.IsAuth = true
 
-	client.Send <- okResponse(req.Type, "OK")
+	safeSend(client.Send, okResponse(req.Type, "OK"))
 }

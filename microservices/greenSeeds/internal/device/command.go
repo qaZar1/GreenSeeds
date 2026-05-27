@@ -95,11 +95,6 @@ func (c *DeviceClient) Begin(sessionId string, command string, iter int) error {
 				"turn":   progress[2],
 			},
 		}
-		if respArr[0] == "ACK" {
-			response.Status = "BEGIN_ACK"
-		} else {
-			response.Status = "BEGIN_END"
-		}
 
 		select {
 		case c.RespCh <- response:

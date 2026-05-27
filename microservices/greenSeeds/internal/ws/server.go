@@ -30,6 +30,7 @@ type Server struct {
 	camera camera.ICamera
 	opencv *opencv.Classification
 	api    *api.API
+	config *models.Config
 
 	router *WSRouter
 }
@@ -46,6 +47,7 @@ func NewServer(
 	infra *infrastructure.Infrastructure,
 	camera camera.ICamera,
 	opencv *opencv.Classification,
+	config *models.Config,
 ) (*Server, error) {
 	api := api.NewAPI(url)
 	router := NewWsRouter()
@@ -62,6 +64,7 @@ func NewServer(
 		camera: camera,
 		opencv: opencv,
 		api:    api,
+		config: config,
 
 		router: router,
 	}
@@ -127,14 +130,6 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		switch wsMsg.Type {
-		case "STOP":
-			client.Control <- wsMsg
-		case "RETRY", "SKIP", "ABORT":
-			client.Actions <- wsMsg
-		default:
-		}
-
 		handler, err := s.router.WsRouter(wsMsg)
 		if err != nil {
 			log.Println("WS to COM error:", err)
@@ -152,10 +147,10 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 		<-client.done
 		conn.Close()
 		s.mu.Lock()
-		
+
 		s.dClient.Stop(client.SessionId)
 		delete(s.Clients, client)
-		
+
 		s.mu.Unlock()
 		log.Println("Client disconnected, total clients:", len(s.Clients))
 	}()

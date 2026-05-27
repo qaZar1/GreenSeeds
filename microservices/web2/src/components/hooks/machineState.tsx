@@ -1,97 +1,149 @@
-export type MachineState = {
-  connection: "connecting" | "connected" | "disconnected";
+// export type MachineState = {
+//   connection: "connecting" | "connected" | "disconnected";
 
-  deviceAlive: boolean;
-  deviceReady: boolean;
+//   deviceAlive: boolean;
+//   deviceReady: boolean;
 
-  status: string;
-  beginState: "idle" | "running" | "error" | "done";
+//   status: string;
 
-  iteration: number | null;
-  availableActions: string[] | null;
+//   // сообщение от backend
+//   message: string | null;
 
-  error: string | null;
-};
+//   beginState: "idle" | "running" | "error" | "done" | "manual";
 
-type Action =
-  | { type: "WS_OPEN" }
-  | { type: "WS_CLOSE" }
-  | { type: "ACK BOOT" }
-  | { type: "STATUS"; status: string; }
-  | {
-      type: "STATE";
-      status: string;
-      iteration?: number | null;
-      error?: string | null; // 🔥 добавили
-      actions?: ("RETRY" | "SKIP" | "ABORT")[] | null; // 🔥 добавили
-    }
-  | {
-      type: "ACTIONS";
-      actions: ("RETRY" | "SKIP" | "ABORT")[];
-    };
+//   iteration: number | null;
 
-const mapStateToBegin = (
-  status: string
-): MachineState["beginState"] => {
-  if (["WAIT_READY", "STAND BY"].includes(status)) return "idle";
-  if (["BEGIN_ACK"].includes(status)) return "running";
-  if (["DONE", "RETURN_DONE"].includes(status)) return "done";
-  if (["WAIT_ACTION", "ERROR"].includes(status)) return "error";
-  return "running";
-};
+//   error: string | null;
+// };
 
-export const Reducer = (
-  state: MachineState,
-  action: Action
-): MachineState => {
-  switch (action.type) {
-    case "WS_OPEN":
-      return { ...state, connection: "connected" };
+// type Action =
+//   | { type: "WS_OPEN" }
+//   | { type: "WS_CLOSE" }
+//   | { type: "ACK_BOOT" }
+//   | {
+//       type: "STATUS";
+//       status: string;
+//       message?: string;
+//     }
+//   | {
+//       type: "STATE";
+//       status: string;
+//       message?: string;
+//       iteration?: number | null;
+//       error?: string | null;
+//     }
+//   | {
+//       type: "FORCE_IDLE";
+//       message?: string | null;
+//     };
+    
 
-    case "WS_CLOSE":
-      return {
-        ...state,
-        connection: "disconnected",
-        deviceAlive: false,
-        deviceReady: false,
-        beginState: "idle", // 🔥 Сбрасываем, чтобы старт стал доступен после реконнекта
-      };
+// const mapStateToBegin = (
+//   status: string,
+// ): MachineState["beginState"] => {
 
-    case "ACK BOOT":
-      return { ...state, deviceAlive: true };
+//   if (
+//     status === "DONE" ||
+//     status === "END" ||
+//     status === "RETURN_DONE"
+//   ) {
+//     return "done";
+//   }
 
-    case "STATUS":
-      return {
-        ...state,
-        deviceReady: action.status === "READY",
-      };
+//   if (status === "ERROR") {
+//     return "error";
+//   }
 
-    case "STATE": {
-      const isErrorMessage = action.status === "ERROR" || action.error != null;
-      
-      return {
-        ...state,
-        status: action.status,
-        iteration: action.iteration ?? state.iteration,
-        availableActions: action.actions ?? state.availableActions,
-        
-        // 🔥 Явно ставим error-режим, если пришла ошибка
-        beginState: isErrorMessage 
-          ? "error" 
-          : mapStateToBegin(action.status),
-        
-        // 🔥 Сохраняем текст ошибки (приоритет: action.error > msg.message)
-        error: isErrorMessage ? (action.error ?? "Неизвестная ошибка") : null,
-      };
-    }
+//   if (
+//     status === "WAIT_READY" ||
+//     status === "STAND BY"
+//   ) {
+//     return "idle";
+//   }
 
-    case "ACTIONS":
-      return {
-        ...state,
-        availableActions: action.actions,
-      };
+//   if (status === "MANUAL_MODE") {
+//     return "manual";
+//   }
 
-    default:
-      return state;
-  }
-};
+//   return "running";
+// };
+
+// export const Reducer = (
+//   state: MachineState,
+//   action: Action,
+// ): MachineState => {
+
+//   switch (action.type) {
+
+//     case "WS_OPEN":
+//       return {
+//         ...state,
+//         connection: "connected",
+//       };
+
+//     case "WS_CLOSE":
+//       return {
+//         ...state,
+
+//         connection: "disconnected",
+
+//         deviceAlive: false,
+
+//         deviceReady: false,
+
+//         beginState: "idle",
+//       };
+
+//     case "ACK_BOOT":
+//       return {
+//         ...state,
+//         deviceAlive: true,
+//       };
+
+//     case "STATUS":
+//       return {
+//         ...state,
+
+//         deviceReady: action.status === "READY",
+
+//         message:
+//           action.message ??
+//           state.message,
+//       };
+
+//     case "STATE": {
+
+//       const isError =
+//         action.status === "ERROR";
+
+//       return {
+//         ...state,
+
+//         status: action.status,
+
+//         message:
+//           action.message ??
+//           null,
+
+//         iteration:
+//           action.iteration ??
+//           state.iteration,
+
+//         beginState: isError
+//           ? "error"
+//           : mapStateToBegin(action.status),
+
+//         error: isError
+//           ? (
+//               action.error ??
+//               action.message ??
+//               "Ошибка выполнения"
+//             )
+//           : null,
+//       };
+//     }
+
+//     default:
+//       return state;
+//   }
+// };

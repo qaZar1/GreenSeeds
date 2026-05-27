@@ -42,4 +42,6 @@ type Config struct {
 	SQLite struct {
 		PathToDB string `yaml:"path_to_db"`
 	}
+
+	MinMatchPercent float64 `yaml:"min_match_percent"`
 }
