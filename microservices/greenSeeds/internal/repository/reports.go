@@ -9,10 +9,10 @@ type IReportsRepository interface {
 	AddReports(reports models.Reports) (models.Reports, error)
 	GetReports() ([]models.Reports, error)
 	UpdateReports(reports models.Reports) (bool, error)
-	DeleteReports(shift int, number int, receipt int) (bool, error)
+	DeleteReports(shift int, number int, recipe int) (bool, error)
 	GetReportsById(id int) (models.Reports, error)
-	GetReportsByAssignment(shift int, number int, receipt int) ([]models.Reports, error)
-	GetNotSuccessfulAssignments(shift int, number int, receipt int) ([]models.Reports, error)
+	GetReportsByAssignment(shift int, number int, recipe int) ([]models.Reports, error)
+	GetNotSuccessfulAssignments(shift int, number int, recipe int) ([]models.Reports, error)
 }
 
 type reportsRepository struct {
@@ -30,7 +30,7 @@ func (rep *reportsRepository) AddReports(reports models.Reports) (models.Reports
 INSERT INTO green_seeds.reports (
 	shift,
 	number,
-	receipt,
+	recipe,
 	turn,
 	dt,
 	success,
@@ -40,14 +40,14 @@ INSERT INTO green_seeds.reports (
 VALUES (
 	:shift,
 	:number,
-	:receipt,
+	:recipe,
 	:turn,
 	:dt,
 	:success,
 	:error,
 	:solution,
 	:mark)
-ON CONFLICT (shift, number, receipt, turn) DO NOTHING
+ON CONFLICT (shift, number, recipe, turn) DO NOTHING
 RETURNING id`
 
 	rows, err := rep.db.NamedQuery(query, reports)
@@ -74,7 +74,7 @@ SELECT
 	id,
 	shift,
 	number,
-	receipt,
+	recipe,
 	turn,
 	dt,
 	COALESCE(success, FALSE) as success,
@@ -103,7 +103,7 @@ SET	dt = COALESCE(:dt, dt),
 WHERE
 	shift = :shift AND
 	number = :number AND
-	receipt = :receipt AND
+	recipe = :recipe AND
 	turn = :turn
 `
 
@@ -120,12 +120,12 @@ WHERE
 	return rowsAffected == 1, nil
 }
 
-func (rep *reportsRepository) DeleteReports(shift int, number int, receipt int) (bool, error) {
+func (rep *reportsRepository) DeleteReports(shift int, number int, recipe int) (bool, error) {
 	const query = `
 DELETE FROM green_seeds.reports
-WHERE shift = $1 AND number = $2 AND receipt = $3`
+WHERE shift = $1 AND number = $2 AND recipe = $3`
 
-	result, err := rep.db.Exec(query, shift, number, receipt)
+	result, err := rep.db.Exec(query, shift, number, recipe)
 	if err != nil {
 		return false, err
 	}
@@ -144,7 +144,7 @@ SELECT
 	r.id,
 	r.shift,
 	r.number,
-	r.receipt,
+	r.recipe,
 	r.turn,
 	r.dt,
 	COALESCE(r.success, FALSE) as success,
@@ -167,13 +167,13 @@ WHERE r.id = $1;`
 	return report, nil
 }
 
-func (rep *reportsRepository) GetReportsByAssignment(shift int, number int, receipt int) ([]models.Reports, error) {
+func (rep *reportsRepository) GetReportsByAssignment(shift int, number int, recipe int) ([]models.Reports, error) {
 	const query = `
 SELECT
 	r.id,
 	r.shift,
 	r.number,
-	r.receipt,
+	r.recipe,
 	r.turn,
 	r.dt,
 	COALESCE(r.success, FALSE) as success,
@@ -186,11 +186,11 @@ LEFT JOIN green_seeds.shifts s
 ON s.shift = r.shift
 LEFT JOIN green_seeds.users u
 ON s.user_id = u.id
-WHERE r.shift = $1 AND r.number = $2 AND r.receipt = $3
+WHERE r.shift = $1 AND r.number = $2 AND r.recipe = $3
 ORDER BY r.turn ASC;`
 
 	var reports []models.Reports
-	if err := rep.db.Select(&reports, query, shift, number, receipt); err != nil {
+	if err := rep.db.Select(&reports, query, shift, number, recipe); err != nil {
 		return nil, err
 	}
 
@@ -200,14 +200,14 @@ ORDER BY r.turn ASC;`
 func (rep *reportsRepository) GetNotSuccessfulAssignments(
 	shift int,
 	number int,
-	receipt int,
+	recipe int,
 ) ([]models.Reports, error) {
 	const query = `
 SELECT
 	r.id,
 	r.shift,
 	r.number,
-	r.receipt,
+	r.recipe,
 	r.turn,
 	r.dt,
 	COALESCE(r.success, FALSE) as success,
@@ -220,11 +220,11 @@ LEFT JOIN green_seeds.shifts s
 ON s.shift = r.shift
 LEFT JOIN green_seeds.users u
 ON s.user_id = u.id
-WHERE r.shift = $1 AND r.number = $2 AND r.receipt = $3 AND success IS NOT TRUE
+WHERE r.shift = $1 AND r.number = $2 AND r.recipe = $3 AND success IS NOT TRUE
 ORDER BY r.turn ASC;`
 
 	var reports []models.Reports
-	if err := rep.db.Select(&reports, query, shift, number, receipt); err != nil {
+	if err := rep.db.Select(&reports, query, shift, number, recipe); err != nil {
 		return nil, err
 	}
 

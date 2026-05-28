@@ -60,11 +60,11 @@ const AssignmentsCreate = () => {
                     />
                 </ReferenceInput>
                 <NumberInput source="number" label="Номер сменного задания" min={1}/>
-                <ReferenceInput source="receipt" reference="receipts">
+                <ReferenceInput source="recipe" reference="recipes">
                     <AutocompleteInput
                         optionText="description"
-                        optionValue="receipt"
-                        id="receipt"
+                        optionValue="recipe"
+                        id="recipe"
                         label="Рецепт"
                     />
                 </ReferenceInput>

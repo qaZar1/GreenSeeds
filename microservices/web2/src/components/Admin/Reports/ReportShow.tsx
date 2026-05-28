@@ -95,7 +95,7 @@ const ReportShow: React.FC = () => {
 
             <Field label="Номер задания" value={report.number} />
 
-            <Field label="Рецепт" value={report.receipt} />
+            <Field label="Рецепт" value={report.recipe} />
 
             <Field label="Номер выполнения" value={report.turn} />
 

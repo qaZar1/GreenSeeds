@@ -58,8 +58,8 @@ const AssignmentsEdit = () => {
                     label="Смена"
                 />
                 <NumberInput source="number" label="Номер сменного задания" />
-                <ReferenceInput source="receipt" reference="receipts">
-                    <AutocompleteInput optionText="description" optionValue="receipt" label="Рецепт" />
+                <ReferenceInput source="recipe" reference="recipes">
+                    <AutocompleteInput optionText="description" optionValue="recipe" label="Рецепт" />
                 </ReferenceInput>
                 <NumberInput source="amount" label="Количество" />
             </SimpleForm>

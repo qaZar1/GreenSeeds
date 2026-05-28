@@ -2,14 +2,14 @@ import React from "react";
 import { useListContext, Datagrid, TextField, SimpleList } from "react-admin";
 import { LoadingOverlay } from "../../utils/Loading";
 import { EditButton } from "react-admin";
-import { EmptyReceipt } from "./EmptyReceipt";
+import { EmptyRecipe } from "./EmptyRecipe";
 import { DateField } from "react-admin";
 
-const ReceiptListContent = ({ isSmall, isMedium }) => {
+const RecipeListContent = ({ isSmall, isMedium }) => {
     const { isLoading, ids, data, error } = useListContext();
 
     if (isLoading) return <LoadingOverlay />;
-    if (error) return <EmptyReceipt />;
+    if (error) return <EmptyRecipe />;
 
     return isSmall || isMedium ? (
         <SimpleList
@@ -30,13 +30,13 @@ const ReceiptListContent = ({ isSmall, isMedium }) => {
                 </>
             )}
             rowClick={false}
-            empty={<EmptyReceipt />}
+            empty={<EmptyRecipe />}
         />
     ) : (
         <Datagrid
             rowClick={false}
             bulkActionButtons={false}
-            empty={<EmptyReceipt />}
+            empty={<EmptyRecipe />}
         >
             <TextField source="seed_ru" label="Семена" />
             <TextField source="description" label="Описание" />
@@ -46,4 +46,4 @@ const ReceiptListContent = ({ isSmall, isMedium }) => {
     )
 };
 
-export default ReceiptListContent;
+export default RecipeListContent;

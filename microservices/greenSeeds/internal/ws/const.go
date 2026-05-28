@@ -27,6 +27,7 @@ const (
 	MessagePhotoDone     = "Фотографирование завершено"
 	MessageControlStart  = "Начало проведения контроля качества"
 	MessageControlEnd    = "Контроль качества завершен"
+	MessageControlFailed = "Контроль качества не пройден"
 	MessageWaitingReturn = "Возврат устройства"
 	MessageReturned      = "Устройство возвращено"
 	MessageError         = "Ошибка"

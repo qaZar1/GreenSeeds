@@ -57,14 +57,14 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 	allReports, err := s.repo.RepRepo.GetNotSuccessfulAssignments(
 		req.Params.Shift,
 		req.Params.Number,
-		req.Params.Receipt,
+		req.Params.Recipe,
 	)
 	if err != nil {
 		safeSend(c.Send, errResponse("START", errors.New("Cant start")))
 		return
 	}
 
-	receipt, err := s.repo.RptRepo.GetReceiptsByReceipt(req.Params.Receipt)
+	recipe, err := s.repo.RptRepo.GetRecipesByRecipe(req.Params.Recipe)
 	if err != nil {
 		safeSend(c.Send, errResponse("START", errors.New("Cant start")))
 		return
@@ -84,13 +84,13 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 
 		report := allReports[c.planting.Iteration]
 		iter := models.Iteration{
-			Seed:      receipt.Seed,
-			Gcode:     receipt.Gcode,
+			Seed:      recipe.Seed,
+			Gcode:     recipe.Gcode,
 			Shift:     req.Params.Shift,
 			Number:    req.Params.Number,
 			Turn:      report.Turn,
 			Required:  req.Params.RequiredAmount,
-			Receipt:   int(*receipt.Receipt),
+			Recipe:    int(*recipe.Recipe),
 			ExtraMode: req.Params.ExtraMode,
 			Report:    report,
 		}

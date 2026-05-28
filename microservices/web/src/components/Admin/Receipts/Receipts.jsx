@@ -1,32 +1,32 @@
 import React from "react";
 import { List, Datagrid, TextField, EditButton, DeleteButton, SimpleList } from "react-admin";
 import { useMediaQuery } from "@mui/material";
-import { EmptyReceipt } from "./EmptyReceipt";
-import ReceiptListActions from "./Action";
-import ReceiptListContent from "./Controller";
+import { EmptyRecipe } from "./EmptyRecipe";
+import RecipeListActions from "./Action";
+import RecipeListContent from "./Controller";
 import { useNotify } from "react-admin";
 
-const ReceiptList = ({ ...props }) => {
+const RecipeList = ({ ...props }) => {
     const isSmall = useMediaQuery((theme) => theme.breakpoints.down("sm"));
     const isMedium = useMediaQuery((theme) => theme.breakpoints.between("sm", "md"));
     const notify = useNotify();
 
     return (
         <List
-            resource="receipts"
-            empty={<EmptyReceipt />}
+            resource="recipes"
+            empty={<EmptyRecipe />}
             {...props}
             sx={{ padding: 2 }}
-            actions={<ReceiptListActions />}
+            actions={<RecipeListActions />}
             title="Рецепты"
             pagination={false}
             queryOptions={{
                 onError: () => notify("Ошибка загрузки рецептов", { type: "error" }),
             }}
         >
-            <ReceiptListContent isSmall={isSmall} isMedium={isMedium} />
+            <RecipeListContent isSmall={isSmall} isMedium={isMedium} />
         </List>
     );
 };
 
-export default ReceiptList;
+export default RecipeList;

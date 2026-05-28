@@ -20,8 +20,9 @@ export type TaskRecord = {
   gcode?: string;
   bunker: number;
   turn: number;
-  receipt: string;
+  recipe: string;
   reports?: Report[];
+  extraMode?: boolean;
 };
 
 export type DecisionModalState = {
@@ -36,7 +37,7 @@ export type WSMessage =
       params: {
         shift: string;
         number: number;
-        receipt?: string;
+        recipe?: string;
         seed: string;
         turn: number;
         completed_amount: number;

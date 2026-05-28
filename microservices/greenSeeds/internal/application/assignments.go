@@ -57,7 +57,7 @@ func (app *App) UpdateAssignment(assignment models.Assignments) (models.Assignme
 	reports, err := app.repo.RepRepo.GetReportsByAssignment(
 		int(assignment.Shift),
 		assignment.Number,
-		int(assignment.Receipt))
+		int(assignment.Recipe))
 	if err != nil {
 		return models.Assignments{}, err
 	}

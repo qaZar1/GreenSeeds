@@ -16,7 +16,7 @@ type IApp interface {
 	IBunkersApp
 	IDeviceSettingsApp
 	IPlacementsApp
-	IReceiptsApp
+	IRecipesApp
 	IReportsApp
 	ISeedsApp
 	IShiftsApp

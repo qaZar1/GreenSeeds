@@ -23,7 +23,7 @@ const menuItems = [
       { path: '/settings/bunkers', label: 'Бункеры', icon: 'fa-solid fa-warehouse' },
       { path: '/settings/seeds', label: 'Семена', icon: 'fa-solid fa-seedling' },
       { path: '/settings/placements', label: 'Расположение', icon: 'fa-solid fa-link' },
-      { path: '/settings/receipts', label: 'Рецепты', icon: 'fa-solid fa-file-contract' },
+      { path: '/settings/recipes', label: 'Рецепты', icon: 'fa-solid fa-file-contract' },
       { path: '/settings/device-settings', label: 'Настройки устройства', icon: 'fa-solid fa-sliders' },
     ]
   },

@@ -2,7 +2,7 @@ export interface Assignment {
   id?: number;
   shift: number;
   number: number;
-  receipt: number;
+  recipe: number;
   description: string;
   amount: number;
 }
@@ -11,7 +11,7 @@ export interface ActiveTask {
   id: number;
   shift: number;
   number: number;
-  receipt: number;
+  recipe: number;
   dt: string;
   amount: number;
   done_turns: number;
@@ -27,7 +27,7 @@ export interface Task {
   seed_ru: string;
   bunker: number;
   gcode: string;
-  receipt: number;
+  recipe: number;
   required_amount: number;
   reports?: Report[];
 }

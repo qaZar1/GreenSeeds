@@ -18,7 +18,7 @@ const AssignmentsPage: React.FC = () => {
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [shiftsList, setShiftsList] = useState<any[]>([]);
-  const [receiptsList, setReceiptsList] = useState<any[]>([]);
+  const [recipesList, setRecipesList] = useState<any[]>([]);
 
   const [openShift, setOpenShift] = useState<number | null>(null);
 
@@ -32,15 +32,15 @@ const AssignmentsPage: React.FC = () => {
     setError(false);
 
     try {
-      const [assignmentsRes, shiftsRes, receiptsRes] = await Promise.all([
+      const [assignmentsRes, shiftsRes, recipesRes] = await Promise.all([
         api.getList("assignments"),
         api.getList("shifts"),
-        api.getList("receipts"),
+        api.getList("recipes"),
       ]);
 
       setAssignments(assignmentsRes);
       setShiftsList(shiftsRes);
-      setReceiptsList(receiptsRes);
+      setRecipesList(recipesRes);
 
     } catch (e: any) {
       console.error(e);
@@ -124,11 +124,11 @@ const AssignmentsPage: React.FC = () => {
     {
       header: "Рецепт",
       render: rec => {
-        const receipt = receiptsList.find(r => r.id === rec.receipt);
+        const recipe = recipesList.find(r => r.id === rec.recipe);
 
         return (
           <div className="text-[var(--text-primary)] text-[14px]">
-            {receipt?.name ?? `Рецепт ${rec.receipt}`}
+            {recipe?.name ?? `Рецепт ${rec.recipe}`}
           </div>
         );
       },
@@ -243,8 +243,8 @@ const AssignmentsPage: React.FC = () => {
                 }
                 emptyMessage="Задания отсутствуют"
                 renderCard={(rec) => {
-                  const receipt = receiptsList.find(
-                    r => r.id === rec.receipt
+                  const recipe = recipesList.find(
+                    r => r.id === rec.recipe
                   );
 
                   return (
@@ -263,7 +263,7 @@ const AssignmentsPage: React.FC = () => {
                           <span className="text-[var(--text-secondary)]">
                             Рецепт:
                           </span>{" "}
-                          {receipt?.name ?? `Рецепт ${rec.receipt}`}
+                          {recipe?.name ?? `Рецепт ${rec.recipe}`}
                         </div>
 
                         <div className="text-[var(--text-primary)]">
@@ -333,7 +333,7 @@ const AssignmentsPage: React.FC = () => {
         initialValues={{
           shift: editingAssignment?.shift,
           number: editingAssignment?.number,
-          receipt: editingAssignment?.receipt,
+          recipe: editingAssignment?.recipe,
           amount: editingAssignment?.amount,
         }}
         fields={[
@@ -366,14 +366,14 @@ const AssignmentsPage: React.FC = () => {
             disabled: !!editingAssignment,
           },
           {
-            name: "receipt",
+            name: "recipe",
             label: "Рецепт",
             type: "select",
             required: true,
             disabled: !!editingAssignment,
             options: [
 							{ label: "Выберите рецепт", value: "" },
-							...receiptsList.map(r => ({
+							...recipesList.map(r => ({
 								label: r.seed_ru,
 								value: r.id,
 							}))

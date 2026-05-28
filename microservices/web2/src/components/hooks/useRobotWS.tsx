@@ -309,7 +309,7 @@ export function useWSConnection(
 
         number: record.number,
 
-        receipt: record.receipt,
+        recipe: record.recipe,
 
         required_amount:
           record.required_amount,
@@ -318,7 +318,7 @@ export function useWSConnection(
 
         gcode: record.gcode,
 
-        extraMode: false,
+        extraMode: record.extraMode ?? false,
 
         seed: record.seed,
       },

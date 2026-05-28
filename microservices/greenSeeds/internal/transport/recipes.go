@@ -16,194 +16,194 @@ import (
 
 // Set godoc
 //
-// @Router /api/receipts/add [post]
+// @Router /api/recipes/add [post]
 // @Summary Добавление информации, в каком бункере какие семена
 // @Description При обращении, добавляет информацию о семенах в БД
 //
-// @Tags Receipts
+// @Tags Recipes
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param 	request	body	receipts	true	"Тело запроса"
+// @Param 	request	body	recipes	true	"Тело запроса"
 //
-// @Success 200 {object} receipts "Запрос выполнен успешно"
+// @Success 200 {object} recipes "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) PostApiReceiptsAdd(w http.ResponseWriter, r *http.Request) {
+func (transport *Transport) PostApiRecipesAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not read body: %v", err))
 		return
 	}
 
-	var receipt models.Receipts
-	if err := jsoniter.Unmarshal(body, &receipt); err != nil {
+	var recipe models.Recipes
+	if err := jsoniter.Unmarshal(body, &recipe); err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Can not unmarshal: %v", err))
 		return
 	}
 
-	addedReceipt, err := transport.Receipts.AddReceipts(receipt)
+	addedRecipe, err := transport.Recipes.AddRecipes(recipe)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add receipts: %v", err))
+		utils.WriteJSON(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add recipes: %v", err))
 		return
 	}
 
-	if addedReceipt == (models.Receipts{}) {
+	if addedRecipe == (models.Recipes{}) {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid add placement: %v", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, addedReceipt)
+	utils.WriteJSON(w, http.StatusOK, addedRecipe)
 }
 
 // Set godoc
 //
-// @Router /api/receipts/get [get]
+// @Router /api/recipes/get [get]
 // @Summary Получение списка бункеров и семян
 // @Description При обращении, возвращает список бункеров и семян
 //
-// @Tags Receipts
+// @Tags Recipes
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Success 200 {object} []receipts "Запрос выполнен успешно"
+// @Success 200 {object} []recipes "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) GetApiReceiptsGet(w http.ResponseWriter, r *http.Request) {
-	receipts, err := transport.Receipts.GetReceipts()
+func (transport *Transport) GetApiRecipesGet(w http.ResponseWriter, r *http.Request) {
+	recipes, err := transport.Recipes.GetRecipes()
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipts: %v", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get recipes: %v", err))
 		return
 	}
 
-	if receipts == nil {
-		utils.WriteString(w, http.StatusNotFound, fmt.Sprintf("Receipts not found"))
+	if recipes == nil {
+		utils.WriteString(w, http.StatusNotFound, fmt.Sprintf("Recipes not found"))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, receipts)
+	utils.WriteJSON(w, http.StatusOK, recipes)
 }
 
 // Set godoc
 //
-// @Router /api/receipts/get/{receipt} [get]
+// @Router /api/recipes/get/{recipe} [get]
 // @Summary Получение бункера и семян по ID
 // @Description При обращении, возвращает бункер и семена по ID
 //
-// @Tags Receipts
+// @Tags Recipes
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Success 200 {object} receipts "Запрос выполнен успешно"
+// @Success 200 {object} recipes "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) GetApiReceiptsGetReceipt(w http.ResponseWriter, r *http.Request) {
-	receiptName := chi.URLParam(r, "receipt")
+func (transport *Transport) GetApiRecipesGetRecipe(w http.ResponseWriter, r *http.Request) {
+	recipeName := chi.URLParam(r, "recipe")
 
-	receiptNum, err := strconv.Atoi(receiptName)
+	recipeNum, err := strconv.Atoi(recipeName)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get recipe: %v", err))
 		return
 	}
 
-	receipt, err := transport.Receipts.GetReceiptsByReceipt(receiptNum)
+	recipe, err := transport.Recipes.GetRecipesByRecipe(recipeNum)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get recipe: %v", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, receipt)
+	utils.WriteJSON(w, http.StatusOK, recipe)
 }
 
 // Set godoc
 //
-// @Router /api/receipts/update [put]
+// @Router /api/recipes/update [put]
 // @Summary Обновление данных о семенах
 // @Description При обращении, обновляет данные о семенах
 //
-// @Tags Receipts
+// @Tags Recipes
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param request body receipts true "Тело запроса"
+// @Param request body recipes true "Тело запроса"
 //
-// @Success 200 {object} receipts "Запрос выполнен успешно"
+// @Success 200 {object} recipes "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) PutApiReceiptsUpdate(w http.ResponseWriter, r *http.Request) {
+func (transport *Transport) PutApiRecipesUpdate(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid read body: %v", err))
 		return
 	}
 
-	var receipt models.Receipts
-	if err := jsoniter.Unmarshal(data, &receipt); err != nil {
+	var recipe models.Recipes
+	if err := jsoniter.Unmarshal(data, &recipe); err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid unmarshal: %v", err))
 		return
 	}
 
-	updatedReceipt, err := transport.Receipts.UpdateReceipts(receipt)
+	updatedRecipe, err := transport.Recipes.UpdateRecipes(recipe)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %v", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update recipe: %v", err))
 		return
 	}
 
-	if updatedReceipt == (models.Receipts{}) {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update receipt: %v", err))
+	if updatedRecipe == (models.Recipes{}) {
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid update recipe: %v", err))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, updatedReceipt)
+	utils.WriteJSON(w, http.StatusOK, updatedRecipe)
 }
 
 // Set godoc
 //
-// @Router /api/receipts/delete/{receipt} [delete]
+// @Router /api/recipes/delete/{recipe} [delete]
 // @Summary Удаление рецепта
 // @Description При обращении, удаляет рецепт
 //
-// @Tags Receipts
+// @Tags Recipes
 // @Produce      application/json
 // @Consume      application/json
 //
-// @Param receipt path string true "Название рецепта"
+// @Param recipe path string true "Название рецепта"
 //
 // @Success 204 {object} nil "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) DeleteApiReceiptsDelete(w http.ResponseWriter, r *http.Request) {
+func (transport *Transport) DeleteApiRecipesDelete(w http.ResponseWriter, r *http.Request) {
 	log, ok := r.Context().Value(log.CtxKey).(zerolog.Logger)
 	if !ok {
 		utils.WriteString(w, http.StatusInternalServerError, "Invalid logger")
 		return
 	}
 
-	receiptName := chi.URLParam(r, "receipt")
+	recipeName := chi.URLParam(r, "recipe")
 
-	receiptNum, err := strconv.Atoi(receiptName)
+	recipeNum, err := strconv.Atoi(recipeName)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get receipt: %v", err))
+		utils.WriteString(w, http.StatusInternalServerError, fmt.Sprintf("Invalid get recipe: %v", err))
 		return
 	}
 
-	ok, err = transport.Receipts.DeleteReceipts(receiptNum)
+	ok, err = transport.Recipes.DeleteRecipes(recipeNum)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if !ok {
-		utils.WriteString(w, http.StatusInternalServerError, "Invalid delete receipt")
+		utils.WriteString(w, http.StatusInternalServerError, "Invalid delete recipe")
 		return
 	}
 
-	log.Warn().Ctx(r.Context()).Msg(fmt.Sprintf("Receipt removed: %s", receiptName))
+	log.Warn().Ctx(r.Context()).Msg(fmt.Sprintf("Recipe removed: %s", recipeName))
 
 	utils.WriteNoContent(w)
 }

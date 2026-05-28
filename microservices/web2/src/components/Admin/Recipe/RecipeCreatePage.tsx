@@ -9,7 +9,7 @@ import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
 import ActionButton from "../../utils/AсtionButton";
 
-const ReceiptCreatePage: React.FC = () => {
+const RecipeCreatePage: React.FC = () => {
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const ReceiptCreatePage: React.FC = () => {
     try {
       const requests = [
         api.getList("seeds"),
-        ...(id ? [api.getOne("receipts", id)] : [])
+        ...(id ? [api.getOne("recipes", id)] : [])
       ];
 
       const results = await Promise.allSettled(requests);
@@ -56,10 +56,10 @@ const ReceiptCreatePage: React.FC = () => {
       }
 
       if (id) {
-        const receiptRes = results[1];
+        const recipeRes = results[1];
 
-        if (receiptRes.status === "fulfilled") {
-          const data = receiptRes.value.data;
+        if (recipeRes.status === "fulfilled") {
+          const data = recipeRes.value.data;
 
           setForm({
             seed: data?.seed ?? "",
@@ -120,13 +120,13 @@ const ReceiptCreatePage: React.FC = () => {
 
     try {
       if (id) {
-        await api.update("receipts", {
+        await api.update("recipes", {
           id: Number(id),
           ...form,
           gcode: form.gcode.trim()
         });
       } else {
-        await api.create("receipts", {
+        await api.create("recipes", {
           ...form,
           gcode: form.gcode.trim()
         });
@@ -137,7 +137,7 @@ const ReceiptCreatePage: React.FC = () => {
         { id: loading }
       );
 
-      navigate("/settings/receipts");
+      navigate("/settings/recipes");
     } catch {
       toast.error("Ошибка сохранения", { id: loading });
     }
@@ -256,4 +256,4 @@ G1 X20 Y5`
 
 };
 
-export default ReceiptCreatePage;
+export default RecipeCreatePage;

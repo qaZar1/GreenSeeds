@@ -123,12 +123,12 @@ func NewRouter(
 				r.Put("/fill", transport.PutApiPlacementFill)
 			})
 
-			r.Route("/receipts", func(r chi.Router) {
-				r.Post("/add", transport.PostApiReceiptsAdd)
-				r.Get("/get", transport.GetApiReceiptsGet)
-				r.Get("/get/{receipt}", transport.GetApiReceiptsGetReceipt)
-				r.Put("/update", transport.PutApiReceiptsUpdate)
-				r.Delete("/delete/{receipt}", transport.DeleteApiReceiptsDelete)
+			r.Route("/recipes", func(r chi.Router) {
+				r.Post("/add", transport.PostApiRecipesAdd)
+				r.Get("/get", transport.GetApiRecipesGet)
+				r.Get("/get/{recipe}", transport.GetApiRecipesGetRecipe)
+				r.Put("/update", transport.PutApiRecipesUpdate)
+				r.Delete("/delete/{recipe}", transport.DeleteApiRecipesDelete)
 			})
 
 			r.Route("/shifts", func(r chi.Router) {
