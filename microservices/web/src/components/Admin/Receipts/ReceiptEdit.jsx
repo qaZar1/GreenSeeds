@@ -6,7 +6,7 @@ import BackButton from "../../utils/Back";
 import { ReferenceInput, SelectInput, AutocompleteInput } from "react-admin";
 import { useNotify } from "react-admin";
 
-const ReceiptEdit = () => {
+const RecipeEdit = () => {
     const notify = useNotify();
     return (
         <Edit
@@ -30,4 +30,4 @@ const ReceiptEdit = () => {
     );
 };
 
-export default ReceiptEdit;
+export default RecipeEdit;

@@ -55,6 +55,7 @@ func waitForDeviceReady(manager *device.Manager, c *Client, timeout time.Duratio
 
 func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 	iter.CurrentState = StateWaitingReady
+	iter.IsFailed = false
 
 	for {
 
@@ -154,7 +155,14 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 			}
 
 			if !ok {
-				iter.CurrentState = StateBegin
+				state(
+					s,
+					StatusControl,
+					MessageControlFailed,
+					iter.Turn,
+				)
+				iter.CurrentState = StateProcess
+				iter.IsFailed = true
 				continue
 			}
 
@@ -187,8 +195,12 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 				iter.Turn,
 			)
 
-			iter.CurrentState = StateDone
+			if iter.IsFailed {
+				iter.CurrentState = StateBegin
+				continue
+			}
 
+			iter.CurrentState = StateDone
 		case StateDone:
 			iter.Success = true
 			iter.Finished = true
@@ -265,7 +277,7 @@ func buildReport(
 	return models.Reports{
 		Shift:    int64(iter.Shift),
 		Number:   iter.Number,
-		Receipt:  int64(iter.Receipt),
+		Recipe:   int64(iter.Recipe),
 		Turn:     iter.Turn,
 		Dt:       &dt,
 		Success:  success,

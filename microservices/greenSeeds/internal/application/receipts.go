@@ -4,39 +4,39 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-//go:generate mockgen -source=receipts.go -destination=./../mocks/mock_receipts.go -package=mocks
-type IReceiptsApp interface {
-	AddReceipts(models.Receipts) (models.Receipts, error)
-	GetReceipts() ([]models.Receipts, error)
-	GetReceiptsByReceipt(int) (models.Receipts, error)
-	UpdateReceipts(models.Receipts) (models.Receipts, error)
-	DeleteReceipts(int) (bool, error)
+//go:generate mockgen -source=recipes.go -destination=./../mocks/mock_recipes.go -package=mocks
+type IRecipesApp interface {
+	AddRecipes(models.Recipes) (models.Recipes, error)
+	GetRecipes() ([]models.Recipes, error)
+	GetRecipesByRecipe(int) (models.Recipes, error)
+	UpdateRecipes(models.Recipes) (models.Recipes, error)
+	DeleteRecipes(int) (bool, error)
 }
 
-func (app *App) AddReceipts(receipts models.Receipts) (models.Receipts, error) {
-	if err := app.validate.Struct(receipts); err != nil {
-		return models.Receipts{}, err
+func (app *App) AddRecipes(recipes models.Recipes) (models.Recipes, error) {
+	if err := app.validate.Struct(recipes); err != nil {
+		return models.Recipes{}, err
 	}
 
-	return app.repo.RptRepo.AddReceipts(receipts)
+	return app.repo.RptRepo.AddRecipes(recipes)
 }
 
-func (app *App) GetReceipts() ([]models.Receipts, error) {
-	return app.repo.RptRepo.GetReceipts()
+func (app *App) GetRecipes() ([]models.Recipes, error) {
+	return app.repo.RptRepo.GetRecipes()
 }
 
-func (app *App) GetReceiptsByReceipt(receipt int) (models.Receipts, error) {
-	return app.repo.RptRepo.GetReceiptsByReceipt(receipt)
+func (app *App) GetRecipesByRecipe(recipe int) (models.Recipes, error) {
+	return app.repo.RptRepo.GetRecipesByRecipe(recipe)
 }
 
-func (app *App) UpdateReceipts(receipts models.Receipts) (models.Receipts, error) {
-	if err := app.validate.Struct(receipts); err != nil {
-		return models.Receipts{}, err
+func (app *App) UpdateRecipes(recipes models.Recipes) (models.Recipes, error) {
+	if err := app.validate.Struct(recipes); err != nil {
+		return models.Recipes{}, err
 	}
 
-	return app.repo.RptRepo.UpdateReceipts(receipts)
+	return app.repo.RptRepo.UpdateRecipes(recipes)
 }
 
-func (app *App) DeleteReceipts(receipt int) (bool, error) {
-	return app.repo.RptRepo.DeleteReceipts(receipt)
+func (app *App) DeleteRecipes(recipe int) (bool, error) {
+	return app.repo.RptRepo.DeleteRecipes(recipe)
 }

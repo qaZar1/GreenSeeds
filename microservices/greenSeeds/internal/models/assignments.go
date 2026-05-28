@@ -5,19 +5,19 @@ import (
 )
 
 type Assignments struct {
-	Id          *int64 `json:"id" db:"id"`
-	Shift       int64  `json:"shift" db:"shift"`
-	Number      int    `json:"number" db:"number"`
-	Receipt     int64  `json:"receipt" db:"receipt"`
-	ReceiptDesc string `json:"description" db:"description"`
-	Amount      int    `json:"amount" db:"amount"`
+	Id         *int64 `json:"id" db:"id"`
+	Shift      int64  `json:"shift" db:"shift"`
+	Number     int    `json:"number" db:"number"`
+	Recipe     int64  `json:"recipe" db:"recipe"`
+	RecipeDesc string `json:"description" db:"description"`
+	Amount     int    `json:"amount" db:"amount"`
 } // @name assignment
 
 type ActiveTask struct {
 	Id        int64     `json:"id" db:"id"`
 	Shift     int64     `json:"shift" db:"shift"`
 	Number    int       `json:"number" db:"number"`
-	Receipt   int64     `json:"receipt" db:"receipt"`
+	Recipe    int64     `json:"recipe" db:"recipe"`
 	Dt        time.Time `json:"dt" db:"dt"`
 	Amount    int       `json:"amount" db:"amount"`
 	DoneTurns int       `json:"done_turns" db:"done_turns"`
@@ -33,7 +33,7 @@ type Task struct {
 	SeedRu         string     `json:"seed_ru" db:"seed_ru"`
 	Bunker         int64      `json:"bunker" db:"bunker"`
 	Gcode          string     `json:"gcode" db:"gcode"`
-	Receipt        int64      `json:"receipt" db:"receipt"`
+	Recipe         int64      `json:"recipe" db:"recipe"`
 	RequiredAmount int        `json:"required_amount" db:"required_amount"`
 	Reports        *[]Reports `json:"reports" db:"reports"`
 } // @name task

@@ -20,14 +20,14 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/transport"
 )
 
-func TestReceiptsTransport(t *testing.T) {
+func TestRecipesTransport(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockReceipts := mocks.NewMockIReceiptsApp(ctrl)
+	mockRecipes := mocks.NewMockIRecipesApp(ctrl)
 
 	tr := &transport.Transport{
-		Receipts: mockReceipts,
+		Recipes: mockRecipes,
 	}
 
 	now := time.Now()
@@ -35,8 +35,8 @@ func TestReceiptsTransport(t *testing.T) {
 
 	// ---------- ADD ----------
 	t.Run("Add/success", func(t *testing.T) {
-		r := models.Receipts{
-			Receipt:     &id,
+		r := models.Recipes{
+			Recipe:      &id,
 			Seed:        "seed",
 			SeedRu:      "семя",
 			Gcode:       "G1",
@@ -46,14 +46,14 @@ func TestReceiptsTransport(t *testing.T) {
 
 		body, _ := jsoniter.Marshal(r)
 
-		mockReceipts.EXPECT().
-			AddReceipts(gomock.Any()).
+		mockRecipes.EXPECT().
+			AddRecipes(gomock.Any()).
 			Return(r, nil)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/receipts/add", bytes.NewBuffer(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/recipes/add", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 
-		tr.PostApiReceiptsAdd(w, req)
+		tr.PostApiRecipesAdd(w, req)
 
 		if w.Code != http.StatusOK {
 			t.Fatalf("expected 200, got %d", w.Code)
@@ -61,10 +61,10 @@ func TestReceiptsTransport(t *testing.T) {
 	})
 
 	t.Run("Add/invalid json", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/receipts/add", bytes.NewBuffer([]byte("bad json")))
+		req := httptest.NewRequest(http.MethodPost, "/api/recipes/add", bytes.NewBuffer([]byte("bad json")))
 		w := httptest.NewRecorder()
 
-		tr.PostApiReceiptsAdd(w, req)
+		tr.PostApiRecipesAdd(w, req)
 
 		if w.Code != http.StatusInternalServerError {
 			t.Fatalf("expected 500, got %d", w.Code)
@@ -72,17 +72,17 @@ func TestReceiptsTransport(t *testing.T) {
 	})
 
 	t.Run("Add/app error", func(t *testing.T) {
-		r := models.Receipts{Seed: "seed"}
+		r := models.Recipes{Seed: "seed"}
 		body, _ := jsoniter.Marshal(r)
 
-		mockReceipts.EXPECT().
-			AddReceipts(gomock.Any()).
-			Return(models.Receipts{}, errors.New("fail"))
+		mockRecipes.EXPECT().
+			AddRecipes(gomock.Any()).
+			Return(models.Recipes{}, errors.New("fail"))
 
-		req := httptest.NewRequest(http.MethodPost, "/api/receipts/add", bytes.NewBuffer(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/recipes/add", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 
-		tr.PostApiReceiptsAdd(w, req)
+		tr.PostApiRecipesAdd(w, req)
 
 		if w.Code != http.StatusInternalServerError {
 			t.Fatalf("expected 500, got %d", w.Code)
@@ -91,14 +91,14 @@ func TestReceiptsTransport(t *testing.T) {
 
 	// ---------- GET ----------
 	t.Run("Get/success", func(t *testing.T) {
-		mockReceipts.EXPECT().
-			GetReceipts().
-			Return([]models.Receipts{{Seed: "seed"}}, nil)
+		mockRecipes.EXPECT().
+			GetRecipes().
+			Return([]models.Recipes{{Seed: "seed"}}, nil)
 
-		req := httptest.NewRequest(http.MethodGet, "/api/receipts/get", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/recipes/get", nil)
 		w := httptest.NewRecorder()
 
-		tr.GetApiReceiptsGet(w, req)
+		tr.GetApiRecipesGet(w, req)
 
 		if w.Code != http.StatusOK {
 			t.Fatalf("expected 200, got %d", w.Code)
@@ -106,14 +106,14 @@ func TestReceiptsTransport(t *testing.T) {
 	})
 
 	t.Run("Get/not found", func(t *testing.T) {
-		mockReceipts.EXPECT().
-			GetReceipts().
+		mockRecipes.EXPECT().
+			GetRecipes().
 			Return(nil, nil)
 
-		req := httptest.NewRequest(http.MethodGet, "/api/receipts/get", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/recipes/get", nil)
 		w := httptest.NewRecorder()
 
-		tr.GetApiReceiptsGet(w, req)
+		tr.GetApiRecipesGet(w, req)
 
 		if w.Code != http.StatusNotFound {
 			t.Fatalf("expected 404, got %d", w.Code)
@@ -122,12 +122,12 @@ func TestReceiptsTransport(t *testing.T) {
 
 	// ---------- GET BY ID ----------
 	t.Run("GetById/success", func(t *testing.T) {
-		mockReceipts.EXPECT().
-			GetReceiptsByReceipt(1).
-			Return(models.Receipts{Seed: "seed"}, nil)
+		mockRecipes.EXPECT().
+			GetRecipesByRecipe(1).
+			Return(models.Recipes{Seed: "seed"}, nil)
 
 		r := chi.NewRouter()
-		r.Get("/{receipt}", tr.GetApiReceiptsGetReceipt)
+		r.Get("/{recipe}", tr.GetApiRecipesGetRecipe)
 
 		req := httptest.NewRequest(http.MethodGet, "/1", nil)
 		w := httptest.NewRecorder()
@@ -141,7 +141,7 @@ func TestReceiptsTransport(t *testing.T) {
 
 	t.Run("GetById/bad param", func(t *testing.T) {
 		r := chi.NewRouter()
-		r.Get("/{receipt}", tr.GetApiReceiptsGetReceipt)
+		r.Get("/{recipe}", tr.GetApiRecipesGetRecipe)
 
 		req := httptest.NewRequest(http.MethodGet, "/abc", nil)
 		w := httptest.NewRecorder()
@@ -155,17 +155,17 @@ func TestReceiptsTransport(t *testing.T) {
 
 	// ---------- UPDATE ----------
 	t.Run("Update/success", func(t *testing.T) {
-		rp := models.Receipts{Seed: "seed"}
+		rp := models.Recipes{Seed: "seed"}
 		body, _ := jsoniter.Marshal(rp)
 
-		mockReceipts.EXPECT().
-			UpdateReceipts(gomock.Any()).
+		mockRecipes.EXPECT().
+			UpdateRecipes(gomock.Any()).
 			Return(rp, nil)
 
-		req := httptest.NewRequest(http.MethodPut, "/api/receipts/update", bytes.NewBuffer(body))
+		req := httptest.NewRequest(http.MethodPut, "/api/recipes/update", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 
-		tr.PutApiReceiptsUpdate(w, req)
+		tr.PutApiRecipesUpdate(w, req)
 
 		if w.Code != http.StatusOK {
 			t.Fatalf("expected 200, got %d", w.Code)
@@ -173,17 +173,17 @@ func TestReceiptsTransport(t *testing.T) {
 	})
 
 	t.Run("Update/error", func(t *testing.T) {
-		rp := models.Receipts{Seed: "seed"}
+		rp := models.Recipes{Seed: "seed"}
 		body, _ := jsoniter.Marshal(rp)
 
-		mockReceipts.EXPECT().
-			UpdateReceipts(gomock.Any()).
-			Return(models.Receipts{}, errors.New("fail"))
+		mockRecipes.EXPECT().
+			UpdateRecipes(gomock.Any()).
+			Return(models.Recipes{}, errors.New("fail"))
 
-		req := httptest.NewRequest(http.MethodPut, "/api/receipts/update", bytes.NewBuffer(body))
+		req := httptest.NewRequest(http.MethodPut, "/api/recipes/update", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 
-		tr.PutApiReceiptsUpdate(w, req)
+		tr.PutApiRecipesUpdate(w, req)
 
 		if w.Code != http.StatusInternalServerError {
 			t.Fatalf("expected 500, got %d", w.Code)
@@ -192,12 +192,12 @@ func TestReceiptsTransport(t *testing.T) {
 
 	// ---------- DELETE ----------
 	t.Run("Delete/success", func(t *testing.T) {
-		mockReceipts.EXPECT().
-			DeleteReceipts(1).
+		mockRecipes.EXPECT().
+			DeleteRecipes(1).
 			Return(true, nil)
 
 		r := chi.NewRouter()
-		r.Delete("/{receipt}", tr.DeleteApiReceiptsDelete)
+		r.Delete("/{recipe}", tr.DeleteApiRecipesDelete)
 
 		req := httptest.NewRequest(http.MethodDelete, "/1", nil)
 
@@ -216,7 +216,7 @@ func TestReceiptsTransport(t *testing.T) {
 
 	t.Run("Delete/no logger", func(t *testing.T) {
 		r := chi.NewRouter()
-		r.Delete("/{receipt}", tr.DeleteApiReceiptsDelete)
+		r.Delete("/{recipe}", tr.DeleteApiRecipesDelete)
 
 		req := httptest.NewRequest(http.MethodDelete, "/1", nil)
 		w := httptest.NewRecorder()
@@ -229,12 +229,12 @@ func TestReceiptsTransport(t *testing.T) {
 	})
 
 	t.Run("Delete/fail", func(t *testing.T) {
-		mockReceipts.EXPECT().
-			DeleteReceipts(1).
+		mockRecipes.EXPECT().
+			DeleteRecipes(1).
 			Return(false, nil)
 
 		r := chi.NewRouter()
-		r.Delete("/{receipt}", tr.DeleteApiReceiptsDelete)
+		r.Delete("/{recipe}", tr.DeleteApiRecipesDelete)
 
 		req := httptest.NewRequest(http.MethodDelete, "/1", nil)
 

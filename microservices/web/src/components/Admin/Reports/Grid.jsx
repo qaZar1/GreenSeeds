@@ -117,7 +117,7 @@ const GroupedDatagrid = () => {
                           <Typography variant="subtitle2" color="text.secondary">
                             Задание №{rec.number}
                           </Typography>
-                          <Typography>Рецепт: {rec.receipt}</Typography>
+                          <Typography>Рецепт: {rec.recipe}</Typography>
                           <Typography>Номер выполнения: {rec.turn}</Typography>
                           <Typography>
                             Дата: <DateField record={rec} source="dt" showTime locales="ru-RU" />
@@ -153,7 +153,7 @@ const GroupedDatagrid = () => {
                       .map((rec) => (
                         <TableRow key={rec.id}>
                           <TableCell>{rec.number}</TableCell>
-                          <TableCell>{rec.receipt}</TableCell>
+                          <TableCell>{rec.recipe}</TableCell>
                           <TableCell>{rec.turn}</TableCell>
                           <TableCell>
                             <DateField record={rec} source="dt" showTime locales="ru-RU" />

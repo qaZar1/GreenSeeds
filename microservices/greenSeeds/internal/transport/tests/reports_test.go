@@ -36,7 +36,7 @@ func TestReportsTransport(t *testing.T) {
 			Id:      &id,
 			Shift:   1,
 			Number:  1,
-			Receipt: 1,
+			Recipe:  1,
 			Turn:    1,
 			Dt:      &now,
 			Success: true,

@@ -1,5 +1,5 @@
-export type Receipt = {
-  receipt: number | null;
+export type Recipe = {
+  recipe: number | null;
   seed: string;
   seed_ru: string;
   gcode: string;

@@ -36,17 +36,17 @@ func (assign *assignmentsRepository) AddAssignments(assignments models.Assignmen
 INSERT INTO green_seeds.assignments (
 	shift,
 	number,
-	receipt,
+	recipe,
 	amount
 )
 VALUES (
 	:shift,
 	:number,
-	:receipt,
+	:recipe,
 	:amount
 )
-ON CONFLICT (shift, number, receipt) DO NOTHING
-RETURNING id, shift, number, receipt, amount`
+ON CONFLICT (shift, number, recipe) DO NOTHING
+RETURNING id, shift, number, recipe, amount`
 
 	rows, err := assign.db.NamedQuery(query, assignments)
 	if err != nil {
@@ -64,10 +64,10 @@ RETURNING id, shift, number, receipt, amount`
 	var reports []models.Reports
 	for i := range inserted.Amount {
 		reports = append(reports, models.Reports{
-			Shift:   inserted.Shift,
-			Number:  inserted.Number,
-			Receipt: inserted.Receipt,
-			Turn:    i + 1,
+			Shift:  inserted.Shift,
+			Number: inserted.Number,
+			Recipe: inserted.Recipe,
+			Turn:   i + 1,
 		})
 	}
 
@@ -75,10 +75,10 @@ RETURNING id, shift, number, receipt, amount`
 INSERT INTO green_seeds.reports (
 	shift,
 	number,
-	receipt,
+	recipe,
 	turn
 )
-VALUES (:shift, :number, :receipt, :turn)`
+VALUES (:shift, :number, :recipe, :turn)`
 	res, err := assign.db.NamedExec(insertReportsQuery, reports)
 	if err != nil {
 		return models.Assignments{}, err
@@ -102,13 +102,13 @@ SELECT
 	id,
 	a.shift as shift,
 	number,
-	a.receipt as receipt,
+	a.recipe as recipe,
 	r.description as description,
 	amount
 FROM green_seeds.assignments a
 JOIN green_seeds.shifts ON a.shift = green_seeds.shifts.shift
-LEFT JOIN green_seeds.receipts r
-ON r.receipt = a.receipt
+LEFT JOIN green_seeds.recipes r
+ON r.recipe = a.recipe
 WHERE green_seeds.shifts.dt >= (CURRENT_DATE AT TIME ZONE 'UTC+5') AND a.deleted_at IS NULL
 ORDER BY a.shift, a.number;`
 
@@ -147,10 +147,10 @@ func (assign *assignmentsRepository) SyncReports(
 		var reports []models.Reports
 		for i := range res {
 			reports = append(reports, models.Reports{
-				Shift:   assignments.Shift,
-				Number:  assignments.Number,
-				Receipt: assignments.Receipt,
-				Turn:    startTurn + i,
+				Shift:  assignments.Shift,
+				Number: assignments.Number,
+				Recipe: assignments.Recipe,
+				Turn:   startTurn + i,
 			})
 		}
 
@@ -183,10 +183,10 @@ func (assign *assignmentsRepository) UpdateAssignments(tx *sqlx.Tx, assignments 
 UPDATE green_seeds.assignments
 SET shift = :shift,
 	number = :number,
-	receipt = :receipt,
+	recipe = :recipe,
 	amount = :amount
 WHERE id = :id AND deleted_at IS NULL
-RETURNING id, shift, number, receipt, amount;
+RETURNING id, shift, number, recipe, amount;
 `
 
 	rows, err := tx.NamedQuery(query, assignments)
@@ -227,7 +227,7 @@ WHERE id = $2 AND deleted_at IS NULL;
 
 func (assign *assignmentsRepository) GetAssignmentsByNumber(id int) (models.Assignments, error) {
 	const query = `
-SELECT id, shift, number, receipt, amount
+SELECT id, shift, number, recipe, amount
 FROM green_seeds.assignments
 WHERE id = $1 AND deleted_at IS NULL;`
 
@@ -245,7 +245,7 @@ SELECT
 	a.id,
     a.shift,
     a.number,
-    a.receipt,
+    a.recipe,
     s.dt,
     a.amount,
     COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) AS done_turns,
@@ -256,13 +256,13 @@ JOIN green_seeds.shifts s ON s.shift = a.shift
 LEFT JOIN green_seeds.reports r 
   ON r.shift = a.shift
   AND r.number = a.number 
-  AND r.receipt = a.receipt
-left join green_seeds.receipts r2 
-  on r2.receipt = a.receipt
+  AND r.recipe = a.recipe
+left join green_seeds.recipes r2 
+  on r2.recipe = a.recipe
 left join green_seeds.seeds se
   on se.seed = r2.seed 
 WHERE s.user_id = $1 and DATE(s.dt) = CURRENT_DATE AND a.deleted_at IS NULL
-GROUP BY a.id, a.shift, a.number, a.receipt, s.dt, a.amount, se.seed, se.seed_ru 
+GROUP BY a.id, a.shift, a.number, a.recipe, s.dt, a.amount, se.seed, se.seed_ru 
 HAVING COALESCE(SUM(CASE WHEN r.success THEN 1 ELSE 0 END), 0) < a.amount;
 `
 
@@ -291,11 +291,11 @@ SELECT
         LIMIT 1
     ) AS bunker,
     r.gcode,
-    r.receipt,
+    r.recipe,
     a.amount AS required_amount
 FROM green_seeds.assignments a
-JOIN green_seeds.receipts r
-    ON r.receipt = a.receipt
+JOIN green_seeds.recipes r
+    ON r.recipe = a.recipe
 LEFT JOIN green_seeds.seeds se
     ON r.seed = se.seed
 WHERE a.id = $1 AND a.deleted_at IS NULL;`
@@ -309,17 +309,17 @@ WHERE a.id = $1 AND a.deleted_at IS NULL;`
 SELECT
 	r.shift,
 	r.number,
-	r.receipt,
+	r.recipe,
 	r.turn,
 	COALESCE(r.success, FALSE) AS success,
 	r.error,
 	r.solution,
 	r.mark
 FROM green_seeds.reports r
-WHERE r.shift = $1 AND r.number = $2 AND r.receipt = $3 AND (r.success = FALSE OR r.success IS NULL)
+WHERE r.shift = $1 AND r.number = $2 AND r.recipe = $3 AND (r.success = FALSE OR r.success IS NULL)
 ORDER BY r.turn ASC`
 	var reports []models.Reports
-	if err := assign.db.Select(&reports, reportsQuery, task.Shift, task.Number, task.Receipt); err != nil {
+	if err := assign.db.Select(&reports, reportsQuery, task.Shift, task.Number, task.Recipe); err != nil {
 		return models.Task{}, err
 	}
 
@@ -333,10 +333,10 @@ func (assign *assignmentsRepository) insReports(tx *sqlx.Tx, reports []models.Re
 INSERT INTO green_seeds.reports (
 	shift,
 	number,
-	receipt,
+	recipe,
 	turn
 )
-VALUES (:shift, :number, :receipt, :turn)`
+VALUES (:shift, :number, :recipe, :turn)`
 
 	result, err := tx.NamedExec(insertReportsQuery, reports)
 	if err != nil {
@@ -356,7 +356,7 @@ func (assign *assignmentsRepository) delReports(tx *sqlx.Tx, assignments models.
 DELETE FROM green_seeds.reports
 WHERE shift = :shift AND 
 	number = :number AND
-	receipt = :receipt AND
+	recipe = :recipe AND
 	turn > :amount AND
 	success IS NULL AND
 	error IS NULL`

@@ -77,7 +77,7 @@ const TaskCard = () => {
         id: record.id,
         shift: record.shift,
         number: record.number,
-        receipt: record.receipt,
+        recipe: record.recipe,
         seed: record.seed,
         amount: amount,
       },
@@ -199,7 +199,7 @@ const TaskCard = () => {
         params: {
           shift: record.shift,
           number: record.number,
-          receipt: record.receipt,
+          recipe: record.recipe,
           seed: record.seed,
           turn: currentTaskNumber,
           completed_amount: completedAmount,

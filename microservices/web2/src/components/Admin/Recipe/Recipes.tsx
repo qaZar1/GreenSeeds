@@ -6,21 +6,21 @@ import { Table } from "../../utils/Table";
 import { StatCard } from "../../utils/Card";
 import type { Column } from "../../../types/table";
 import type { Seed } from "../../../types/seed";
-import type { Receipt } from "../../../types/receipt";
+import type { Recipe } from "../../../types/recipe";
 import { useNavigate } from "react-router-dom";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
 import ActionButton from "../../utils/AсtionButton";
 import ResponsiveTable from "../../utils/ResponsiveTable";
 
-const ReceiptPage: React.FC = () => {
+const RecipePage: React.FC = () => {
 
   usePageHeader(
     "Рецепты",
     "Рецепты выращивания семян"
   );
 
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeds, setSeeds] = useState<Seed[]>([]);
   const [error, setError] = useState(false);
@@ -32,15 +32,15 @@ const ReceiptPage: React.FC = () => {
     setError(false);
 
     try {
-      const [receiptsRes, seedsRes] = await Promise.allSettled([
-        api.getList("receipts"),
+      const [recipesRes, seedsRes] = await Promise.allSettled([
+        api.getList("recipes"),
         api.getList("seeds")
       ]);
 
       let hasError = false;
 
-      if (receiptsRes.status === "fulfilled") {
-        setReceipts(receiptsRes.value || []);
+      if (recipesRes.status === "fulfilled") {
+        setRecipes(recipesRes.value || []);
       } else {
         toast.error("Не удалось загрузить рецепты");
         hasError = true;
@@ -77,15 +77,15 @@ const ReceiptPage: React.FC = () => {
   );
 
   /* ---------------- actions ---------------- */
-  const handleDelete = async (receipt: Receipt) => {
+  const handleDelete = async (recipe: Recipe) => {
 
     const loading = toast.loading("Удаление рецепта...");
 
     try {
-      await api.delete("receipts", receipt.receipt);
+      await api.delete("recipes", recipe.recipe);
 
-      setReceipts(prev =>
-        prev.filter(r => r.receipt !== receipt.receipt)
+      setRecipes(prev =>
+        prev.filter(r => r.recipe !== recipe.recipe)
       );
 
       toast.success("Рецепт удалён", { id: loading });
@@ -97,7 +97,7 @@ const ReceiptPage: React.FC = () => {
 
   /* ---------------- columns ---------------- */
 
-  const columns: Column<Receipt>[] = [
+  const columns: Column<Recipe>[] = [
 
     {
       header: "Семена",
@@ -137,7 +137,7 @@ const ReceiptPage: React.FC = () => {
         <div className="flex justify-end gap-[8px]">
 
           <button
-            onClick={() => navigate(`/settings/receipts/${r.receipt}/edit`)}
+            onClick={() => navigate(`/settings/recipes/${r.recipe}/edit`)}
             className="p-[8px] rounded-[8px] text-[var(--text-secondary)] hover:text-[var(--status-info-text)] hover:bg-[var(--status-info-bg)]"
           >
             <i className="fa-solid fa-pen-to-square text-[14px]" />
@@ -171,7 +171,7 @@ const ReceiptPage: React.FC = () => {
       {/* кнопка добавления */}
       <div className="flex justify-end">
         <ActionButton
-          onClick={() => navigate("/settings/receipts/create")}
+          onClick={() => navigate("/settings/recipes/create")}
           icon="fa-solid fa-plus"
         >
           Добавить
@@ -182,12 +182,12 @@ const ReceiptPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
         <StatCard
           title="Всего рецептов"
-          value={receipts.length}
+          value={recipes.length}
         />
         <StatCard
           title="Обновлены сегодня"
           value={
-            receipts.filter(r => {
+            recipes.filter(r => {
               if (!r.updated) return false;
 
               const today = new Date().toDateString();
@@ -201,10 +201,10 @@ const ReceiptPage: React.FC = () => {
 
       {/* table */}
       <ResponsiveTable
-        data={receipts}
+        data={recipes}
         table={
           <Table
-            data={receipts}
+            data={recipes}
             columns={columns}
             emptyMessage="Рецепты ещё не созданы"
           />
@@ -245,7 +245,7 @@ const ReceiptPage: React.FC = () => {
 
               <button
                 onClick={() =>
-                  navigate(`/settings/receipts/${r.receipt}/edit`)
+                  navigate(`/settings/recipes/${r.recipe}/edit`)
                 }
                 className="
                   flex-1
@@ -289,4 +289,4 @@ const ReceiptPage: React.FC = () => {
 
 };
 
-export default ReceiptPage;
+export default RecipePage;

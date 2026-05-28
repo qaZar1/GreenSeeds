@@ -7,27 +7,27 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-type IReceiptsRepository interface {
-	AddReceipts(receipts models.Receipts) (models.Receipts, error)
-	GetReceipts() ([]models.Receipts, error)
-	UpdateReceipts(receipts models.Receipts) (models.Receipts, error)
-	DeleteReceipts(receipt int) (bool, error)
-	GetReceiptsByReceipt(receipt int) (models.Receipts, error)
+type IRecipesRepository interface {
+	AddRecipes(recipes models.Recipes) (models.Recipes, error)
+	GetRecipes() ([]models.Recipes, error)
+	UpdateRecipes(recipes models.Recipes) (models.Recipes, error)
+	DeleteRecipes(recipe int) (bool, error)
+	GetRecipesByRecipe(recipe int) (models.Recipes, error)
 }
 
-type receiptsRepository struct {
+type recipesRepository struct {
 	db *sqlx.DB
 }
 
-func NewReceiptsRepository(db *sqlx.DB) *receiptsRepository {
-	return &receiptsRepository{
+func NewRecipesRepository(db *sqlx.DB) *recipesRepository {
+	return &recipesRepository{
 		db: db,
 	}
 }
 
-func (rec *receiptsRepository) AddReceipts(receipts models.Receipts) (models.Receipts, error) {
+func (rec *recipesRepository) AddRecipes(recipes models.Recipes) (models.Recipes, error) {
 	const query = `
-INSERT INTO green_seeds.receipts (
+INSERT INTO green_seeds.recipes (
 	seed,
 	gcode,
 	description
@@ -37,86 +37,86 @@ VALUES (
 	:gcode,
 	:description
 )
-RETURNING receipt, seed, gcode, description, updated`
+RETURNING recipe, seed, gcode, description, updated`
 
-	rows, err := rec.db.NamedQuery(query, receipts)
+	rows, err := rec.db.NamedQuery(query, recipes)
 	if err != nil {
-		return models.Receipts{}, err
+		return models.Recipes{}, err
 	}
 
 	defer rows.Close()
 
-	var inserted models.Receipts
+	var inserted models.Recipes
 	if rows.Next() {
 		err = rows.StructScan(&inserted)
 		if err != nil {
-			return models.Receipts{}, err
+			return models.Recipes{}, err
 		}
 	}
 
 	return inserted, nil
 }
 
-func (rec *receiptsRepository) GetReceipts() ([]models.Receipts, error) {
+func (rec *recipesRepository) GetRecipes() ([]models.Recipes, error) {
 	const query = `
 SELECT 
-    receipts.receipt, 
-    receipts.seed, 
+    recipes.recipe, 
+    recipes.seed, 
     seeds.seed_ru,
-    receipts.gcode, 
-    receipts.updated, 
-    receipts.description
-FROM green_seeds.receipts
+    recipes.gcode, 
+    recipes.updated, 
+    recipes.description
+FROM green_seeds.recipes
 LEFT JOIN green_seeds.seeds 
-    ON seeds.seed = receipts.seed
-WHERE receipts.deleted_at IS NULL
-ORDER BY receipts.seed ASC;
+    ON seeds.seed = recipes.seed
+WHERE recipes.deleted_at IS NULL
+ORDER BY recipes.seed ASC;
 `
 
-	var receipts []models.Receipts
-	if err := rec.db.Select(&receipts, query); err != nil {
+	var recipes []models.Recipes
+	if err := rec.db.Select(&recipes, query); err != nil {
 		return nil, err
 	}
 
-	return receipts, nil
+	return recipes, nil
 }
 
-func (rec *receiptsRepository) UpdateReceipts(receipts models.Receipts) (models.Receipts, error) {
+func (rec *recipesRepository) UpdateRecipes(recipes models.Recipes) (models.Recipes, error) {
 	const query = `
-UPDATE green_seeds.receipts
+UPDATE green_seeds.recipes
 SET
 	seed = :seed,
     gcode = :gcode,
     description = :description,
     updated = CURRENT_TIMESTAMP
-WHERE receipt = :receipt AND deleted_at IS NULL
-RETURNING receipt, seed, gcode, description, updated`
+WHERE recipe = :recipe AND deleted_at IS NULL
+RETURNING recipe, seed, gcode, description, updated`
 
-	rows, err := rec.db.NamedQuery(query, receipts)
+	rows, err := rec.db.NamedQuery(query, recipes)
 	if err != nil {
-		return models.Receipts{}, err
+		return models.Recipes{}, err
 	}
 
 	defer rows.Close()
 
-	var updated models.Receipts
+	var updated models.Recipes
 	if rows.Next() {
 		err = rows.StructScan(&updated)
 		if err != nil {
-			return models.Receipts{}, err
+			return models.Recipes{}, err
 		}
 	}
 
 	return updated, nil
 }
 
-func (rec *receiptsRepository) DeleteReceipts(receipt int) (bool, error) {
+func (rec *recipesRepository) DeleteRecipes(recipe int) (bool, error) {
 	const query = `
-UPDATE green_seeds.receipts
+UPDATE green_seeds.recipes
 SET deleted_at = $1
-WHERE receipt = $2 AND deleted_at IS NULL;`
+WHERE recipe = $2 AND deleted_at IS NULL;`
 
-	result, err := rec.db.Exec(query, time.Now(), receipt)
+	result, err := rec.db.Exec(query, time.Now(), recipe)
 	if err != nil {
 		return false, err
 	}
@@ -129,24 +129,24 @@ WHERE receipt = $2 AND deleted_at IS NULL;`
 	return rowsAffected == 1, nil
 }
 
-func (rec *receiptsRepository) GetReceiptsByReceipt(receiptNum int) (models.Receipts, error) {
+func (rec *recipesRepository) GetRecipesByRecipe(recipeNum int) (models.Recipes, error) {
 	const query = `
 SELECT 
-    receipts.receipt, 
-    receipts.seed, 
+    recipes.recipe, 
+    recipes.seed, 
     seeds.seed_ru,
-    receipts.gcode, 
-    receipts.updated, 
-    receipts.description
-FROM green_seeds.receipts
+    recipes.gcode, 
+    recipes.updated, 
+    recipes.description
+FROM green_seeds.recipes
 LEFT JOIN green_seeds.seeds 
-    ON seeds.seed = receipts.seed
-WHERE receipt = $1 AND receipts.deleted_at IS NULL;`
+    ON seeds.seed = recipes.seed
+WHERE recipe = $1 AND recipes.deleted_at IS NULL;`
 
-	var receipt models.Receipts
-	if err := rec.db.Get(&receipt, query, receiptNum); err != nil {
-		return models.Receipts{}, err
+	var recipe models.Recipes
+	if err := rec.db.Get(&recipe, query, recipeNum); err != nil {
+		return models.Recipes{}, err
 	}
 
-	return receipt, nil
+	return recipe, nil
 }

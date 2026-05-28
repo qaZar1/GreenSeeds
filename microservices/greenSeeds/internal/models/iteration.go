@@ -7,26 +7,28 @@ import (
 type Iteration struct {
 	PrevState    State
 	CurrentState State
-	NextState State
-	
-	Seed string
+	NextState    State
+
+	Seed  string
 	Gcode string
-	Bunker int
-	Shift int
-	Number int
-	Turn int
+
+	Bunker   int
+	Shift    int
+	Number   int
+	Turn     int
 	Required int
-	Receipt int
+	Recipe   int
 
 	ExtraMode bool
+	IsFailed  bool
 
-	Err []error
+	Err     []error
 	LastBuf *bytes.Buffer
 
 	Report Reports
 
 	Solutions []string
 
-	Success bool
+	Success  bool
 	Finished bool
 }

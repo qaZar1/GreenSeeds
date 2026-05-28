@@ -4,7 +4,7 @@ import { CreateButton } from "react-admin";
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 
-const ReceiptListActions = () => {
+const RecipeListActions = () => {
     const theme = useTheme();
     return (
     <TopToolbar>
@@ -25,4 +25,4 @@ const ReceiptListActions = () => {
     );
 };
 
-export default ReceiptListActions;
+export default RecipeListActions;

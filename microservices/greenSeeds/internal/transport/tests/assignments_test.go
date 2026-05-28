@@ -27,7 +27,7 @@ func TestPostApiAssignmentsAdd(t *testing.T) {
 
 		mockApp := mocks.NewMockIAssignmentsApp(ctrl)
 
-		input := models.Assignments{Shift: 1, Number: 1, Receipt: 10, Amount: 5}
+		input := models.Assignments{Shift: 1, Number: 1, Recipe: 10, Amount: 5}
 
 		mockApp.EXPECT().AddAssignment(input).Return(input, nil)
 
@@ -58,7 +58,7 @@ func TestPostApiAssignmentsAdd(t *testing.T) {
 		defer ctrl.Finish()
 
 		mockApp := mocks.NewMockIAssignmentsApp(ctrl)
-		input := models.Assignments{Shift: 1, Number: 1, Receipt: 10, Amount: 5}
+		input := models.Assignments{Shift: 1, Number: 1, Recipe: 10, Amount: 5}
 
 		mockApp.EXPECT().AddAssignment(input).Return(models.Assignments{}, errors.New("err"))
 

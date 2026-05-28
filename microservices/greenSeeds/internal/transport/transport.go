@@ -17,7 +17,7 @@ type Transport struct {
 	Bunkers        application.IBunkersApp
 	DeviceSettings application.IDeviceSettingsApp
 	Placements     application.IPlacementsApp
-	Receipts       application.IReceiptsApp
+	Recipes        application.IRecipesApp
 	Reports        application.IReportsApp
 	Seeds          application.ISeedsApp
 	Shifts         application.IShiftsApp
@@ -45,7 +45,7 @@ func NewTransport(
 		Bunkers:        app,
 		DeviceSettings: app,
 		Placements:     app,
-		Receipts:       app,
+		Recipes:        app,
 		Reports:        app,
 		Seeds:          app,
 		Shifts:         app,

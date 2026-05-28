@@ -5,7 +5,7 @@ import {
   ExpandMore,
   Warehouse as WarehouseIcon,
   Grass as GrassIcon,
-  Receipt as ReceiptIcon,
+  Recipe as RecipeIcon,
   DragIndicator as DragIndicatorIcon,
   Assignment as AssignmentIcon,
   Report as ReportIcon,
@@ -60,7 +60,7 @@ const CustomMenu = () => {
             <MenuItemLink key="bunkers" to="/bunkers" primaryText="Бункеры" leftIcon={<WarehouseIcon />} />
             <MenuItemLink key="seeds" to="/seeds" primaryText="Семена" leftIcon={<GrassIcon />} />
             <MenuItemLink key="placements" to="/placements" primaryText="Расположение" leftIcon={<LinkIcon />} />
-            <MenuItemLink key="receipts" to="/receipts" primaryText="Рецепты" leftIcon={<ReceiptIcon />} />
+            <MenuItemLink key="recipes" to="/recipes" primaryText="Рецепты" leftIcon={<RecipeIcon />} />
             <MenuItemLink key="device-settings" to="/device-settings" primaryText="Настройки устройства" leftIcon={<TuneIcon />} />
         </Box>
       </Collapse>

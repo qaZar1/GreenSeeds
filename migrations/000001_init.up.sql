@@ -24,27 +24,27 @@ CREATE TABLE IF NOT EXISTS green_seeds.placement (
     FOREIGN KEY (seed) REFERENCES green_seeds.seeds(seed)
 );
 
-CREATE TABLE IF NOT EXISTS green_seeds.receipts (
-    receipt SERIAL,
+CREATE TABLE IF NOT EXISTS green_seeds.recipes (
+    recipe SERIAL,
     seed VARCHAR(50),
     gcode TEXT,
     updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     description TEXT,
     deleted_at TIMESTAMP WITH TIME ZONE,
     FOREIGN KEY (seed) REFERENCES green_seeds.seeds(seed),
-    PRIMARY KEY (receipt)
+    PRIMARY KEY (recipe)
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.assignments (
     id SERIAL,
     shift BIGINT,
     number INT,
-    receipt BIGINT,
+    recipe BIGINT,
     amount INT,
     deleted_at TIMESTAMP WITH TIME ZONE,
-    FOREIGN KEY (receipt) REFERENCES green_seeds.receipts(receipt),
+    FOREIGN KEY (recipe) REFERENCES green_seeds.recipes(recipe),
     FOREIGN KEY (shift) REFERENCES green_seeds.shifts(shift),
-    PRIMARY KEY (shift, number, receipt)
+    PRIMARY KEY (shift, number, recipe)
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.shifts (
@@ -74,16 +74,16 @@ CREATE TABLE IF NOT EXISTS green_seeds.reports (
     id SERIAL,
     shift BIGINT,
     number INT,
-    receipt BIGINT,
+    recipe BIGINT,
     turn INT,
     dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     success BOOLEAN,
     error VARCHAR(255),
     solution VARCHAR(50),
     mark VARCHAR(50),
-    FOREIGN KEY (shift, number, receipt)
-        REFERENCES green_seeds.assignments (shift, number, receipt),
-    PRIMARY KEY (shift, number, receipt, turn)
+    FOREIGN KEY (shift, number, recipe)
+        REFERENCES green_seeds.assignments (shift, number, recipe),
+    PRIMARY KEY (shift, number, recipe, turn)
 );
 
 CREATE TABLE IF NOT EXISTS green_seeds.logs (

@@ -65,7 +65,7 @@ const ReportsPage: React.FC = () => {
       header: "Рецепт",
       render: rec => (
         <div className="text-[14px] text-[var(--text-primary)]">
-          {rec.receipt}
+          {rec.recipe}
         </div>
       ),
     },
@@ -209,7 +209,7 @@ const ReportsPage: React.FC = () => {
                         <span className="text-[var(--text-secondary)]">
                           Рецепт:
                         </span>{" "}
-                        {rec.receipt}
+                        {rec.recipe}
                       </div>
 
                       <div className="text-[var(--text-primary)]">
@@ -364,7 +364,7 @@ const ReportsPage: React.FC = () => {
                               <span className="text-[var(--text-secondary)]">
                                 Рецепт:
                               </span>{" "}
-                              {rec.receipt}
+                              {rec.recipe}
                             </div>
 
                             <div className="text-[var(--text-primary)]">

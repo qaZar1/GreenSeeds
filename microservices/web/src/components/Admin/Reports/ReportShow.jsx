@@ -21,7 +21,7 @@ const ReportShow = () => {
                         <SimpleShowLayout>
                             <TextField source="shift" emptyText="-" label="Смена" />
                             <TextField source="number" emptyText="-" label="Номер задания" />
-                            <TextField source="receipt" emptyText="-" label="Рецепт" />
+                            <TextField source="recipe" emptyText="-" label="Рецепт" />
                             <TextField source="turn" emptyText="-" label="Номер выполнения" />
                             <DateField source="dt" showTime locales="ru-RU" label="Дата" />
                             <FunctionField
@@ -39,7 +39,7 @@ const ReportShow = () => {
                             <SimpleShowLayout>
                                 <TextField source="shift" emptyText="-" label="Смена" />
                                 <TextField source="number" emptyText="-" label="Номер задания" />
-                                <TextField source="receipt" emptyText="-" label="Рецепт" />
+                                <TextField source="recipe" emptyText="-" label="Рецепт" />
                                 <TextField source="turn" emptyText="-" label="Номер выполнения" />
                                 <DateField source="dt" showTime locales="ru-RU" label="Дата" />
                             </SimpleShowLayout>

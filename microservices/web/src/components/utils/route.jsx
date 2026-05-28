@@ -101,14 +101,14 @@ export const resourcesConfig = {
         }),
     },
 
-    receipts: {
-        idKey: "receipt",
+    recipes: {
+        idKey: "recipe",
         urls: {
-            list: "/api/receipts/get",
-            one: (id) => `/api/receipts/get/${id}`,
-            create: "/api/receipts/add",
-            update: "/api/receipts/update",
-            delete: (id) => `/api/receipts/delete/${id}`,
+            list: "/api/recipes/get",
+            one: (id) => `/api/recipes/get/${id}`,
+            create: "/api/recipes/add",
+            update: "/api/recipes/update",
+            delete: (id) => `/api/recipes/delete/${id}`,
         },
         createPayload: (d) => ({
             seed: d.seed,
@@ -116,7 +116,7 @@ export const resourcesConfig = {
             description: d.description,
         }),
         updatePayload: (d) => ({
-            receipt: d.id,
+            recipe: d.id,
             seed: d.seed,
             gcode: d.gcode,
             description: d.description,
@@ -153,14 +153,14 @@ export const resourcesConfig = {
         createPayload: (d) => ({
             shift: d.shift,
             number: d.number,
-            receipt: d.receipt,
+            recipe: d.recipe,
             amount: d.amount,
         }),
         updatePayload: (d) => ({
             id: d.id,
             shift: d.shift,
             number: d.number,
-            receipt: d.receipt,
+            recipe: d.recipe,
             amount: d.amount,
         }),
     },

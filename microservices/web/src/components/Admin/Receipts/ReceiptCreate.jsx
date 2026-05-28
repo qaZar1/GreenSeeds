@@ -7,7 +7,7 @@ import { ReferenceInput, AutocompleteInput } from "react-admin";
 import { useNotify } from "react-admin";
 import { useRedirect } from "react-admin";
 
-const ReceiptCreate = () => {
+const RecipeCreate = () => {
     const notify = useNotify();
     const redirect = useRedirect();
 
@@ -20,7 +20,7 @@ const ReceiptCreate = () => {
             mutationOptions={{
                 onSuccess: (response) => {
                     notify("Рецепт создан", { type: "success" })
-                    redirect('edit', 'receipts', response.id);
+                    redirect('edit', 'recipes', response.id);
                 },
                 onError: (error) => notify(error.message, { type: "error" }),
             }}
@@ -36,4 +36,4 @@ const ReceiptCreate = () => {
     );
 }
 
-export default ReceiptCreate;
+export default RecipeCreate;

@@ -9,18 +9,18 @@ type WSRequest struct {
 }
 
 type WSResponse struct {
-	Type WSMessageType `json:"type"`
-	Status  string     `json:"status,omitempty"`
-	Message string      `json:"message,omitempty"`
+	Type      WSMessageType `json:"type"`
+	Status    string        `json:"status,omitempty"`
+	Message   string        `json:"message,omitempty"`
 	Iteration int
-	Data    interface{} `json:"data,omitempty"`
-	Actions *[]string   `json:"actions,omitempty"`
+	Data      interface{} `json:"data,omitempty"`
+	Actions   *[]string   `json:"actions,omitempty"`
 }
 
 type Params struct {
 	Shift          int    `json:"shift"`
 	Number         int    `json:"number"`
-	Receipt        int `json:"receipt"`
+	Recipe         int    `json:"recipe"`
 	Turn           int    `json:"turn"`
 	RequiredAmount int    `json:"required_amount"`
 	Bunker         int    `json:"bunker"`

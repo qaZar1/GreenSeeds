@@ -17,9 +17,9 @@ import ProfilePage from './components/Admin/Profile/Profile';
 import PlacementList from './components/Admin/Placements/Placements';
 import PlacementEdit from './components/Admin/Placements/PlacementEdit';
 import PlacementCreate from './components/Admin/Placements/PlacementCreate';
-import ReceiptList from './components/Admin/Receipts/Receipts';
-import ReceiptEdit from './components/Admin/Receipts/ReceiptEdit';
-import ReceiptCreate from './components/Admin/Receipts/ReceiptCreate';
+import RecipeList from './components/Admin/Recipes/Recipes';
+import RecipeEdit from './components/Admin/Recipes/RecipeEdit';
+import RecipeCreate from './components/Admin/Recipes/RecipeCreate';
 import ShiftList from './components/Admin/Shifts/Shifts';
 import ShiftEdit from './components/Admin/Shifts/ShiftEdit';
 import ShiftCreate from './components/Admin/Shifts/ShiftCreate';
@@ -70,10 +70,10 @@ function App() {
               edit={PlacementEdit}
             />
             <Resource
-              name="receipts"
-              list={ReceiptList}
-              create={ReceiptCreate}
-              edit={ReceiptEdit}
+              name="recipes"
+              list={RecipeList}
+              create={RecipeCreate}
+              edit={RecipeEdit}
             />
             <Resource
               name="shifts"

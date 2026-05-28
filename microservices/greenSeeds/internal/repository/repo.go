@@ -13,7 +13,7 @@ type Repository struct {
 	RepRepo  IReportsRepository
 	ShfRepo  IShiftsRepository
 	PlcRepo  IPlacementRepository
-	RptRepo  IReceiptsRepository
+	RptRepo  IRecipesRepository
 	AsnRepo  IAssignmentsRepository
 	SeedRepo ISeedsRepository
 	BunkRepo IBunkersRepository
@@ -61,7 +61,7 @@ func NewRepository(db *sqlx.DB, sqlite *sqlite.SQLite) *Repository {
 		RepRepo:  NewReportsRepository(db),
 		ShfRepo:  NewShiftsRepository(db),
 		PlcRepo:  NewPlacementRepository(db),
-		RptRepo:  NewReceiptsRepository(db),
+		RptRepo:  NewRecipesRepository(db),
 		AsnRepo:  NewAssignmentsRepository(db),
 		SeedRepo: NewSeedsRepository(db),
 		BunkRepo: NewBunkersRepository(db),

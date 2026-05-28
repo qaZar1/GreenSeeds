@@ -13,10 +13,10 @@ import BunkersPage from "../components/Admin/Bunkers/Bunkers";
 import CalibrationPage from "../components/Admin/Calibration/Calibrate";
 import DeviceSettingCreatePage from "../components/Admin/DeviceSettings/DeviceSettingsCreatePage";
 import DeviceSettingsPage from "../components/Admin/DeviceSettings/DeviceSettingsPage";
-import ReceiptPage from "../components/Admin/Receipt/Receipts";
+import RecipePage from "../components/Admin/Recipe/Recipes";
 import PlacementPage from "../components/Admin/Placement/Placement";
 import SeedsPage from "../components/Admin/Seeds/SeedsPage";
-import ReceiptCreatePage from "../components/Admin/Receipt/ReceiptCreatePage";
+import RecipeCreatePage from "../components/Admin/Recipe/RecipeCreatePage";
 import SproutLoader from "../components/utils/Loader/SproutLoader";
 import NotFoundPage from "../components/pages/NotFoundPage";
 import ChoicePage from "../components/Operator/ChoiceTask/ChoicePage";
@@ -48,9 +48,9 @@ export const AppRouter = () => {
           <Route path="/settings/bunkers" element={<BunkersPage/>} />
           <Route path="/settings/seeds" element={<SeedsPage/>} />
           <Route path="/settings/placements" element={<PlacementPage/>} />
-          <Route path="/settings/receipts" element={<ReceiptPage/>} />
-          <Route path="/settings/receipts/create" element={<ReceiptCreatePage/>} />
-          <Route path="/settings/receipts/:id/edit" element={<ReceiptCreatePage />} />
+          <Route path="/settings/recipes" element={<RecipePage/>} />
+          <Route path="/settings/recipes/create" element={<RecipeCreatePage/>} />
+          <Route path="/settings/recipes/:id/edit" element={<RecipeCreatePage />} />
           <Route path="/settings/device-settings" element={<DeviceSettingsPage />} />
           <Route path="/settings/device-settings/create" element={<DeviceSettingCreatePage/>} />
           <Route path="/settings/device-settings/:id/edit" element={<DeviceSettingCreatePage />} />
