@@ -172,7 +172,7 @@ const TaskCard: React.FC<Props> = ({ record }) => {
                 </div>
               </div>
             )}
-
+            
             {!hasError && (
               <div>
                 <div className="text-xs text-[var(--text-secondary)] mb-1">Текущий статус</div>
