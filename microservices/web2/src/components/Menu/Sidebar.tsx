@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ProfileAction from './header/ProfileAction';
 import LogoutAction from './header/LogoutAction';
@@ -20,11 +20,11 @@ const menuItems = [
     roles: ['admin'],
     isSection: true,
     children: [
-      { path: '/settings/bunkers', label: 'Бункеры', icon: 'fa-solid fa-warehouse' },
-      { path: '/settings/seeds', label: 'Семена', icon: 'fa-solid fa-seedling' },
-      { path: '/settings/placements', label: 'Расположение', icon: 'fa-solid fa-link' },
-      { path: '/settings/recipes', label: 'Рецепты', icon: 'fa-solid fa-file-contract' },
-      { path: '/settings/device-settings', label: 'Настройки устройства', icon: 'fa-solid fa-sliders' },
+      { path: '/settings/bunkers', label: 'Бункеры', icon: 'fa-solid fa-warehouse', roles: ['admin'] },
+      { path: '/settings/seeds', label: 'Семена', icon: 'fa-solid fa-seedling', roles: ['admin'] },
+      { path: '/settings/placements', label: 'Расположение', icon: 'fa-solid fa-link', roles: ['admin'] },
+      { path: '/settings/recipes', label: 'Рецепты', icon: 'fa-solid fa-file-contract', roles: ['admin'] },
+      { path: '/settings/device-settings', label: 'Настройки устройства', icon: 'fa-solid fa-sliders', roles: ['admin'] },
     ]
   },
 
@@ -44,8 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { role, logout } = useAuth();
-  const navigate = useNavigate();
+  const { role } = useAuth();
 
   if (!role) {
     throw new Error('User ID is required');

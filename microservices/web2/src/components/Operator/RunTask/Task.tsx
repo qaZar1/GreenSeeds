@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import type { TaskRecord } from "../../../types/task";
-import { useWSConnection } from "../../hooks/useRobotWS";
+import { useRobotWS } from "../../hooks/useRobotWS";
 import { useAuth } from "../../../context/AuthContext";
 import ActionButton from "../../utils/AсtionButton";
 import { usePageHeader } from "../../../context/HeaderContext";
@@ -11,446 +11,274 @@ type Props = {
   record: TaskRecord;
 };
 
-const STEP_LABELS = [
-  "Ожидание",
-  "Посев",
-  "Фото",
-  "Контроль",
-  "Завершение",
-];
+const STEP_LABELS = ["Ожидание", "Посев", "Фото", "Контроль", "Возврат"];
 
 const STEP_INDEX: Record<string, number> = {
   WAIT_READY: 0,
-  "STAND BY": 0,
-
   BEGIN: 1,
-
   PHOTO: 2,
-
   CONTROL: 3,
-
-  PROCESS: 4,
-
-  RETURN_DONE: 4,
-  DONE: 4,
+  RETURN: 4,
 };
 
-const getHumanStatus = (
-  status: string,
-  beginState: string,
-  dots: string,
-) => {
-
-  if (beginState === "error") {
-    return "Ошибка";
-  }
-
-  if (status === "DONE" || status === "END") {
-    return "Завершено";
-  }
-
-  if (beginState === "running") {
-    return `Выполнение${dots}`;
-  }
-
-  if (beginState === "manual") {
-    return "Ручной режим";
-  }
-
-  return "Ожидание";
+const STEP_TITLES: Record<string, string> = {
+  WAIT_READY: "Ожидание готовности",
+  BEGIN: "Посев",
+  PHOTO: "Получение фото",
+  CONTROL: "Контроль качества",
+  RETURN: "Возврат каретки",
 };
 
-const getStatusColor = (
-  beginState: string,
-) => {
-
-  if (beginState === "running") {
-    return "text-[var(--status-info-text)]";
-  }
-
-  if (beginState === "done") {
-    return "text-[var(--status-success-text)]";
-  }
-
-  if (beginState === "error") {
-    return "text-[var(--status-danger-text)]";
-  }
-
-  if (beginState === "manual") {
-    return "text-[var(--status-warning-text)]";
-  }
-
-  return "text-[var(--text-secondary)]";
+const ERROR_TITLES: Record<string, string> = {
+  DEVICE: "Ошибка устройства",
+  USER: "Остановлено пользователем",
+  INTERNAL: "Внутренняя ошибка",
+  AI: "Ошибка анализа",
+  CAMERA: "Ошибка камеры",
 };
 
-const TaskCard: React.FC<Props> = ({
-  record,
-}) => {
-
-  usePageHeader(
-    "Выполнение задания",
-    "Управление процессом выполнения",
-  );
-
-  if (!record) {
-    return null;
-  }
-
+const TaskCard: React.FC<Props> = ({ record }) => {
+  usePageHeader("Выполнение задания", "Управление процессом выполнения");
   const { token } = useAuth();
 
   const {
-    sendMessage,
-    stopProcess,
-    rawStatus,
-    isConnected,
-    beginState,
-    startBegin,
+    startPlanting,
+    stopPlanting,
+    setReady,
+    step,
+    message,
+    progress,
     iteration,
     error,
-    deviceError,
-    isFullyDisabled,
-    message,
-  } = useWSConnection(token);
-
-  const isManualMode = beginState === "manual";
+    done,
+    stopped,
+    connection,
+    isConnected,
+    hasError,
+    isRunning,
+    logs,
+  } = useRobotWS(token);
 
   const [dots, setDots] = useState("");
   const [isExtraModeModalOpen, setIsExtraModeModalOpen] = useState(false);
+  
+  const leftColRef = useRef<HTMLDivElement>(null);
+  const [rightColHeight, setRightColHeight] = useState<number | string>("auto");
+
+  const effectiveStep = (hasError && error?.stage) ? error.stage : step;
+  const currentStep = STEP_INDEX[effectiveStep || "WAIT_READY"] ?? 0;
+  const isDisconnected = connection !== "connected";
+  
+  const canStop = isConnected && isRunning && !stopped;
+  const canStart = isConnected && !isRunning && !stopped;
 
   useEffect(() => {
-
-    if (beginState !== "running") {
+    if (!isRunning) {
       setDots("");
       return;
     }
-
     const interval = setInterval(() => {
-
-      setDots((prev) => {
-
-        if (prev.length >= 3) {
-          return "";
-        }
-
-        return prev + ".";
-      });
-
+      setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
     }, 500);
-
     return () => clearInterval(interval);
+  }, [isRunning]);
 
-  }, [beginState]);
+  useEffect(() => {
+    const updateHeight = () => {
+      if (leftColRef.current) {
+        setRightColHeight(leftColRef.current.offsetHeight);
+      }
+    };
 
-  const hiddenMessages = [
-    "WAIT",
-    "STAND BY",
-    "READY",
-    "OK",
-  ];
+    updateHeight();
+    
+    const observer = new ResizeObserver(updateHeight);
+    if (leftColRef.current) {
+      observer.observe(leftColRef.current);
+    }
 
-  const shouldShowMessage =
-    message &&
-    !hiddenMessages.includes(message);
+    window.addEventListener("resize", updateHeight);
 
-  const canStart =
-    isConnected &&
-    !isFullyDisabled &&
-    ["idle", "error", "done"].includes(beginState);
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      observer.disconnect();
+    };
+  }, [record, logs.length, effectiveStep, done, stopped, hasError, message]);
 
-  const canStop =
-    !isFullyDisabled &&
-    beginState === "running";
+  const getStatusText = () => {
+    if (done) return "Завершено";
+    if (stopped) return "Остановлено";
+    if (hasError && error?.stage) return `${STEP_TITLES[error.stage]}: Ошибка`;
+    if (effectiveStep) return `${STEP_TITLES[effectiveStep]}${dots}`;
+    return "Ожидание";
+  };
+
+  const getStatusColor = () => {
+    if (done) return "text-[var(--status-success-text)]";
+    if (stopped) return "text-yellow-500";
+    return "text-[var(--status-info-text)]";
+  };
 
   return (
-    <>
-      <div
-        className="
-          w-full
-          max-w-[720px]
-          mx-auto
+  <>
+    <div className="max-w-[1400px] mx-auto">
+      <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-4 items-start">
 
-          bg-[var(--bg-card)]
-          border border-[var(--border-color)]
-          shadow-sm
-          rounded-[16px]
-
-          p-[16px] sm:p-5
-          space-y-5
-        "
-      >
-
-        {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[12px]">
-
-          <div>
-
-            <div className="text-lg font-semibold text-[var(--text-primary)]">
-              Задание №{record.number}
-            </div>
-
-            <div className="text-xs text-[var(--text-secondary)]">
-              Смена {record.shift}
-            </div>
-
-          </div>
-
-          <div className="flex items-center gap-2">
-
-            <div
-              className={`
-                w-2.5 h-2.5 rounded-full
-                ${
-                  isConnected
-                    ? "bg-[var(--status-success-text)]"
-                    : "bg-[var(--status-danger-text)]"
-                }
-              `}
-            />
-
-            <span className="text-xs text-[var(--text-secondary)]">
-              {isConnected
-                ? "Подключено"
-                : "Нет связи"}
-            </span>
-
-          </div>
-
-        </div>
-
-        {/* SEED */}
-        <div className="bg-[var(--bg-page)] rounded-xl p-3 text-center">
-
-          <div className="text-xs text-[var(--text-secondary)]">
-            СЕМЕНА
-          </div>
-
-          <div className="font-medium uppercase break-words text-[var(--text-primary)]">
-            {record.seed_ru}
-          </div>
-
-        </div>
-
-        {/* STEPPER */}
-        <Stepper
-          steps={STEP_LABELS}
-          current={STEP_INDEX[rawStatus] ?? 0}
-        />
-
-        {/* MANUAL MODE */}
-        {isManualMode ? (
-          <div className="rounded-xl border border-yellow-500 bg-yellow-500/10 p-4 text-center">
-
-            <div className="text-lg font-semibold text-yellow-500">
-              Включен ручной режим
-            </div>
-
-            <div className="text-sm text-[var(--text-secondary)] mt-1">
-              Устройство не принимает внешние команды
-            </div>
-
-          </div>
-        ) : (
-          <>
-            {/* STATUS */}
-            <div className="text-center">
-
+        <div 
+          ref={leftColRef}
+          className="bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm rounded-[16px] p-4 sm:p-5 space-y-5"
+        >
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <div className="text-lg font-semibold text-[var(--text-primary)]">
+                Задание №{record.number}
+              </div>
               <div className="text-xs text-[var(--text-secondary)]">
-                Текущий статус
+                Смена {record.shift}
               </div>
-
-              <div
-                className={`
-                  text-lg
-                  font-semibold
-                  ${getStatusColor(beginState)}
-                `}
-              >
-                {getHumanStatus(
-                  rawStatus,
-                  beginState,
-                  dots,
-                )}
-              </div>
-
-              {shouldShowMessage &&
-                beginState !== "error" && (
-                  <div className="text-[var(--text-secondary)] text-sm mt-1">
-                    {message}
-                  </div>
-              )}
-
-              {/* DISCONNECTED */}
-              {deviceError === "DISCONNECTED" && (
-                <div className="mt-3 p-4 rounded-xl bg-[var(--status-danger-bg)] border-2 border-[var(--status-danger-text)]">
-
-                  <div className="flex items-start gap-3">
-
-                    <span className="text-2xl">
-                      🔌
-                    </span>
-
-                    <div className="flex-1">
-
-                      <div className="text-[var(--status-danger-text)] font-bold text-lg">
-                        Устройство отключено
-                      </div>
-
-                      <div className="text-sm text-[var(--status-danger-text)] mt-1 break-words">
-                        {error ||
-                          "Потеряна связь с устройством. Проверьте кабель питания и USB-подключение."}
-                      </div>
-
-                      <div className="text-xs text-[var(--status-danger-text)] mt-2 bg-[var(--bg-card)] p-2 rounded">
-                        💡 После восстановления подключения интерфейс разблокируется автоматически
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                </div>
-              )}
-
-              {/* ERROR */}
-              {beginState === "error" &&
-                error &&
-                !deviceError && (
-                  <div className="mt-3 p-4 rounded-xl bg-[var(--status-danger-bg)] border border-[var(--status-danger-text)]">
-
-                    <div className="flex flex-col items-center gap-2 text-center">
-
-                      <div>
-
-                        <div className="text-[var(--status-danger-text)] font-semibold">
-                          Ошибка выполнения
-                        </div>
-
-                        <div className="text-sm text-[var(--status-danger-text)] mt-1 break-words">
-                          {error}
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-              )}
-
-              {beginState === "done" && (
-                <div className="text-[var(--status-success-text)] text-sm mt-1">
-                  Операция завершена
-                </div>
-              )}
-
-              {iteration !== null && (
-                <div className="text-xs text-[var(--text-secondary)] mt-1">
-                  Итерация: {iteration}
-                </div>
-              )}
-
             </div>
-
-            {/* ACTIONS */}
-            <div className="flex flex-col sm:flex-row gap-2">
-
-              <ActionButton
-                onClick={() => setIsExtraModeModalOpen(true)}
-                disabled={!canStart}
-                className="
-                  flex-1
-                  !bg-[var(--color-primary)]
-                  hover:!bg-[var(--color-primary-hover)]
-                "
-              >
-                {deviceError === "DISCONNECTED"
-                  ? "Ожидание..."
-                  : "Начать"}
-              </ActionButton>
-
-              <ActionButton
-                onClick={() => stopProcess()}
-                disabled={!canStop}
-                className="
-                  flex-1
-                  !bg-red-500
-                  hover:!bg-red-600
-                "
-              >
-                Стоп
-              </ActionButton>
-
-              <ActionButton
-                onClick={() =>
-                  sendMessage({
-                    type: "SET STATUS READY",
-                  })
-                }
-                disabled={isFullyDisabled}
-                className="
-                  flex-1
-                  !bg-[var(--bg-secondary)]
-                  hover:!bg-[var(--bg-hover)]
-                  !text-[var(--text-primary)]
-                  text-[13px]
-                  whitespace-nowrap
-                "
-              >
-                DEV: READY
-              </ActionButton>
-
+            <div className="flex items-center gap-2">
+              <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? "bg-[var(--status-success-text)]" : "bg-[var(--status-danger-text)]"}`} />
+              <span className="text-xs text-[var(--text-secondary)]">
+                {isConnected ? "Подключено" : "Нет связи"}
+              </span>
             </div>
-          </>
-        )}
-
-        {/* FOOTER */}
-        {isFullyDisabled && (
-          <div className="text-center text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)] break-words px-[4px]">
-            {deviceError === "DISCONNECTED"
-              ? "Все функции заблокированы до восстановления связи"
-              : "Интерфейс временно недоступен"}
           </div>
-        )}
+
+          {/* Seed Info */}
+          <div className="bg-[var(--bg-page)] rounded-xl p-3 text-center">
+            <div className="text-xs text-[var(--text-secondary)] uppercase">Семена</div>
+            <div className="font-medium text-[var(--text-primary)] break-words">{record.seed_ru}</div>
+          </div>
+
+          {/* Stepper */}
+          <Stepper 
+            steps={STEP_LABELS} 
+            current={currentStep} 
+            completed={done} 
+            errorStepIndex={hasError && error?.stage ? STEP_INDEX[error.stage] : null}
+          />
+
+          {/* Main Content */}
+          <div className="text-center space-y-4">
+            {hasError && (
+              <div className="p-4 rounded-xl bg-[var(--status-danger-bg)] border border-[var(--status-danger-text)]">
+                <div className="font-bold text-[var(--status-danger-text)]">
+                  {ERROR_TITLES[error?.code || ""] || "Ошибка"}
+                </div>
+                <div className="text-sm mt-1 text-[var(--status-danger-text)]">
+                  {error?.message}
+                </div>
+              </div>
+            )}
+            
+            {!hasError && (
+              <div>
+                <div className="text-xs text-[var(--text-secondary)] mb-1">Текущий статус</div>
+                <div className={`text-lg font-bold ${getStatusColor()}`}>{getStatusText()}</div>
+              </div>
+            )}
+
+            {progress && (
+              <div className="mt-2">
+                <div className="flex justify-between text-xs text-[var(--text-secondary)] mb-1">
+                  <span>Итерация {progress.current} / {progress.total}</span>
+                  <span>{progress.percent}%</span>
+                </div>
+                <div className="h-2 bg-[var(--bg-page)] rounded-full overflow-hidden">
+                  <div className="h-full bg-[var(--color-primary)] transition-all duration-300" style={{ width: `${progress.percent}%` }} />
+                </div>
+              </div>
+            )}
+
+            {!progress && iteration !== null && (
+              <div className="text-xs text-[var(--text-secondary)]">Итерация: {iteration}</div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <ActionButton onClick={() => setIsExtraModeModalOpen(true)} disabled={!canStart} className="flex-1 !bg-[var(--color-primary)] hover:!bg-[var(--color-primary-hover)]">
+              {isDisconnected ? "Нет связи" : "Начать"}
+            </ActionButton>
+            <ActionButton onClick={stopPlanting} disabled={!canStop} className="flex-1 !bg-red-500 hover:!bg-red-600">Стоп</ActionButton>
+            <ActionButton onClick={setReady} disabled={!isConnected} className="flex-1 !bg-[var(--bg-secondary)] hover:!bg-[var(--bg-hover)] !text-[var(--text-primary)] text-[13px] whitespace-nowrap">DEV: READY</ActionButton>
+          </div>
+        </div>
+
+        <div 
+          className="bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm rounded-[16px] p-4 sm:p-5 flex flex-col overflow-hidden"
+          style={{ height: rightColHeight }}
+        >
+          <div className="flex items-center justify-between mb-4 shrink-0">
+            <h3 className="font-semibold text-[var(--text-primary)]">Журнал событий</h3>
+            <span className="text-xs text-[var(--text-secondary)]">{logs.length} записей</span>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto min-h-0 pr-2 space-y-2">
+            {logs.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-[var(--text-secondary)] opacity-70">Нет событий</div>
+            ) : (
+              logs
+                .slice()
+                .reverse()
+                .map((log, index) => {
+                  const uniqueKey = `${log.id}-${index}`;
+                  
+                  const isError = log.event === "ERROR";
+                  const isDone = log.event === "DONE";
+                  const isStop = log.event === "STOP";
+
+                  return (
+                    <div key={uniqueKey} className="p-3 rounded-xl bg-[var(--bg-page)] border border-[var(--border-color)]">
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${isError ? "bg-red-500" : isDone ? "bg-green-500" : isStop ? "bg-yellow-500" : "bg-[var(--color-primary)]"}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-sm ${isError ? "text-red-500" : "text-[var(--text-primary)]"}`}>{log.message}</div>
+                          <div className="text-xs text-[var(--text-secondary)] mt-1">
+                            {log.time}
+                            {log.step && <span className="ml-2">• {STEP_TITLES[log.step]}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+        </div>
 
       </div>
+    </div>
 
-      <FormModal
-        isOpen={isExtraModeModalOpen}
-        title="Запуск задания"
-        onClose={() => setIsExtraModeModalOpen(false)}
-        onSubmit={(data) => {
-
-          setIsExtraModeModalOpen(false);
-
-          startBegin({
-            ...record,
-            extraMode: data.extraMode === "true",
-          });
-
-        }}
-        fields={[
-          {
-            name: "extraMode",
-            label: "Дополнительный режим",
-            type: "select",
-            required: true,
-            options: [
-              {
-                label: "Выключен",
-                value: false,
-              },
-              {
-                label: "Включен",
-                value: true,
-              },
-            ],
-          },
-        ]}
-        initialValues={{
-          extraMode: false,
-        }}
-      />
-    </>
-  );
+    <FormModal
+      isOpen={isExtraModeModalOpen}
+      title="Запуск задания"
+      onClose={() => setIsExtraModeModalOpen(false)}
+      onSubmit={(data) => {
+        setIsExtraModeModalOpen(false);
+        startPlanting({
+          ...record,
+          extraMode: data.extraMode === true || data.extraMode === "true",
+        });
+      }}
+      fields={[
+        {
+          name: "extraMode",
+          label: "Дополнительный режим",
+          type: "select",
+          required: true,
+          options: [
+            { label: "Выключен", value: false },
+            { label: "Включен", value: true },
+          ],
+        },
+      ]}
+      initialValues={{ extraMode: false }}
+    />
+  </>
+);
 };
 
 export default TaskCard;

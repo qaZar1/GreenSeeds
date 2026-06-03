@@ -22,7 +22,6 @@ const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -51,7 +50,6 @@ const UsersPage: React.FC = () => {
   }, []);
 
   const handleAddUser = () => {
-    setEditingUser(null);
     setIsModalOpen(true);
   };
 

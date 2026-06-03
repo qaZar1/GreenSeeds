@@ -26,11 +26,6 @@ func NewAPI(url string) *API {
 }
 
 func (a *API) RequestAI(seed string, buf bytes.Buffer) (models.ResponseAPI, error) {
-	if seed == "Amaranth" {
-		return models.ResponseAPI{
-			PercentOfMatch: 1,
-		}, nil
-	}
 	req, err := http.NewRequest(POST, a.url, &buf)
 	if err != nil {
 		log.Err(err).Msg("Cannot create request")
@@ -55,12 +50,6 @@ func (a *API) RequestAI(seed string, buf bytes.Buffer) (models.ResponseAPI, erro
 
 	var response models.ResponseAPI
 	if err := json.Unmarshal(data, &response); err != nil {
-		log.Err(err).Msg("Cannot create request")
-		return models.ResponseAPI{}, err
-	}
-
-	response, err = a.CheckAI(seed, buf)
-	if err != nil {
 		log.Err(err).Msg("Cannot create request")
 		return models.ResponseAPI{}, err
 	}

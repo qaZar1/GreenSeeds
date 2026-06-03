@@ -10,15 +10,12 @@ const (
 	TypeError     WSMessageType = "ERROR"
 	TypeSetStatus WSMessageType = "SET STATUS READY"
 	TypeAuth      WSMessageType = "AUTH"
+	TypeStop      WSMessageType = "STOP"
 
-	TypeRetry WSMessageType = "RETRY"
-	TypeSkip  WSMessageType = "SKIP"
-	TypeAbort WSMessageType = "ABORT"
-
-	TypeState   = "STATE"   // шаги процесса
-    TypeDevice  = "DEVICE"  // статус устройства
-    TypeAction  = "ACTION"  // запрос действия
-    TypeEnd     = "END"
+	TypeState  = "STATE"  // шаги процесса
+	TypeDevice = "DEVICE" // статус устройства
+	TypeAction = "ACTION" // запрос действия
+	TypeEnd    = "END"
 )
 
 type State int

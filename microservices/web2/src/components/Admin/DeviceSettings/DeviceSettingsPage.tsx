@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePageHeader } from "../../../context/HeaderContext";
 import { api } from "../../../api/apiProvider";
 import toast from "react-hot-toast";

@@ -6,7 +6,6 @@ func (m *Manager) TryAcquireSession(sessiongId string) bool {
 
 	if m.activeSessionId == "" {
 		m.activeSessionId = sessiongId
-		m.log.Info().Msg("session acquired")
 		return true
 	}
 
@@ -19,7 +18,6 @@ func (m *Manager) ReleaseSession(sessionId string) {
 
 	if m.activeSessionId == sessionId {
 		m.activeSessionId = ""
-		m.log.Info().Msg("session released")
 	}
 }
 

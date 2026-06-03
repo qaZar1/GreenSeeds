@@ -10,7 +10,6 @@ import FormModal from "../../utils/FormModal";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
 import ResponsiveTable from "../../utils/ResponsiveTable";
-import AddButton from "../../utils/AсtionButton";
 import ActionButton from "../../utils/AсtionButton";
 
 const AssignmentsPage: React.FC = () => {

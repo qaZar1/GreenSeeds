@@ -1,15 +1,19 @@
 type Props = {
   steps: string[];
   current: number;
+  completed?: boolean;
+  errorStepIndex?: number | null;
 };
 
 export function Stepper({
   steps,
   current,
+  completed = false,
+  errorStepIndex = null,
 }: Props) {
 
   // ================= MOBILE =================
-
+  
   const prev =
     current > 0
       ? {
@@ -25,6 +29,8 @@ export function Stepper({
           label: steps[current + 1],
         }
       : null;
+      
+  const isMobileError = errorStepIndex !== null && errorStepIndex === current;
 
   return (
     <div className="w-full select-none">
@@ -39,8 +45,12 @@ export function Stepper({
       >
         {steps.map((step, i) => {
 
-          const done = i < current;
-          const active = i === current;
+          const isErrored = errorStepIndex !== null && i === errorStepIndex;
+          const done = completed
+            ? i <= current
+            : i < current;
+
+          const active = !completed && !isErrored && i === current;
 
           return (
             <div
@@ -82,19 +92,21 @@ export function Stepper({
                   border
 
                   ${
-                    done
-                      ? "border-[var(--color-primary)] bg-[var(--bg-card)] text-[var(--color-primary)] border-[var(--color-primary)]"
-                      : active
-                        ? "border-[var(--color-primary)] text-[var(--color-primary)] bg-[var(--bg-card)]"
-                        : "rounded-full border border-[var(--border-color)] text-[var(--text-secondary)] bg-[var(--bg-page)] bg-[var(--bg-card)]"
+                    isErrored
+                      ? "border-red-500 bg-red-50 text-red-500"
+                      : done
+                        ? "border-[var(--color-primary)] bg-[var(--bg-card)] text-[var(--color-primary)]"
+                        : active
+                          ? "border-[var(--color-primary)] text-[var(--color-primary)] bg-[var(--bg-card)]"
+                          : "border border-[var(--border-color)] text-[var(--text-secondary)] bg-[var(--bg-card)]"
                   }
                 `}
               >
-                {done
-                  ? (
-                    <i className="fas fa-check text-[11px]" />
-                  )
-                  : i + 1}
+                {isErrored
+                  ? <i className="fas fa-exclamation text-[11px]" />
+                  : done
+                    ? <i className="fas fa-check text-[11px]" />
+                    : i + 1}
               </div>
 
               {/* текст */}
@@ -107,9 +119,11 @@ export function Stepper({
                   leading-[1.3]
 
                   ${
-                    active
-                      ? "text-[var(--text-primary)]"
-                      : "text-[var(--text-secondary)]"
+                    isErrored
+                      ? "text-red-500 font-medium"
+                      : active || done
+                        ? "text-[var(--text-primary)]"
+                        : "text-[var(--text-secondary)]"
                   }
                 `}
               >
@@ -135,39 +149,32 @@ export function Stepper({
                   h-[26px]
                   rounded-full
                   border
-                  border-[var(--border-color)]
+                  border-[var(--color-primary)]
 
-                  text-[var(--text-secondary)]
-                  bg-[var(--bg-page)]
+                  text-[var(--color-primary)]
+                  bg-[var(--bg-card)]
 
                   flex
                   items-center
                   justify-center
 
                   text-[11px]
-                  opacity-80
                   shrink-0
                 "
               >
-                {prev.index + 1}
+                <i className="fas fa-check text-[9px]" />
               </div>
 
-              <div className="w-[36px] h-[2px] bg-[var(--color-primary)]/50" />
+              <div className="w-[36px] h-[2px] bg-[var(--color-primary)]" />
             </>
           )}
 
           {/* current */}
           <div
-            className="
+            className={`
               w-[42px]
               h-[42px]
               rounded-full
-
-              border-2
-              border-[var(--color-primary)]
-
-              bg-[var(--bg-card)]
-              text-[var(--color-primary)]
 
               flex
               items-center
@@ -178,13 +185,25 @@ export function Stepper({
 
               shrink-0
               z-10
-            "
+
+              ${
+                isMobileError
+                  ? "border-2 border-red-500 bg-red-50 text-red-500"
+                  : completed
+                    ? "border-2 border-[var(--color-primary)] bg-[var(--bg-card)] text-[var(--color-primary)]"
+                    : "border-2 border-[var(--color-primary)] bg-[var(--bg-card)] text-[var(--color-primary)]"
+              }
+            `}
           >
-            {current + 1}
+            {isMobileError
+              ? <i className="fas fa-exclamation text-[14px]" />
+              : completed
+                ? <i className="fas fa-check text-[14px]" />
+                : current + 1}
           </div>
 
           {/* next */}
-          {next && (
+          {next && !completed && (
             <>
               <div className="w-[36px] h-[2px] bg-[var(--border-color)]" />
 
@@ -217,15 +236,21 @@ export function Stepper({
 
         {/* current label */}
         <div className="mt-[12px] text-center">
-
-          <div className="text-[14px] font-medium text-[var(--text-primary)]">
-            {steps[current]}
+          <div className={`text-[14px] font-medium ${isMobileError ? "text-red-500" : "text-[var(--text-primary)]"}`}>
+            {isMobileError
+              ? `Ошибка: ${steps[current]}`
+              : completed
+                ? "Завершено"
+                : steps[current]}
           </div>
 
           <div className="text-[12px] text-[var(--text-secondary)] mt-[2px]">
-            Шаг {current + 1} из {steps.length}
+            {isMobileError
+              ? "Требуется внимание"
+              : completed
+                ? `Все ${steps.length} шагов выполнены`
+                : `Шаг ${current + 1} из ${steps.length}`}
           </div>
-
         </div>
 
       </div>

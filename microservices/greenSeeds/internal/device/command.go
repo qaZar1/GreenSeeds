@@ -7,28 +7,46 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
 )
 
-func (c *DeviceClient) Ping(sessionId string) error {
+func (c *DeviceClient) Boot(
+	sessionId string,
+	sendResponse bool,
+) error {
 	defer c.RefreshPolling()
 
 	matchResults := func(data []byte) MatchResult {
 		str := strings.TrimSpace(string(data))
+
 		c.Manager.parseStatus(str)
+
 		switch {
-		case strings.Contains(str, "ACK BOOT"):
-			return MatchResult{Matched: true, Done: true}
+		case strings.Contains(str, ACK_BOOT):
+			return MatchResult{
+				Matched: true,
+				Done:    true,
+			}
 		}
+
 		return MatchResult{}
 	}
 
-	ch, err := c.Manager.Do(c.ctx, []byte("BOOT"+delimeterStr), matchResults, 10, sessionId)
+	ch, err := c.Manager.Do(
+		c.ctx,
+		[]byte(BOOT+delimeterStr),
+		matchResults,
+		10,
+		sessionId,
+	)
 	if err != nil {
-		response := models.WSResponse{
-			Type:    BOOT,
-			Message: err.Error(),
-		}
-		select {
-		case c.RespCh <- response:
-		default:
+		if sendResponse {
+			response := models.WSResponse{
+				Type:    BOOT,
+				Message: err.Error(),
+			}
+
+			select {
+			case c.RespCh <- response:
+			default:
+			}
 		}
 
 		return err
@@ -40,17 +58,21 @@ func (c *DeviceClient) Ping(sessionId string) error {
 			if !ok {
 				return fmt.Errorf("channel closed")
 			}
-			respStr := string(resp)
-			response := models.WSResponse{
-				Type:   BOOT,
-				Status: respStr,
-			}
-			select {
-			case c.RespCh <- response:
-			default:
+
+			if sendResponse {
+				response := models.WSResponse{
+					Type:   BOOT,
+					Status: string(resp),
+				}
+
+				select {
+				case c.RespCh <- response:
+				default:
+				}
 			}
 
 			return nil
+
 		case <-c.ctx.Done():
 			return nil
 		}
@@ -83,17 +105,9 @@ func (c *DeviceClient) Begin(sessionId string, command string, iter int) error {
 	for resp := range ch {
 		respStr := string(resp)
 
-		respArr := strings.Split(respStr, " ")
-		progress := strings.Split(respArr[1], "/")
-
 		response := models.WSResponse{
-			Type:      "STATE",
-			Iteration: iter,
-			Data: map[string]string{
-				"shift":  progress[0],
-				"number": progress[1],
-				"turn":   progress[2],
-			},
+			Type:   "STATE",
+			Status: respStr,
 		}
 
 		select {
@@ -111,31 +125,40 @@ func (c *DeviceClient) Return(sessionId string) error {
 		c.Manager.parseStatus(str)
 
 		switch {
-		case strings.Contains(str, "STAND BY"):
+		case strings.Contains(str, STAND_BY):
 			return MatchResult{Matched: true, Done: true}
 		}
 		return MatchResult{}
 	}
 
-	ch, err := c.Manager.Do(c.ctx, []byte("RETURN"+delimeterStr), matchResults, 10, sessionId)
+	ch, err := c.Manager.Do(c.ctx, []byte(RETURN+delimeterStr), matchResults, 10, sessionId)
 	if err != nil {
 		return err
 	}
 
-	for resp := range ch {
-		respStr := string(resp)
-		response := models.WSResponse{
-			Type:   RETURN,
-			Status: respStr,
-		}
-
+	for {
 		select {
-		case c.RespCh <- response:
-		default:
+		case resp, ok := <-ch:
+			if !ok {
+				return fmt.Errorf("channel closed")
+			}
+
+			respStr := string(resp)
+			response := models.WSResponse{
+				Type:   RETURN,
+				Status: respStr,
+			}
+
+			select {
+			case c.RespCh <- response:
+			default:
+			}
+
+			return nil
+		case <-c.ctx.Done():
+			return nil
 		}
 	}
-
-	return nil
 }
 
 func (c *DeviceClient) GetStatus() {
@@ -240,13 +263,13 @@ func (c *DeviceClient) CalibrationHandshake(sessionId string) error {
 		str := strings.TrimSpace(string(data))
 		c.Manager.parseStatus(str)
 		switch {
-		case strings.Contains(str, "ACK BOOT"):
+		case strings.Contains(str, ACK_BOOT):
 			return MatchResult{Matched: true, Done: true}
 		}
 		return MatchResult{}
 	}
 
-	ch, err := c.Manager.Do(c.ctx, []byte("BOOT"+delimeterStr), matchResults, 10, sessionId)
+	ch, err := c.Manager.Do(c.ctx, []byte(BOOT+delimeterStr), matchResults, 10, sessionId)
 	if err != nil {
 		response := models.WSResponse{
 			Type:    BOOT,
@@ -308,8 +331,6 @@ func (c *DeviceClient) RunGcode(gcode string, sessionId string) error {
 			return nil
 		}
 	}
-
-	return nil
 }
 
 func (c *DeviceClient) Stop(sessionId string) error {

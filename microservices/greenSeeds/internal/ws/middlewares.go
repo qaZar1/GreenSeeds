@@ -8,15 +8,14 @@ import (
 	"github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/repository"
 )
 
-
 func WsAuthMiddleware() MiddlewareFunc {
 	return func(next HandlerFunc) HandlerFunc {
 		return func(s *Server, client *Client, req models.WSRequest) {
-			if !client.IsAuth{
-				client.Send <- errResponse(req.Type, errors.New("Unauthorized"))
+			if !client.IsAuth {
+				EmitError(client, string(req.Type), nil, errors.New("Unauthorized"), "AUTH", 0)
 				return
 			}
-			
+
 			next(s, client, req)
 		}
 	}

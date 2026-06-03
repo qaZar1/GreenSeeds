@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, data } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { usePageHeader } from "../../../context/HeaderContext";
 import { api } from "../../../api/apiProvider";
 import toast from "react-hot-toast";

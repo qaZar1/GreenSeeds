@@ -22,13 +22,20 @@ type Iteration struct {
 	ExtraMode bool
 	IsFailed  bool
 
-	Err     []error
-	LastBuf *bytes.Buffer
+	Err      error
+	ErrStage string
+	LastBuf  *bytes.Buffer
 
 	Report Reports
 
 	Solutions []string
 
-	Success  bool
-	Finished bool
+	Success   bool
+	Finished  bool
+	NeedDosow bool
+
+	Count      int
+	MinDensity int
+	MaxDensity int
+	CountRetry int
 }
