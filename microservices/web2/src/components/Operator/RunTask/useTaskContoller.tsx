@@ -1,11 +1,10 @@
 import { useState } from "react";
 import type { TaskRecord } from "../../../types/task";
 
-export function useTaskController(record: TaskRecord, ws: any) {
+export function useTaskController(record: TaskRecord) {
   const [isRunning, setIsRunning] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [completedAmount, setCompletedAmount] = useState(0);
-  const [bunkers, setBunkers] = useState<any[]>([]);
 
   const requiredAmount = record.required_amount;
 
@@ -33,6 +32,5 @@ export function useTaskController(record: TaskRecord, ws: any) {
     progress,
     handleSuccessStep,
     handleErrorStep,
-    setBunkers,
   };
 }

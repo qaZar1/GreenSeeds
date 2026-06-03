@@ -1,91 +1,123 @@
-import { useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import type { TaskRecord } from "../../types/task";
 
-// ================= TYPES =================
-export type MachineState = {
+export type WSEvent = "STATE" | "ERROR" | "DONE" | "STOP" | "END";
+
+export type WSStep =
+  | "WAIT_READY"
+  | "BEGIN"
+  | "PHOTO"
+  | "CONTROL"
+  | "RETURN";
+
+export type Progress = {
+  current: number;
+  total: number;
+  percent: number;
+};
+
+export type LogEntry = {
+  id: number;
+  time: string;
+  event: WSEvent;
+  step?: WSStep;
+  message: string;
+};
+
+export type WSResponse = {
+  event: WSEvent;
+  step?: WSStep;
+  message?: string;
+  iteration?: number;
+  progress?: Progress;
+  error?: {
+    code: string;
+    stage?: WSStep;
+    message: string;
+  };
+};
+
+type MachineState = {
   connection: "connecting" | "connected" | "disconnected";
-
-  deviceAlive: boolean;
-
-  deviceReady: boolean;
-
-  status: string;
-
+  step: WSStep | null;
   message: string | null;
-
-  beginState: "idle" | "running" | "error" | "done" | "manual";
-
   iteration: number | null;
-
-  error: string | null;
-
-  deviceError:
-    | "DISCONNECTED"
-    | "PORT_ERROR"
-    | "BUSY"
-    | "CALIBRATION"
-    | null;
+  progress: Progress | null;
+  error: {
+    code: string;
+    stage?: WSStep;
+    message: string;
+  } | null;
+  done: boolean;
+  stopped: boolean;
+  isRunning: boolean;
+  logs: LogEntry[];
 };
 
 type Action =
   | { type: "WS_OPEN" }
   | { type: "WS_CLOSE" }
-  | { type: "ACK_BOOT" }
   | {
-      type: "STATUS";
-      status: string;
-      message?: string;
+      type: "STATE";
+      step: WSStep | null;
+      message: string | null;
+      iteration: number | null;
+      progress: Progress | null;
     }
   | {
-      type: "UPDATE_STATE";
-      status: string;
-      message?: string | null;
-      iteration?: number | null;
-      error?: string | null;
-    }
-  | { type: "RESET_ERROR" }
-  | {
-      type: "DEVICE_STATUS";
-      connected: boolean;
-      message?: string;
+      type: "ERROR";
+      step: WSStep | null;
+      error: {
+        code: string;
+        stage?: WSStep;
+        message: string;
+      };
     }
   | {
-      type: "FORCE_IDLE";
-      message?: string | null;
+      type: "DONE";
+      message: string;
+    }
+  | {
+      type: "STOP";
+      message: string;
+    }
+  | {
+      type: "RESET";
+    }
+  | {
+      type: "END";
+      message: string;
     };
 
-// ================= HELPERS =================
-const mapStateToBegin = (
-  status: string,
-): MachineState["beginState"] => {
-
-  if (status === "WAIT_READY") {
-    return "idle";
-  }
-
-  if (status === "DONE") {
-    return "done";
-  }
-
-  if (status === "ERROR") {
-    return "error";
-  }
-  
-  if (status === "MANUAL") {
-    return "manual";
-  }
-
-  return "running";
+const initialState: MachineState = {
+  connection: "connecting",
+  step: null,
+  message: null,
+  iteration: null,
+  progress: null,
+  error: null,
+  done: false,
+  stopped: false,
+  isRunning: false,
+  logs: [],
 };
 
-// ================= REDUCER =================
-export const Reducer = (
-  state: MachineState,
-  action: Action,
-): MachineState => {
+function makeLog(
+  event: WSEvent,
+  message: string,
+  step?: WSStep | null
+): LogEntry {
+  return {
+    id: Date.now() + Math.random(),
+    time: new Date().toLocaleTimeString(),
+    event,
+    step: step ?? undefined,
+    message,
+  };
+}
 
+function reducer(state: MachineState, action: Action): MachineState {
   switch (action.type) {
-
     case "WS_OPEN":
       return {
         ...state,
@@ -95,523 +127,313 @@ export const Reducer = (
     case "WS_CLOSE":
       return {
         ...state,
-
         connection: "disconnected",
-
-        deviceAlive: false,
-
-        deviceReady: false,
+        isRunning: false,
       };
 
-    case "ACK_BOOT":
+    case "RESET":
       return {
-        ...state,
-        deviceAlive: true,
+        ...initialState,
+        connection: state.connection,
+        isRunning: true,
       };
 
-    case "STATUS":
+    case "STATE":
       return {
         ...state,
-
-        deviceReady: action.status === "READY",
-
-        message:
-          action.message ??
-          state.message,
-
-        deviceError:
-          action.message?.includes("Port is nil")
-            ? "PORT_ERROR"
-            : state.deviceError,
-      };
-
-    case "UPDATE_STATE": {
-      const isError =
-        !!action.error;
-
-      return {
-        ...state,
-
-        status: action.status,
-
-        message:
-          action.message ?? state.message,
-
-        iteration:
-          action.iteration ?? state.iteration,
-
-        beginState:
-          isError
-            ? "error"
-            : mapStateToBegin(action.status),
-
-        error:
-          action.error ?? null,
-      };
-    }
-
-    case "FORCE_IDLE":
-      return {
-        ...state,
-
-        status: "WAIT_READY",
-
-        message: action.message ?? null,
-
-        beginState: "idle",
-
-        iteration: null,
-
+        step: action.step,
+        message: action.message,
+        iteration: action.iteration,
+        progress: action.progress,
+        done: false,
+        stopped: false,
         error: null,
-      };
+        isRunning: true,
 
-    case "RESET_ERROR":
+        logs: action.message
+          ? [
+              ...state.logs,
+              makeLog(
+                "STATE",
+                action.message,
+                action.step,
+              ),
+            ]
+          : state.logs,
+      };
+    case "ERROR":
       return {
         ...state,
-        error: null,
+        step: action.step ?? state.step,
+        error: {
+          code: action.error.code,
+          stage: action.error.stage,
+          message: action.error.message,
+        },
+        message: action.error.message,
+        isRunning: false,
+        logs: [
+          ...state.logs,
+          makeLog(
+            "ERROR",
+            action.error.message,
+            action.error.stage ?? action.step,
+          ),
+        ],
       };
 
-    case "DEVICE_STATUS": {
-
-      if (action.connected) {
-        return {
-          ...state,
-
-          deviceError: null,
-
-          error: null,
-
-          deviceAlive: true,
-
-          connection: "connected",
-
-          beginState: "idle",
-        };
-      }
-
+    case "DONE":
       return {
         ...state,
+        done: true,
+        stopped: false,
+        isRunning: true,
+        message: action.message,
 
-        deviceError: "DISCONNECTED",
-
-        deviceAlive: false,
-
-        beginState: "error",
-
-        error:
-          action.message ??
-          "Устройство отключено",
+        logs: [
+          ...state.logs,
+          makeLog(
+            "DONE",
+            action.message,
+          ),
+        ],
       };
-    }
+
+    case "STOP":
+      return {
+        ...state,
+        stopped: true,
+        done: false,
+        isRunning: false,
+        step: null,
+        message: action.message,
+
+        logs: [
+          ...state.logs,
+          makeLog(
+            "STOP",
+            action.message,
+          ),
+        ],
+      };
+
+    case "END":
+      return {
+        ...state,
+        isRunning: false,
+        message: action.message,
+
+        logs: [
+          ...state.logs,
+          makeLog(
+            "END",
+            action.message,
+          ),
+        ],
+      };
 
     default:
       return state;
   }
-};
+}
 
-// ================= HOOK =================
 const WS_URL = "/ws";
 
-export function useWSConnection(
-  token: string | null,
-) {
-
-  const wsRef =
-    useRef<WebSocket | null>(null);
-
-  const isConnectingRef =
-    useRef(false);
-
+export function useRobotWS(token: string | null) {
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queueRef = useRef<any[]>([]);
+  const connectingRef = useRef(false);
 
-  const [state, dispatch] = useReducer(
-    Reducer,
-    {
-      connection: "connecting",
+  const [state, dispatch] = useReducer(reducer, initialState);
 
-      deviceAlive: false,
-
-      deviceReady: false,
-
-      status: "WAIT_READY",
-
-      message: "Ожидание готовности",
-
-      beginState: "idle",
-
-      iteration: null,
-
-      error: null,
-
-      deviceError: null,
-    } as MachineState,
-  );
-
-  const sendMessage = (msg: any) => {
-
-    console.log(
-      "%c[WS OUT]",
-      "color:#4ade80;font-weight:bold",
-      msg,
-    );
-
-    if (
-      wsRef.current?.readyState ===
-      WebSocket.OPEN
-    ) {
-
-      wsRef.current.send(
-        JSON.stringify(msg),
-      );
-
+  const sendMessage = useCallback((data: any) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(data));
       return;
     }
 
-    console.log(
-      "%c[WS QUEUED]",
-      "color:#facc15;font-weight:bold",
-      msg,
-    );
+    queueRef.current.push(data);
+  }, []);
 
-    queueRef.current.push(msg);
-  };
-
-  const startBegin = (
-    record: TaskRecord,
-  ) => {
-
-    if (
-      state.deviceError ===
-      "DISCONNECTED"
-    ) {
+  const connect = useCallback(() => {
+    if (wsRef.current || connectingRef.current) {
       return;
     }
 
-    if (
-      ![
-        "idle",
-        "done",
-        "error",
-      ].includes(state.beginState)
-    ) {
-      return;
-    }
-
-    dispatch({
-      type: "RESET_ERROR",
-    });
-
-    sendMessage({
-      type: "START",
-
-      params: {
-        shift: record.shift,
-
-        number: record.number,
-
-        recipe: record.recipe,
-
-        required_amount:
-          record.required_amount,
-
-        bunker: record.bunker,
-
-        gcode: record.gcode,
-
-        extraMode: record.extraMode ?? false,
-
-        seed: record.seed,
-      },
-    });
-  };
-
-  const stopProcess = () => {
-
-    sendMessage({
-      type: "STOP",
-    });
-  };
-
-  const handleDeviceMessage = (
-    msg: any,
-  ): boolean => {
-
-    if (msg.type !== "DEVICE") {
-      return false;
-    }
-
-    if (
-      msg.status === "ERROR" &&
-      msg.message === "DISCONNECTED"
-    ) {
-
-      dispatch({
-        type: "DEVICE_STATUS",
-
-        connected: false,
-
-        message:
-          "Устройство отключено",
-      });
-
-      return true;
-    }
-
-    if (
-      msg.status === "OK" &&
-      msg.message === "CONNECTED"
-    ) {
-
-      dispatch({
-        type: "DEVICE_STATUS",
-
-        connected: true,
-      });
-
-      return true;
-    }
-
-    return false;
-  };
-
-  const connect = () => {
-
-    if (
-      wsRef.current ||
-      isConnectingRef.current
-    ) {
-      return;
-    }
-
-    isConnectingRef.current = true;
+    connectingRef.current = true;
 
     const ws = new WebSocket(WS_URL);
 
     wsRef.current = ws;
 
     ws.onopen = () => {
-
-      isConnectingRef.current = false;
+      connectingRef.current = false;
 
       dispatch({
         type: "WS_OPEN",
       });
 
-      sendMessage({
-        type: "AUTH",
-
-        token:
-          "Bearer " + token,
-      });
-
-      queueRef.current.forEach((m) => {
-        ws.send(JSON.stringify(m));
-      });
-
-      queueRef.current = [];
-    };
-
-    ws.onmessage = (e) => {
-
-      console.log(
-        "%c[WS RAW IN]",
-        "color:orange;font-weight:bold",
-        e.data,
-      );
-
-      let msg;
-
-      try {
-        msg = JSON.parse(e.data);
-      } catch (err) {
-
-        console.error(
-          "[WS PARSE ERROR]",
-          err,
-        );
-
-        return;
-      }
-
-      console.log(
-        "%c[WS IN]",
-        "color:#60a5fa;font-weight:bold",
-        msg,
-      );
-
-      if (
-        handleDeviceMessage(msg)
-      ) {
-        return;
-      }
-
-      if (
-        msg.type === "AUTH" &&
-        msg.status === "OK"
-      ) {
-
+      if (token) {
         sendMessage({
-          type: "BOOT",
+          type: "AUTH",
+          token: "Bearer " + token,
         });
-
-        sendMessage({
-          type: "STATUS",
-        });
-
-        return;
       }
 
-      if (msg.type === "BOOT") {
-        if (msg.status?.includes("ACK")) {
-          dispatch({
-            type: "ACK_BOOT",
-          });
-        }
-
-        return;
-      }
-
-      if (msg.type === "STATUS") {
-        dispatch({
-          type: "STATUS",
-          status:
-            msg.status ??
-            "UNKNOWN",
-          message:
-            msg.message,
-        });
-
-        return;
-      }
-
-      if (msg.type === "END") {
-
-        dispatch({
-          type: "FORCE_IDLE",
-
-          message:
-            msg.message ??
-            "Остановлено",
-        });
-
-        return;
-      }
-
-      // backend state messages
-      const isProcessMessage = [
-        "STATE",
-        "BEGIN",
-        "PHOTO",
-        "CONTROL",
-        "PROCESS",
-        "END",
-      ].includes(msg.type);
-
-      if (isProcessMessage) {
-
-        dispatch({
-          type: "UPDATE_STATE",
-
-          status:
-            msg.status ??
-            "UNKNOWN",
-
-          message:
-            msg.message ??
-            null,
-
-          iteration:
-            msg.iteration ??
-            msg.Iteration ??
-            null,
-
-          error:
-            msg.status === "ERROR"
-              ? (
-                  msg.message ??
-                  "Ошибка выполнения"
-                )
-              : null,
-        });
-
-        return;
+      while (queueRef.current.length) {
+        const msg = queueRef.current.shift();
+        ws.send(JSON.stringify(msg));
       }
     };
 
     ws.onclose = () => {
-
-      isConnectingRef.current = false;
+      connectingRef.current = false;
+      wsRef.current = null;
 
       dispatch({
         type: "WS_CLOSE",
       });
 
-      wsRef.current = null;
-
-      setTimeout(
-        connect,
-        2000,
-      );
+      reconnectTimerRef.current = setTimeout(() => {
+        connect();
+      }, 2000);
     };
 
     ws.onerror = () => {
       ws.close();
     };
+
+    ws.onmessage = (e) => {
+      let msg: WSResponse;
+      console.log("[RAW IN]", e.data);
+
+      try {
+        msg = JSON.parse(e.data);
+      } catch {
+        return;
+      }
+
+      switch (msg.event) {
+        case "STATE":
+          dispatch({
+            type: "STATE",
+            step: msg.step ?? null,
+            message: msg.message ?? null,
+            iteration: msg.iteration ?? null,
+            progress: msg.progress ?? null,
+          });
+          break;
+
+        case "ERROR":
+          const rawMessage = msg.error?.message;
+          let safeMessage = "Unknown error";
+          
+          if (typeof rawMessage === 'string') {
+              safeMessage = rawMessage;
+          } else if (rawMessage && typeof rawMessage === 'object') {
+              safeMessage = (rawMessage as any).text || JSON.stringify(rawMessage);
+              if (safeMessage === "{}") safeMessage = "Ошибка без описания";
+          }
+
+          dispatch({
+            type: "ERROR",
+            step: msg.step ?? null,
+            error: {
+              code: msg.error?.code ?? "INTERNAL",
+              stage: msg.error?.stage,
+              message: safeMessage,
+            },
+          });
+          break;
+
+        case "DONE":
+          dispatch({
+            type: "DONE",
+            message: msg.message ?? "Done",
+          });
+          break;
+
+        case "STOP":
+          dispatch({
+            type: "STOP",
+            message: msg.message ?? "Stopped",
+          });
+          break;
+        
+        case "END":
+          dispatch({
+            type: "END",
+            message: msg.message ?? "Finished",
+          });
+          break;
+      }
+    };
+  }, [token, sendMessage]);
+
+  const startPlanting = (record: TaskRecord) => {
+    dispatch({
+      type: "RESET",
+    });
+
+    sendMessage({
+      type: "START",
+      params: {
+        shift: record.shift,
+        number: record.number,
+        recipe: record.recipe,
+        required_amount: record.required_amount,
+        bunker: record.bunker,
+        gcode: record.gcode,
+        extraMode: record.extraMode ?? false,
+        seed: record.seed,
+      },
+    });
+  };
+
+  const stopPlanting = () => {
+    sendMessage({
+      type: "STOP",
+    });
+  };
+
+  const setReady = () => {
+    sendMessage({
+      type: "SET STATUS READY",
+    });
   };
 
   useEffect(() => {
-
     connect();
 
     return () => {
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+      }
+
       wsRef.current?.close();
     };
-
-  }, []);
-
-  const isConnected =
-    state.connection ===
-      "connected" &&
-    state.deviceAlive &&
-    state.deviceError !==
-      "DISCONNECTED";
-
-  const isFullyDisabled =
-    state.deviceError ===
-      "DISCONNECTED" ||
-    state.connection ===
-      "disconnected";
+  }, [connect]);
 
   return {
     sendMessage,
+    startPlanting,
+    stopPlanting,
+    setReady,
 
-    startBegin,
+    connection: state.connection,
+    step: state.step,
+    message: state.message,
+    iteration: state.iteration,
+    progress: state.progress,
+    error: state.error,
+    done: state.done,
+    stopped: state.stopped,
+    isRunning: state.isRunning,
 
-    stopProcess,
+    logs: state.logs,
 
-    rawStatus:
-      state.status,
-
-    message:
-      state.message,
-
-    beginState:
-      state.beginState,
-
-    error:
-      state.error,
-
-    deviceError:
-      state.deviceError,
-
-    iteration:
-      state.iteration,
-
-    connectionStatus:
-      state.connection,
-
-    isConnected,
-
-    isFullyDisabled,
+    isConnected: state.connection === "connected",
+    hasError: !!state.error,
   };
 }

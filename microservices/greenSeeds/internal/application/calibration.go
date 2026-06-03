@@ -30,9 +30,8 @@ func (app *App) CalibrationHandshake() (string, error) {
 
 	// 3. Останавливаем фоновый пинг на время сессии
 	app.device.PausePolling()
-	defer app.device.RefreshPolling()
 
-	if err := app.device.CalibrationHandshake(sessionId); err != nil {
+	if err := app.device.Boot(sessionId, false); err != nil {
 		return "", err
 	}
 

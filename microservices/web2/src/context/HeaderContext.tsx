@@ -1,20 +1,17 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
-// 👇 1. Интерфейс для данных хедера
 export interface HeaderConfig {
   title: string;
   subtitle: string;
 }
 
-// 👇 2. Интерфейс для значения контекста (что доступно потребителям)
 interface HeaderContextValue {
   headerConfig: HeaderConfig;
   setHeader: (title: string, subtitle?: string) => void;
   clearHeader: () => void;
 }
 
-// 👇 3. Интерфейс для пропсов провайдера (чтобы исправить ошибку children: any)
 interface HeaderContextProps {
   children: ReactNode;
 }
@@ -29,8 +26,6 @@ export const useHeader = (): HeaderContextValue => {
   return context;
 };
 
-// 👇 4. Типизированный хук для страниц
-// Если заголовок не передан, он просто не обновится (или можно добавить дефолтное поведение)
 export const usePageHeader = (title?: string, subtitle: string = ''): void => {
   const { setHeader, clearHeader } = useHeader();
 

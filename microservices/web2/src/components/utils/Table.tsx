@@ -1,4 +1,3 @@
-import { useState, useMemo } from "react"
 import type { Column } from "../../types/table";
 
 interface TableProps<T> {

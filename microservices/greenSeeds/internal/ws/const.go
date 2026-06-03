@@ -1,35 +1,23 @@
 package ws
 
-import "github.com/qaZar1/GreenSeeds/microservices/greenSeeds/internal/models"
+type EventType string
 
 const (
-	StateWaitingReady models.State = iota
-	StateBegin
-	StatePhoto
-	StateControl
-	StateWaitingReturn
-	StateProcess
-	StateError
-	StateDone
+	EventState EventType = "STATE"
+	EventError EventType = "ERROR"
+	EventDone  EventType = "DONE"
+	EventRetry EventType = "RETRY"
+	EventStop  EventType = "STOP"
+)
 
-	StatusWaitReady = "WAIT_READY"
-	StatusBegin     = "BEGIN"
-	StatusPhoto     = "PHOTO"
-	StatusControl   = "CONTROL"
-	StatusReturn    = "RETURN"
-	StatusError     = "ERROR"
-	StatusDone      = "DONE"
+type Step string
 
-	MessageWaitingReady  = "Ожидание готовности устройства"
-	MessageBegin         = "Начало процесса посева"
-	MessageSeedPlanted   = "Посадка выполнена, переход к фотографированию"
-	MessagePhoto         = "Фотографирование"
-	MessagePhotoDone     = "Фотографирование завершено"
-	MessageControlStart  = "Начало проведения контроля качества"
-	MessageControlEnd    = "Контроль качества завершен"
-	MessageControlFailed = "Контроль качества не пройден"
-	MessageWaitingReturn = "Возврат устройства"
-	MessageReturned      = "Устройство возвращено"
-	MessageError         = "Ошибка"
-	MessageDone          = "Процесс завершен"
+const (
+	StepWaitReady Step = "WAIT_READY"
+	StepBegin     Step = "BEGIN"
+	StepPhoto     Step = "PHOTO"
+	StepControl   Step = "CONTROL"
+	StepProcess   Step = "PROCESS"
+	StepReturn    Step = "RETURN"
+	StepDone      Step = "DONE"
 )

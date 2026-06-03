@@ -94,7 +94,7 @@ func main() {
 		client,
 		repo,
 		cfg.API.URL,
-		log,
+		&log,
 		infra,
 		camera,
 		&opencv,

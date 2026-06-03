@@ -21,7 +21,7 @@ type Server struct {
 	Clients map[*Client]bool
 	dClient *device.DeviceClient
 	mu      sync.RWMutex
-	log     zerolog.Logger
+	log     *zerolog.Logger
 
 	Send chan models.WSResponse
 
@@ -43,7 +43,7 @@ func NewServer(
 	dClient *device.DeviceClient,
 	repo *repository.Repository,
 	url string,
-	log zerolog.Logger,
+	log *zerolog.Logger,
 	infra *infrastructure.Infrastructure,
 	camera camera.ICamera,
 	opencv *opencv.Classification,

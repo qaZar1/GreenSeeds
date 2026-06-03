@@ -6,7 +6,6 @@ import { usePageHeader } from "../../../context/HeaderContext";
 import { api } from "../../../api/apiProvider";
 import toast from "react-hot-toast";
 import FormModal from "../../utils/FormModal";
-import { StatCard } from "../../utils/Card";
 import SproutLoader from "../../utils/Loader/SproutLoader";
 import ErrorState from "../../pages/ErrorState";
 import ActionButton from "../../utils/AсtionButton";

@@ -4,17 +4,17 @@ import (
 	"bytes"
 )
 
-
 type Planting struct {
-	Active       bool
-	Iteration    int
-	MaxIter      int
-	Bunker		 int
+	Active    bool
+	Iteration int
+	MaxIter   int
+	Bunker    int
+	Required  int
 
 	PrevState    State
 	CurrentState State
 	Command      string
-	Seed 		 string
+	Seed         string
 	Error        error
 
 	LastBuf    *bytes.Buffer
@@ -22,8 +22,8 @@ type Planting struct {
 
 	Params Params
 
-	Results *[]Reports
+	Results      *[]Reports
 	ActiveBunker *SeedsWithBunker
 
-	Stop bool
+	StopChan chan struct{}
 }

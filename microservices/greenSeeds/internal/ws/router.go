@@ -35,6 +35,7 @@ func NewWsRouter() *WSRouter {
 	authRouter.Handle("STATUS", handleStatus)
 	authRouter.Handle("SET STATUS READY", handleSetStatusReady)
 	authRouter.Handle("START", handlePlanting)
+	authRouter.Handle("STOP", handleStop)
 
 	for msgType, handler := range authRouter.routes {
 		router.routes[msgType] = handler

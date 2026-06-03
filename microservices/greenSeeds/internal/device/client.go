@@ -119,10 +119,17 @@ func (c *DeviceClient) pollingDevice() {
 					continue
 				}
 
-				if err := c.Ping(InternalSessionID); err != nil {
-					fmt.Println("ERROR!!") // todo
+				if err := c.Boot(InternalSessionID, true); err != nil {
+					resp := models.WSResponse{
+						Type:  "DEVICE",
+						Error: &models.WSError{Message: err.Error()},
+					}
+
+					select {
+					case c.RespCh <- resp:
+					default:
+					}
 				}
-				c.RefreshPolling()
 
 			case <-c.Manager.ctx.Done():
 				c.pollMu.Lock()

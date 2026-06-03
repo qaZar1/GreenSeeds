@@ -9,14 +9,14 @@ import (
 )
 
 func handleBoot(s *Server, client *Client, req models.WSRequest) {
-	if err := s.dClient.Ping(client.SessionId); err != nil {
+	if err := s.dClient.Boot(client.SessionId, true); err != nil {
 		return
 	}
 }
 
 func handleStatus(s *Server, c *Client, req models.WSRequest) {
 	if !s.dClient.Manager.TryAcquireSession(c.SessionId) {
-		c.Send <- errResponse("START", errors.New("device busy"))
+		c.Send <- ErrResponse("START", errors.New("device busy"))
 		s.dClient.GetStatus()
 
 		return
@@ -38,13 +38,13 @@ func handleSetStatusReady(s *Server, client *Client, req models.WSRequest) {
 func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 	// Проверяем параметры
 	if req.Params == nil {
-		safeSend(c.Send, errResponse("START", errors.New("params required")))
+		SafeSend(c.Send, ErrResponse("START", errors.New("params required")))
 		return
 	}
 
 	// Пытаемся захватить устройство
 	if !s.dClient.Manager.TryAcquireSession(c.SessionId) {
-		safeSend(c.Send, errResponse("START", errors.New("device busy")))
+		SafeSend(c.Send, ErrResponse("START", errors.New("device busy")))
 		return
 	}
 	// Гарантированно освобождаем при выходе из функции
@@ -60,13 +60,13 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 		req.Params.Recipe,
 	)
 	if err != nil {
-		safeSend(c.Send, errResponse("START", errors.New("Cant start")))
+		SafeSend(c.Send, ErrResponse("START", errors.New("Cant start")))
 		return
 	}
 
 	recipe, err := s.repo.RptRepo.GetRecipesByRecipe(req.Params.Recipe)
 	if err != nil {
-		safeSend(c.Send, errResponse("START", errors.New("Cant start")))
+		SafeSend(c.Send, ErrResponse("START", errors.New("Cant start")))
 		return
 	}
 
@@ -75,13 +75,11 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 		Active:    true,
 		Iteration: 0,
 		MaxIter:   len(allReports) - 1,
+		StopChan:  make(chan struct{}),
+		Required:  req.Params.RequiredAmount,
 	}
 
 	for c.planting.Iteration < c.planting.MaxIter {
-		if c.planting.Stop {
-			break
-		}
-
 		report := allReports[c.planting.Iteration]
 		iter := models.Iteration{
 			Seed:      recipe.Seed,
@@ -97,43 +95,64 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 
 		RunIteration(s, c, &iter)
 
+		if !iter.Success {
+			break
+		}
+
 		c.planting.Iteration++
-		time.Sleep(10 * time.Second)
+
+		select {
+		case <-c.planting.StopChan:
+			Emit(c, "END", "Автоматическая посадка прервана", &models.Iteration{})
+			return
+		case <-time.After(10 * time.Second):
+		}
 	}
 
 	// Всё закончили
-	safeSend(c.Send, okResponse("END", "Посадка завершена"))
+	Emit(c, "END", "Автоматическая посадка завершена", &models.Iteration{})
+}
+
+func handleStop(s *Server, c *Client, req models.WSRequest) {
+	select {
+	case <-c.planting.StopChan:
+		// уже закрыт
+	default:
+		close(c.planting.StopChan)
+	}
+
+	SafeSend(c.Send, OkResponse("STOP", "Stopping after current iteration"))
 }
 
 func handleAuth(s *Server, client *Client, req models.WSRequest) {
 	if req.Token == nil {
-		safeSend(client.Send, errResponse(req.Type, errors.New("Token is nil")))
+		SafeSend(client.Send, ErrResponse(req.Type, errors.New("Token is nil")))
 		return
 	}
 
 	token := *req.Token
 	if !strings.HasPrefix(token, "Bearer ") {
-		safeSend(client.Send, errResponse(req.Type, errors.New("Invalid token format")))
+		SafeSend(client.Send, ErrResponse(req.Type, errors.New("Invalid token format")))
 		return
 	}
 
 	claims, err := s.infra.GetTokenClaims(token[7:])
 	if err != nil {
-		safeSend(client.Send, errResponse(req.Type, errors.New("Failed to get token claims")))
+		SafeSend(client.Send, ErrResponse(req.Type, errors.New("Failed to get token claims")))
 		return
 	}
 
 	if claims == nil {
-		safeSend(client.Send, errResponse(req.Type, errors.New("Invalid token")))
+		SafeSend(client.Send, ErrResponse(req.Type, errors.New("Invalid token")))
 		return
 	}
 
 	if err := validateJWT(*claims, s.repo); err != nil {
-		safeSend(client.Send, errResponse(req.Type, errors.New("Invalid token")))
+		SafeSend(client.Send, ErrResponse(req.Type, errors.New("Invalid token")))
 		return
 	}
 
 	client.IsAuth = true
 
-	safeSend(client.Send, okResponse(req.Type, "OK"))
+	SafeSend(client.Send, OkResponse(req.Type, "OK"))
 }

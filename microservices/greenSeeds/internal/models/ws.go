@@ -9,12 +9,30 @@ type WSRequest struct {
 }
 
 type WSResponse struct {
-	Type      WSMessageType `json:"type"`
-	Status    string        `json:"status,omitempty"`
-	Message   string        `json:"message,omitempty"`
-	Iteration int
-	Data      interface{} `json:"data,omitempty"`
-	Actions   *[]string   `json:"actions,omitempty"`
+	Type    WSMessageType `json:"type,omitempty"`
+	Status  string        `json:"status,omitempty"`
+	Message string        `json:"message,omitempty"`
+
+	Error *WSError `json:"error,omitempty"`
+
+	// planting events
+	Event     string    `json:"event,omitempty"`
+	Iteration int       `json:"iteration,omitempty"`
+	Step      string    `json:"step,omitempty"`
+	Progress  *Progress `json:"progress,omitempty"`
+	Data      *Params   `json:"data,omitempty"`
+}
+
+type Progress struct {
+	Current int `json:"current"`
+	Total   int `json:"total"`
+	Percent int `json:"percent"`
+}
+
+type WSError struct {
+	Code    string `json:"code"`
+	Stage   string `json:"stage"`
+	Message string `json:"message"`
 }
 
 type Params struct {
@@ -25,6 +43,6 @@ type Params struct {
 	RequiredAmount int    `json:"required_amount"`
 	Bunker         int    `json:"bunker"`
 	Gcode          string `json:"gcode"`
-	ExtraMode      bool   `json:"extraMode"`
+	ExtraMode      bool   `json:"extra_mode"`
 	Seed           string `json:"seed"`
 }

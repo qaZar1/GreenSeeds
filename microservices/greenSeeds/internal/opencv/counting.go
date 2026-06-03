@@ -7,6 +7,7 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 
 	"gocv.io/x/gocv"
 )
@@ -21,23 +22,6 @@ func NewCounting() Classification {
 		Stats: gocv.Mat{},
 		Img:   gocv.Mat{},
 	}
-}
-
-// maskMat применяет маску к изображению: dst[i,j] = src[i,j] если mask[i,j] != 0, иначе 0
-func maskMat(src, mask gocv.Mat) gocv.Mat {
-	dst := gocv.NewMatWithSize(src.Rows(), src.Cols(), src.Type())
-	defer dst.Close()
-
-	for r := 0; r < src.Rows(); r++ {
-		for c := 0; c < src.Cols(); c++ {
-			if mask.GetUCharAt(r, c) > 0 {
-				dst.SetUCharAt(r, c, src.GetUCharAt(r, c))
-			} else {
-				dst.SetUCharAt(r, c, 0)
-			}
-		}
-	}
-	return dst.Clone()
 }
 
 func BuildCleanDotMaskWithMask(src gocv.Mat, debugDir string) (gocv.Mat, gocv.Mat) {
@@ -202,7 +186,7 @@ func (cl *Classification) Counter(data []byte) int {
 	// gocv.IMWrite(filepath.Join(outDir, "processed.png"), processed)
 	// gocv.IMWrite(filepath.Join(outDir, "solidMask.png"), solidMask)
 
-	cmd := exec.Command("python3", "test.py")
+	cmd := exec.Command("./dist/test")
 
 	writer, _ := cmd.StdinPipe()
 	reader, _ := cmd.StdoutPipe()
@@ -231,10 +215,14 @@ func (cl *Classification) Counter(data []byte) int {
 		return -1
 	}
 
-	fmt.Printf("%s", string(buf))
 	// result, _ := gocv.IMDecode(buf, gocv.IMReadColor)
 	// defer result.Close()
 	// gocv.IMWrite(filepath.Join(outDir, "result.jpg"), result)
 
-	return 0
+	count, err := strconv.Atoi(string(buf))
+	if err != nil {
+		return -1
+	}
+
+	return count
 }
