@@ -130,7 +130,6 @@ export function useRobotWS(params = {}) {
         break;
       
       case "BUNKERS_UPDATE": {
-        console.log("BUNKERS_UPDATE", msg)
         if (msg.bunkers) {
           onBunkersUpdate?.(msg.bunkers);
         }
@@ -162,7 +161,6 @@ export function useRobotWS(params = {}) {
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log("WebSocket connected");
       sendMessage({ type: "BOOT" });
       setTimeout(() => {
         sendMessage({ type: "STATUS" });
@@ -172,18 +170,14 @@ export function useRobotWS(params = {}) {
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-        console.log("📩 WS message:", msg);
 
         handleWSMessage(msg);
       } catch (err) {
-        console.error("❌ Failed to parse WS message:", event.data, err);
       }
     };
 
     ws.onclose = () => {
-      console.log("WebSocket disconnected");
       if (isMountedRef.current) {
-        console.log("Reconnecting in 2s...");
         reconnectTimeout.current = setTimeout(connectWS, 2000);
       }
     };

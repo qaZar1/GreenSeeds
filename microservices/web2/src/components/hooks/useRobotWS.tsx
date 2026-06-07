@@ -306,7 +306,6 @@ export function useRobotWS(token: string | null) {
 
     ws.onmessage = (e) => {
       let msg: WSResponse;
-      console.log("[RAW IN]", e.data);
 
       try {
         msg = JSON.parse(e.data);
