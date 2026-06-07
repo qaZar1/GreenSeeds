@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -17,7 +16,7 @@ type SQLite struct {
 }
 
 func NewSQLiteClient(cfg models.Config) *SQLite {
-	db, err := sql.Open("sqlite", "./db/calibration.db")
+	db, err := sql.Open("sqlite", cfg.SQLite.PathToDB)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,7 +47,7 @@ func (s *SQLite) startCleaner() {
 func (s *SQLite) Cleaner() {
 	calibrations, err := s.GetOldCalibration()
 	if err != nil {
-		fmt.Printf("Invalid get old calibration: %s", err)
+		log.Printf("Invalid get old calibration: %s", err)
 		return
 	}
 
@@ -67,10 +66,8 @@ func (s *SQLite) Cleaner() {
 	}
 
 	if err := s.DeleteOldRows(); err != nil {
-		log.Fatal(err)
+		log.Printf("Invalid delete old rows: %s", err)
 	}
-
-	return
 }
 
 func (s *SQLite) AddCalibration(sessionId string, createdAt time.Time) (bool, error) {

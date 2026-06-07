@@ -4,8 +4,7 @@ import { useState } from "react";
 
 const BunkerCheckModal = ({ open, required, available, onReduce, onFill }) => {
   const [percent, setPercent] = useState("");
-  console.log("req", required)
-
+  
   return (
     <Dialog open={open}>
       <DialogTitle>Недостаточно семян</DialogTitle>

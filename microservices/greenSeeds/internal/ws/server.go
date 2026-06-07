@@ -163,7 +163,6 @@ func (s *Server) Close() {
 		client.Conn.Close()
 	}
 	s.mu.Unlock()
-	log.Println("All users deleted")
-
+	log.Println("All users disconnected")
 	log.Println("COM port closed")
 }

@@ -1,7 +1,6 @@
 package opencv
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"io"
@@ -195,12 +194,10 @@ func (cl *Classification) Counter(data []byte) int {
 	cmd.Start()
 
 	go func() {
-		data, err := io.ReadAll(stdErr)
+		_, err := io.ReadAll(stdErr)
 		if err != nil {
 			return
 		}
-
-		fmt.Println(string(data))
 	}()
 
 	writer.Write(data)

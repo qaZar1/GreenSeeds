@@ -139,37 +139,3 @@ func main() {
 		log.Error().Err(err).Msg("Service shutdown\n\n")
 	}
 }
-
-// // TODO: debug
-// func ProcessDataset(root string) error {
-// 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		// пропускаем папки
-// 		if d.IsDir() {
-// 			return nil
-// 		}
-
-// 		ext := strings.ToLower(filepath.Ext(path))
-// 		if ext != ".png" && ext != ".jpg" && ext != ".jpeg" {
-// 			return nil
-// 		}
-
-// 		// относительный путь
-// 		rel, _ := filepath.Rel(root, path)
-
-// 		base := strings.TrimSuffix(filepath.Base(rel), filepath.Ext(rel))
-
-// 		// папка вывода
-// 		outDir := filepath.Join("out", filepath.Dir(rel), base)
-// 		_ = os.MkdirAll(outDir, 0755)
-
-// 		opencv := opencv.NewCounting()
-// 		total := opencv.Counter(path, outDir)
-
-// 		fmt.Printf("/%s - total seeds %d\n", rel, total)
-// 		return nil
-// 	})
-// }
