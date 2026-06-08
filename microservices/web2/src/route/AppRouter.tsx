@@ -10,11 +10,11 @@ import LogsPage from "../components/Admin/Logs/LogsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import ProfilePage from "../components/Menu/Profile/ProfilePage";
 import BunkersPage from "../components/Admin/Bunkers/Bunkers";
-import CalibrationPage from "../components/Admin/Calibration/Calibrate";
+import CalibrationPage from "../components/Operator/Calibration/Calibrate";
 import DeviceSettingCreatePage from "../components/Admin/DeviceSettings/DeviceSettingsCreatePage";
 import DeviceSettingsPage from "../components/Admin/DeviceSettings/DeviceSettingsPage";
 import RecipePage from "../components/Admin/Recipe/Recipes";
-import PlacementPage from "../components/Admin/Placement/Placement";
+import PlacementPage from "../components/Operator/Placement/Placement";
 import SeedsPage from "../components/Admin/Seeds/SeedsPage";
 import RecipeCreatePage from "../components/Admin/Recipe/RecipeCreatePage";
 import SproutLoader from "../components/utils/Loader/SproutLoader";
@@ -47,7 +47,6 @@ export const AppRouter = () => {
 
           <Route path="/settings/bunkers" element={<BunkersPage/>} />
           <Route path="/settings/seeds" element={<SeedsPage/>} />
-          <Route path="/settings/placements" element={<PlacementPage/>} />
           <Route path="/settings/recipes" element={<RecipePage/>} />
           <Route path="/settings/recipes/create" element={<RecipeCreatePage/>} />
           <Route path="/settings/recipes/:id/edit" element={<RecipeCreatePage />} />
@@ -55,8 +54,10 @@ export const AppRouter = () => {
           <Route path="/settings/device-settings/create" element={<DeviceSettingCreatePage/>} />
           <Route path="/settings/device-settings/:id/edit" element={<DeviceSettingCreatePage />} />
         </Route>
+
+        <Route path="/settings/placements" element={<PlacementPage/>} />
         
-        <Route path="/" element={<Navigate to="/calibrate" replace />} />
+        <Route path="/" element={<Navigate to="/choice" replace />} />
 
         <Route path="/calibrate" element={<CalibrationPage />} />
 

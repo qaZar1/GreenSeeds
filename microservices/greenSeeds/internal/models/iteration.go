@@ -30,7 +30,7 @@ type Iteration struct {
 
 	Solutions []string
 
-	Success   bool
+	Success   ReportStatus
 	Finished  bool
 	NeedDosow bool
 
@@ -39,3 +39,11 @@ type Iteration struct {
 	MaxDensity int
 	CountRetry int
 }
+
+type ReportStatus int
+
+const (
+	ReportStatusPending ReportStatus = iota
+	ReportStatusSuccess
+	ReportStatusFailed
+)

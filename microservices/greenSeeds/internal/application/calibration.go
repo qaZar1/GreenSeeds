@@ -70,22 +70,10 @@ func (app *App) GetPhoto(sessionId string, numberPhotoStr string) ([]byte, error
 		return nil, err
 	}
 
-	photoPath := ""
-	if numberPhoto == 1 {
-		photoPath = "./1.jpg"
-	} else {
-		photoPath = "./2.jpg"
-	}
-
-	buf, err := app.camera.GetBytesFromPhoto(photoPath)
+	buf, err := app.camera.TakePhoto()
 	if err != nil {
 		return nil, err
 	}
-
-	// buf, err := app.camera.TakePhoto()
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	if buf == nil || buf.Len() == 0 {
 		return nil, errors.New("photo is nil")

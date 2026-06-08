@@ -95,7 +95,7 @@ func handlePlanting(s *Server, c *Client, req models.WSRequest) {
 
 		RunIteration(s, c, &iter)
 
-		if !iter.Success {
+		if iter.Success != models.ReportStatusSuccess {
 			break
 		}
 

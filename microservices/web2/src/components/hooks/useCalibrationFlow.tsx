@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { calibrationApi } from "../Admin/Calibration/CalibrationApi";
+import { calibrationApi } from "../Operator/Calibration/CalibrationApi";
 
 export type Step =
   | "prepare"
