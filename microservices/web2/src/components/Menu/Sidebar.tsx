@@ -22,13 +22,23 @@ const menuItems = [
     children: [
       { path: '/settings/bunkers', label: 'Бункеры', icon: 'fa-solid fa-warehouse', roles: ['admin'] },
       { path: '/settings/seeds', label: 'Семена', icon: 'fa-solid fa-seedling', roles: ['admin'] },
-      { path: '/settings/placements', label: 'Расположение', icon: 'fa-solid fa-link', roles: ['admin'] },
+      { path: '/settings/placements', label: 'Расположение', icon: 'fa-solid fa-link' },
       { path: '/settings/recipes', label: 'Рецепты', icon: 'fa-solid fa-file-contract', roles: ['admin'] },
       { path: '/settings/device-settings', label: 'Настройки устройства', icon: 'fa-solid fa-sliders', roles: ['admin'] },
     ]
   },
 
-  { path: '/calibrate', label: 'Калибровка', icon: 'fa-solid fa-person-walking-arrow-right', roles: ['admin'] },
+  {
+    label: 'Настройки',
+    icon: 'fa-solid fa-gear',
+    roles: ['operator'],
+    isSection: true,
+    children: [
+      { path: '/settings/placements', label: 'Расположение', icon: 'fa-solid fa-link' },
+     ]
+  },
+
+  { path: '/calibrate', label: 'Калибровка', icon: 'fa-solid fa-person-walking-arrow-right' },
 ];
 
 interface SidebarProps {

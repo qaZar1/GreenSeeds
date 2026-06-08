@@ -30,6 +30,6 @@ func AddError(log *zerolog.Logger, iter *models.Iteration, err error, stage stri
 	}
 	log.Error().Err(err).Msg(fmt.Sprintf("[%s] %s", stage, err.Error()))
 
-	iter.Success = false
+	iter.Success = models.ReportStatusFailed
 	iter.Finished = true
 }

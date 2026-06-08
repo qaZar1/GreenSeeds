@@ -10,12 +10,16 @@ func finishIteration(
 	s *Server,
 	c *Client,
 	iter *models.Iteration,
-	success bool,
 	errStr string,
 	solution string,
 	mark string,
 ) {
 	now := time.Now()
+
+	var success bool
+	if iter.Success == models.ReportStatusSuccess {
+		success = true
+	}
 
 	report := buildReport(
 		c,

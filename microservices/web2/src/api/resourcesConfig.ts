@@ -13,7 +13,7 @@ export const resourcesConfig: Record<string, ResourceConfig> = {
     bunkers: {
         idKey: "bunker",
         urls: {
-            list: "/api/admin/bunkers/get",
+            list: "/api/bunkers/get",
             one: (id) => `/api/admin/bunkers/get/${id}`,
             create: "/api/admin/bunkers/add",
             update: "/api/admin/bunkers/update",
@@ -32,7 +32,7 @@ export const resourcesConfig: Record<string, ResourceConfig> = {
     seeds: {
         idKey: "seed",
         urls: {
-            list: "/api/admin/seeds/get",
+            list: "/api/seeds/get",
             one: (id) => `/api/admin/seeds/get/${id}`,
             create: "/api/admin/seeds/add",
             update: "/api/admin/seeds/update",
@@ -93,11 +93,11 @@ export const resourcesConfig: Record<string, ResourceConfig> = {
     placements: {
         idKey: "bunker",
         urls: {
-            list: "/api/admin/placement/get",
-            one: (id) => `/api/admin/placement/get/${id}`,
-            create: "/api/admin/placement/add",
-            update: "/api/admin/placement/update",
-            delete: (id) => `/api/admin/placement/delete/${id}`,
+            list: "/api/placement/get",
+            one: (id) => `/api/placement/get/${id}`,
+            create: "/api/placement/add",
+            update: "/api/placement/update",
+            delete: (id) => `/api/placement/delete/${id}`,
         },
         createPayload: (d) => ({
             bunker: Number(d.bunker),

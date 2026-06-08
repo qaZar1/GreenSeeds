@@ -103,7 +103,6 @@ func stateProcess(s *Server, c *Client, iter *models.Iteration) {
 		AddError(s.log, iter, fmt.Errorf("Ошибка возврата устройства"), string(StepReturn))
 
 		iter.Finished = true
-		iter.Success = false
 
 		return
 	}
@@ -114,14 +113,12 @@ func stateProcess(s *Server, c *Client, iter *models.Iteration) {
 		AddError(s.log, iter, fmt.Errorf("Процесс остановлен пользователем"), string(StepReturn))
 
 		iter.Finished = true
-		iter.Success = false
 
 		return
 	}
 
 	if iter.IsFailed {
 		iter.Finished = true
-		iter.Success = false
 		return
 	}
 
@@ -131,11 +128,9 @@ func stateProcess(s *Server, c *Client, iter *models.Iteration) {
 	}
 
 	iter.CurrentState = StateDone
-
-	return
 }
 
 func stateDone(iter *models.Iteration) {
 	iter.Finished = true
-	iter.Success = true
+	iter.Success = models.ReportStatusSuccess
 }

@@ -93,7 +93,6 @@ func NewRouter(
 
 			r.Route("/seeds", func(r chi.Router) {
 				r.Post("/add", transport.PostApiSeedAdd)
-				r.Get("/get", transport.GetApiSeedGet)
 				r.Get("/get/{seed}", transport.GetApiSeedGetSeed)
 				r.Put("/update", transport.PutApiSeedUpdate)
 				r.Delete("/delete/{seed}", transport.DeleteApiSeedDelete)
@@ -102,7 +101,6 @@ func NewRouter(
 
 			r.Route("/bunkers", func(r chi.Router) {
 				r.Post("/add", transport.PostApiBunkerAdd)
-				r.Get("/get", transport.GetApiBunkerGet)
 				r.Get("/get/{bunker}", transport.GetApiBunkerGetId)
 				r.Put("/update", transport.PutApiBunkerUpdate)
 				r.Delete("/delete/{bunker}", transport.DeleteApiBunkerDelete)
@@ -112,15 +110,6 @@ func NewRouter(
 			r.Route("/users", func(r chi.Router) {
 				r.Get("/get", transport.GetApiCheckAllUsers)
 				r.Delete("/delete/{username}", transport.DeleteApiRemoveUser)
-			})
-
-			r.Route("/placement", func(r chi.Router) {
-				r.Post("/add", transport.PostApiPlacementAdd)
-				r.Get("/get", transport.GetApiPlacementGet)
-				r.Get("/get/{bunker}", transport.GetApiPlacementGetBunker)
-				r.Put("/update", transport.PutApiPlacementUpdate)
-				r.Delete("/delete/{bunker}", transport.DeleteApiPlacementDelete)
-				r.Put("/fill", transport.PutApiPlacementFill)
 			})
 
 			r.Route("/recipes", func(r chi.Router) {
@@ -172,7 +161,23 @@ func NewRouter(
 			r.Post("/clear", transport.PostApiCalibrationClear)
 			r.Post("/calculate", transport.PostApiCalibrationCalc)
 			r.Post("/save", transport.PostApiCalibrationSave)
-			// r.Get("/stream", transport.GetApiCalibrationStream)
+		})
+
+		r.Route("/placement", func(r chi.Router) {
+			r.Post("/add", transport.PostApiPlacementAdd)
+			r.Get("/get", transport.GetApiPlacementGet)
+			r.Get("/get/{bunker}", transport.GetApiPlacementGetBunker)
+			r.Put("/update", transport.PutApiPlacementUpdate)
+			r.Delete("/delete/{bunker}", transport.DeleteApiPlacementDelete)
+			r.Put("/fill", transport.PutApiPlacementFill)
+		})
+
+		r.Route("/bunkers", func(r chi.Router) {
+			r.Get("/get", transport.GetApiBunkerGet)
+		})
+
+		r.Route("/seeds", func(r chi.Router) {
+			r.Get("/get", transport.GetApiSeedGet)
 		})
 	})
 

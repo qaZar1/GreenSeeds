@@ -46,17 +46,20 @@ func RunIteration(s *Server, c *Client, iter *models.Iteration) {
 		}
 
 		if iter.Finished {
+			err := ""
+			if iter.Err != nil {
+				err = iter.Err.Error()
+			}
 			finishIteration(
 				s,
 				c,
 				iter,
-				iter.Success,
-				iter.Err.Error(),
+				err,
 				"",
 				"",
 			)
 
-			if iter.Success {
+			if iter.Success == models.ReportStatusSuccess {
 				EmitDone(c, MessageDone, iter, c.planting.Required)
 			} else {
 				EmitError(
